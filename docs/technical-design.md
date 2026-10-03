@@ -138,7 +138,7 @@ Endpoints from `slice-decisions.md`, with behaviour pinned down:
 Cross-cutting:
 
 - **Validation at the boundary** with a schema validator (Zod). Reject unknown fields and over-long notes.
-- **Idempotency.** Every POST requires an `Idempotency-Key`, unique per user (`unique (created_by, key)`). A repeat returns the original record. This protects against double taps on poor signal. Rejecting a reused key with a different body is left to production.
+- **Idempotency.** Every POST requires an `Idempotency-Key`, unique per user (`unique (created_by, key)`). The key is looked up before any business check, so a retry returns the original record even if the shortage has since resolved. A key reused for a different target (site, shortage and kind, or site and penetration) is rejected with 409. Rejecting a repeat whose note or reason differs is left to production. Full contract in `api.md`.
 - **No caching.** Readiness and actions responses send `Cache-Control: no-store`, and the UI shows an "as of" time. A cached "Crew can go" after stock has fallen is the failure this design most wants to avoid.
 - **Errors** use one shape: `{ code, message }`. Stack traces and internals are never returned.
 - **Upstream failure** returns 502 with a clear code. The UI shows "stock unavailable" and does not show "clear". Failing safe means never showing a crew as clear on missing data.

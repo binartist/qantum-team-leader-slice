@@ -35,7 +35,7 @@ Before a crew leaves for a site, the team leader needs to know whether the mater
 | FR13 | When there are no candidates, the app says so and offers escalate. When the substrate is incomplete in the catalogue, it says that. |
 | FR14 | A leader can list all recorded actions for a site, newest first. |
 | FR15 | Every screen has a defined state for loading, empty, error and upstream-unavailable. Upstream failure never shows crew as clear. |
-| FR16 | Every write requires an idempotency key, and a repeat records once. |
+| FR16 | Every write requires an idempotency key, and a repeat records once. A repeat for the same target returns the original even if the shortage has since resolved. A repeat for a different target is rejected with 409. |
 
 ## 4. Acceptance criteria
 
@@ -59,8 +59,8 @@ Numbered for use as test names. Sample data is defined in section 7.
 13. Recording an action on a shortage that does not currently exist returns 404.
 14. Given escalate then wait, the shortage state is escalated and both actions are listed.
 15. Given an action recorded at shortfall 5 and the shortfall is now 8, the action shows "earlier decision, shortfall has grown" and the shortage state is open.
-16. Repeating a POST with the same idempotency key returns the original record and creates no second row. A POST without a key returns 400.
-17. A note longer than the limit is rejected with 422.
+16. Repeating a POST with the same idempotency key and target returns the original record (200) and creates no second row, even after the shortage has resolved or the nomination has changed. The same key for a different target is 409 `idempotency_key_reused`. A POST without a key returns 400. Keys are unique per user.
+17. A note or reason longer than 500 characters after trimming is rejected with 422, and a whitespace-only reason is rejected. A body over 10,000 bytes is rejected with 413 while streaming, whether or not `Content-Length` is sent.
 
 **Substitution**
 18. For penetration with nominated `0438` (PEX Ø25mm, wall, 60/30), candidates are `0451` and `0464`.

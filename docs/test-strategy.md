@@ -88,6 +88,10 @@ A script lists every AC number and fails CI if one has no test referencing it.
 - Orientation, substrate, service type and size always equal after normalisation.
 - Count of solutions with candidates is exactly 20.
 
+## 4a. API layer verification (added after independent review)
+
+The vitest coverage floor measures only `src/domain`, so the API layer is judged by mutation checks. After the first review, 24 deliberately broken rules survived the suite. The fix round added tests for each, and the orchestrator re-ran the rules as mutants: 13 of 15 were killed, and the 2 survivors were equivalent (the numeric `Content-Length` early reject is an optimisation behind the streaming limit, and the note length is enforced by both the schema and the use case). Contract tests run against the in-memory repository, and against Supabase only when credentials are present. `REQUIRE_SUPABASE_CONTRACT=1` and `REQUIRE_BUNDLE_SCAN=1` make a skipped run fail, for CI.
+
 ## 5. Failure and risk coverage
 
 | Risk | Consequence | Tests |
