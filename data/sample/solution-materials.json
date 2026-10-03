@@ -1,0 +1,167 @@
+{
+  "label": "INVENTED SAMPLE DATA. The supplied catalogue has no products or quantities.",
+  "materials": [
+    {
+      "id": "MAT-SEALANT",
+      "name": "Intumescent sealant, 310 ml cartridge",
+      "unit": "cartridge"
+    },
+    {
+      "id": "MAT-COLLAR-25",
+      "name": "Pipe collar for 25 mm pipe",
+      "unit": "each"
+    },
+    {
+      "id": "MAT-COLLAR-32",
+      "name": "Pipe collar for 32 mm pipe",
+      "unit": "each"
+    },
+    {
+      "id": "MAT-WRAP",
+      "name": "Intumescent wrap strip",
+      "unit": "metre"
+    },
+    {
+      "id": "MAT-BATT",
+      "name": "Mineral wool batt",
+      "unit": "each"
+    },
+    {
+      "id": "MAT-PUTTY",
+      "name": "Fire putty pad",
+      "unit": "each"
+    },
+    {
+      "id": "MAT-MASTIC",
+      "name": "Fire mastic tube",
+      "unit": "tube"
+    }
+  ],
+  "items": [
+    {
+      "internalCode": "0344",
+      "materialId": "MAT-WRAP",
+      "quantityPerInstall": 1.5
+    },
+    {
+      "internalCode": "0344",
+      "materialId": "MAT-SEALANT",
+      "quantityPerInstall": 0.5
+    },
+    {
+      "internalCode": "0375",
+      "materialId": "MAT-WRAP",
+      "quantityPerInstall": 2
+    },
+    {
+      "internalCode": "0375",
+      "materialId": "MAT-SEALANT",
+      "quantityPerInstall": 0.5
+    },
+    {
+      "internalCode": "0452",
+      "materialId": "MAT-COLLAR-25",
+      "quantityPerInstall": 1
+    },
+    {
+      "internalCode": "0438",
+      "materialId": "MAT-COLLAR-25",
+      "quantityPerInstall": 1
+    },
+    {
+      "internalCode": "0438",
+      "materialId": "MAT-SEALANT",
+      "quantityPerInstall": 0.5
+    },
+    {
+      "internalCode": "0451",
+      "materialId": "MAT-PUTTY",
+      "quantityPerInstall": 1
+    },
+    {
+      "internalCode": "0451",
+      "materialId": "MAT-SEALANT",
+      "quantityPerInstall": 0.25
+    },
+    {
+      "internalCode": "0434",
+      "materialId": "MAT-COLLAR-32",
+      "quantityPerInstall": 1
+    },
+    {
+      "internalCode": "0434",
+      "materialId": "MAT-SEALANT",
+      "quantityPerInstall": 0.25
+    },
+    {
+      "internalCode": "0435",
+      "materialId": "MAT-COLLAR-32",
+      "quantityPerInstall": 1
+    },
+    {
+      "internalCode": "0435",
+      "materialId": "MAT-SEALANT",
+      "quantityPerInstall": 0.5
+    },
+    {
+      "internalCode": "0789",
+      "materialId": "MAT-SEALANT",
+      "quantityPerInstall": 2
+    },
+    {
+      "internalCode": "0789",
+      "materialId": "MAT-BATT",
+      "quantityPerInstall": 1
+    },
+    {
+      "internalCode": "0790",
+      "materialId": "MAT-SEALANT",
+      "quantityPerInstall": 2
+    },
+    {
+      "internalCode": "0790",
+      "materialId": "MAT-BATT",
+      "quantityPerInstall": 2
+    },
+    {
+      "internalCode": "0791",
+      "materialId": "MAT-SEALANT",
+      "quantityPerInstall": 3
+    },
+    {
+      "internalCode": "0791",
+      "materialId": "MAT-BATT",
+      "quantityPerInstall": 1
+    },
+    {
+      "internalCode": "0334",
+      "materialId": "MAT-BATT",
+      "quantityPerInstall": 2
+    },
+    {
+      "internalCode": "0334",
+      "materialId": "MAT-SEALANT",
+      "quantityPerInstall": 1
+    },
+    {
+      "internalCode": "0347",
+      "materialId": "MAT-BATT",
+      "quantityPerInstall": 2
+    },
+    {
+      "internalCode": "0347",
+      "materialId": "MAT-PUTTY",
+      "quantityPerInstall": 2
+    },
+    {
+      "internalCode": "0943",
+      "materialId": "MAT-SEALANT",
+      "quantityPerInstall": 1
+    },
+    {
+      "internalCode": "0943",
+      "materialId": "MAT-MASTIC",
+      "quantityPerInstall": 1
+    }
+  ]
+}

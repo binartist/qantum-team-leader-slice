@@ -107,3 +107,4 @@ From `technical-design.md` section 11 and 12.
 | 2026-10-03 | Agent guidance moved to AGENTS.md; CLAUDE.md now only imports it (`@AGENTS.md`), as umbrella-workspace scaffolds it. |
 | 2026-10-03 | Independent review (3 fresh Grok sessions, $2.97) found fail-open numeric paths and test gaps. Fixed by a second worker session ($0.784, 28 turns): 105 tests, 100% domain coverage, 19 mutants killed incl. all reviewer survivors. Spec, design, test strategy and AGENTS.md updated with the `invalid_quantity` rule and number handling. |
 | 2026-10-03 | Committed locally on `dev` in four per-intent commits (docs and data, scaffold, skills, domain core). Fresh-clone gates pass. Not pushed. |
+| 2026-10-03 | Sample data proposed (data/sample/*.json, docs/sample-data-and-stubs.md), verified by running the real domain over it. Caught own generator bug (siteId mismatch). Approved and committed. |
