@@ -10,7 +10,7 @@ Legend: `[x]` done, `[~]` partial, `[ ]` not started.
 
 | # | Item | Status | Evidence / next step |
 | --- | --- | --- | --- |
-| 1 | GitHub repository link | [~] | Local git repo initialised on `main`, nothing committed. Remote, first commit and push need your go-ahead. |
+| 1 | GitHub repository link | [~] | Local repo on branch `dev` with 4 per-intent commits, verified from a fresh clone (npm ci, typecheck, lint, 105 tests, build). No remote and nothing pushed. Creating the GitHub repo and pushing need your go-ahead. |
 | 2 | Public URL for the working experience | [ ] | Vercel deploy. Record URL here. |
 | 3 | Try-it instructions | [ ] | In README. |
 | 4 | README: run locally | [~] | README is a stub. |
@@ -24,7 +24,7 @@ Legend: `[x]` done, `[~]` partial, `[ ]` not started.
 | 12 | Test strategy (md) | [x] | `docs/test-strategy.md`: layers, all 32 ACs mapped, risks, CI gates. Awaiting your review. |
 | 13 | Agent instructions and context files | [~] | Repo guidance in `AGENTS.md` (tool-neutral; `CLAUDE.md` is a one-line `@AGENTS.md` import), plus six Skill Forge skills vendored in `.agents/skills` (declared in `skill-forge.json`, locked in `skill-forge.lock.json`). Add per-task briefs (domain core `BRIEF.md`, review briefs) to the repo before submission. |
 | 14 | Working application code | [~] | Domain core and CSV adapter done (src/domain, src/adapters). API, upstream stubs, screens still to build. | |
-| 15 | Automated tests | [~] | 69 unit and data tests, 100% coverage of src/domain, ACs 1-8, 10, 14, 15, 18-22, 25, 26 referenced. API, DB, e2e still to write. | |
+| 15 | Automated tests | [~] | 105 unit and data tests, 100% coverage of src/domain, ACs 1-8, 10, 14, 15, 18-22, 25, 26 referenced. API, DB, e2e still to write. | |
 | 16 | CI/CD config | [~] | `.github/workflows/ci.yml` runs typecheck, lint, tests with coverage, build, prod audit, secret scan. DB tests, Playwright, AC check and Vercel deploy still to add. |
 | 17 | Pipeline inspectable, with successful deploy evidence | [ ] | Link a green run and the deployment. |
 | 18 | Agentic coding account | [ ] | See section 3. |
@@ -106,3 +106,4 @@ From `technical-design.md` section 11 and 12.
 | 2026-10-03 | Skill Forge profile added: coding-discipline, security-baseline, code-quality, testing-strategy, external-worker-delegation, grok-build-harness (`skf sync --check` exit 0, no shadowing against $HOME). Gates still green. |
 | 2026-10-03 | Agent guidance moved to AGENTS.md; CLAUDE.md now only imports it (`@AGENTS.md`), as umbrella-workspace scaffolds it. |
 | 2026-10-03 | Independent review (3 fresh Grok sessions, $2.97) found fail-open numeric paths and test gaps. Fixed by a second worker session ($0.784, 28 turns): 105 tests, 100% domain coverage, 19 mutants killed incl. all reviewer survivors. Spec, design, test strategy and AGENTS.md updated with the `invalid_quantity` rule and number handling. |
+| 2026-10-03 | Committed locally on `dev` in four per-intent commits (docs and data, scaffold, skills, domain core). Fresh-clone gates pass. Not pushed. |
