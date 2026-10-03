@@ -23,8 +23,8 @@ Legend: `[x]` done, `[~]` partial, `[ ]` not started.
 | 11 | Technical design (md) | [x] | `docs/technical-design.md`. Section 11 additions awaiting confirmation. |
 | 12 | Test strategy (md) | [x] | `docs/test-strategy.md`: layers, all 32 ACs mapped, risks, CI gates. Awaiting your review. |
 | 13 | Agent instructions and context files | [~] | Repo guidance in `AGENTS.md` (tool-neutral; `CLAUDE.md` is a one-line `@AGENTS.md` import), plus six Skill Forge skills vendored in `.agents/skills` (declared in `skill-forge.json`, locked in `skill-forge.lock.json`). Add per-task briefs (domain core `BRIEF.md`, review briefs) to the repo before submission. |
-| 14 | Working application code | [~] | Domain core and CSV adapter done (src/domain, src/adapters). API, upstream stubs, screens still to build. | |
-| 15 | Automated tests | [~] | 105 unit and data tests, 100% coverage of src/domain, ACs 1-8, 10, 14, 15, 18-22, 25, 26 referenced. API, DB, e2e still to write. | |
+| 14 | Working application code | [~] | Domain core, upstream stubs, actions repositories (memory, Supabase), use cases and the seven-route HTTP API are built and reviewed (docs/api.md). The three screens (UI) are still to build. | |
+| 15 | Automated tests | [~] | 196 tests (5 skipped: live Supabase contract), 100% coverage of src/domain, ACs 1-29 referenced (only UI ACs 30-32 outstanding), ACs 1-8, 10, 14, 15, 18-22, 25, 26 referenced. API, DB, e2e still to write. | |
 | 16 | CI/CD config | [~] | `.github/workflows/ci.yml` runs typecheck, lint, tests with coverage, build, prod audit, secret scan. DB tests, Playwright, AC check and Vercel deploy still to add. |
 | 17 | Pipeline inspectable, with successful deploy evidence | [ ] | Link a green run and the deployment. |
 | 18 | Agentic coding account | [ ] | See section 3. |
@@ -44,6 +44,9 @@ Legend: `[x]` done, `[~]` partial, `[ ]` not started.
 ## 3. Agentic coding account (collect as we go)
 
 Logged so far:
+- API layer built by Grok fast ($2.82), independently reviewed by three fresh sessions ($4.83) with no Critical findings but one High (idempotency checked after business rules) and 24 surviving mutants. Fix round on fast ($3.47) accepted after orchestrator re-ran mutants (13 of 15 killed, 2 equivalent) and a live HTTP walk.
+- Agent (me) accepted the worker's per-key idempotency design at first; review showed a retry after resolution returned 404. Redesigned as lookup-first with 409 on target mismatch.
+- Agent (me) rejected two reviewer suggestions with reasons: module-relative catalogue path (breaks in bundled output) and a `server-only` import (needs a new dependency).
 - Delegated the domain core to Grok (grok-4.7, in-tree, new-files-only because nothing was committed). Orchestrator gates, write-scope diff and 14 mutation checks done in own shell. Worker cost $0.669, 26 turns.
 - Agent (me) wrote the brief with an expected value of 24 candidate solutions; recomputing under the design's own final rules gave 20 (24 included truncated substrates the design forbids). Corrected in spec, design and test strategy before dispatch.
 - Agent chose ESLint 10 with `eslint-config-next`; lint crashed (plugin incompatibility). Pinned ESLint 9 instead of forcing a workaround.
@@ -108,3 +111,4 @@ From `technical-design.md` section 11 and 12.
 | 2026-10-03 | Independent review (3 fresh Grok sessions, $2.97) found fail-open numeric paths and test gaps. Fixed by a second worker session ($0.784, 28 turns): 105 tests, 100% domain coverage, 19 mutants killed incl. all reviewer survivors. Spec, design, test strategy and AGENTS.md updated with the `invalid_quantity` rule and number handling. |
 | 2026-10-03 | Committed locally on `dev` in four per-intent commits (docs and data, scaffold, skills, domain core). Fresh-clone gates pass. Not pushed. |
 | 2026-10-03 | Sample data proposed (data/sample/*.json, docs/sample-data-and-stubs.md), verified by running the real domain over it. Caught own generator bug (siteId mismatch). Approved and committed. |
+| 2026-10-04 | API layer accepted and documented (docs/api.md). Gates: typecheck, lint, 196 tests, build, prod audit, CSV traced in all 7 routes, shuffled run, live HTTP walk. |

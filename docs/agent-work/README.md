@@ -11,6 +11,16 @@ Evidence of how the domain core was built and checked. Files are numbered in the
 | `04-fix-brief.md` | Brief for the fix round, with the orchestrator's triage decisions in section 3 |
 | `05-fix-worker-notes.md` | The fix worker's notes, including which new tests failed before the fix |
 
+### API layer round
+
+| File | What it is |
+| --- | --- |
+| `06-api-layer-brief.md` | Brief for the API build (ports, adapters, use cases, routes, tests). Run on `grok-4.7-build-fast` |
+| `07-review-brief-api-*.md` | Three single-lens review briefs for the API layer, run in fresh read-only sessions |
+| `reviews/findings-api-*.md` | The three API review reports, unedited |
+| `08-api-fix-brief.md` | Fix brief with the orchestrator's triage decisions in section 3 |
+| `09-api-worker-notes.md`, `10-api-fix-worker-notes.md` | The workers' notes, including the response shapes and which new tests failed before each fix |
+
 What the orchestrator (Claude) did, as opposed to the workers: wrote the briefs and the decisions in them, ran every gate in its own shell, checked write scope with before and after checksums, ran mutation checks of its own, triaged the review findings (accepting most, rejecting a path jail and a shortage-id re-encoding), and updated the docs.
 
-Cost: build $0.67, three reviews $2.97, fixes $0.78. Corrections and rejections are logged in `docs/submission-checklist.md`.
+Cost, domain core: build $0.67, three reviews $2.97, fixes $0.78. API layer: build $2.82 (fast model, 54 turns, 20.5 min), three reviews $4.83 (default model, 35 min), fixes $3.47 (fast model, 61 turns, 16.5 min). Total worker spend $15.54. Corrections and rejections are logged in `docs/submission-checklist.md`.

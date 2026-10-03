@@ -17,6 +17,7 @@ App code, specs, and deploy target to follow.
 - `docs/iteration-plan.md` — why this slice, and the iterations after it
 - `docs/slice-specification.md` — requirements, acceptance criteria, assumptions, exclusions
 - `docs/test-strategy.md` — test layers, AC mapping, CI gates, risks
+- `docs/api.md` — the built HTTP API: endpoints, errors, idempotency, configuration
 - `docs/technical-design.md` — architecture, domain model, interfaces, trade-offs
 - `docs/glossary.md` — business terms for this exercise
 - `docs/submission-checklist.md` — submission checklist, kept current as work lands
