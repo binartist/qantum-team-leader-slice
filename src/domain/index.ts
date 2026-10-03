@@ -17,6 +17,7 @@ export type {
   Solution,
   SolutionMaterial,
   StockBalance,
+  SubstitutionProposal,
 } from "./types";
 
 export { isIncompleteSubstrate, normaliseText } from "./normalise";
@@ -28,5 +29,14 @@ export {
   isActionCurrent,
   viewActions,
   type ListedActionStatus,
+  type ShortageLookup,
 } from "./lifecycle";
 export { findCandidates } from "./candidates";
+export {
+  describeCandidateAvailability,
+  type AvailabilityStatus,
+  type CandidateAvailability,
+  type CandidateOverall,
+  type MaterialLine,
+} from "./availability";
+export { isNonNegativeFinite, onHandFromQuantities, roundUpQuantity, snapQuantity } from "./quantities";

@@ -1,4 +1,11 @@
-import type { Shortage, ShortageAction, ShortageActionView, ShortageState } from "./types";
+import type { ShortageAction, ShortageActionView, ShortageState } from "./types";
+
+/** A current shortage or blocker. Blockers always carry a null shortfall. */
+export interface ShortageLookup {
+  readonly id: string;
+  readonly siteId: string;
+  readonly shortfallQty: number | null;
+}
 
 export type ListedActionStatus = "current" | "earlier" | "resolved";
 
@@ -34,7 +41,7 @@ export function viewActions(actions: readonly ShortageAction[], shortfallNow: nu
 
 export function classifyActionsForList(
   actions: readonly ShortageAction[],
-  shortages: readonly Shortage[],
+  shortages: readonly ShortageLookup[],
 ): Array<ShortageAction & { status: ListedActionStatus }> {
   return [...actions].sort(byCreatedAtDescending).map((action) => {
     const shortage = shortages.find((item) => item.id === action.shortageId && item.siteId === action.siteId);

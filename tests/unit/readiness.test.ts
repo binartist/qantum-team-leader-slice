@@ -31,6 +31,22 @@ function row(code: string): RawCatalogueRow {
 
 const catalogue = buildCatalogue([row("S1"), row("S2"), row("BARE")]);
 
+function openBlocker(
+  reason: "unknown_solution_code" | "no_material_mapping" | "invalid_quantity",
+  penetrationId: string,
+  internalCode: string,
+  siteId = "site-a",
+) {
+  return {
+    id: `${siteId}:blocker.${penetrationId}`,
+    reason,
+    penetrationId,
+    internalCode,
+    state: "open" as const,
+    actions: [],
+  };
+}
+
 function penetration(partial: Partial<Penetration> & Pick<Penetration, "id">): Penetration {
   return {
     siteId: "site-a",
@@ -267,9 +283,7 @@ describe("computeSiteReadiness blockers and crew status", () => {
         stock: [],
       }),
     );
-    expect(result.blockers).toEqual([
-      { reason: "unknown_solution_code", penetrationId: "p-missing", internalCode: "NO-SUCH" },
-    ]);
+    expect(result.blockers).toEqual([openBlocker("unknown_solution_code", "p-missing", "NO-SUCH")]);
     expect(result.shortages).toEqual([]);
     expect(result.crewStatus).toBe("blocked");
   });
@@ -282,7 +296,7 @@ describe("computeSiteReadiness blockers and crew status", () => {
         stock: [{ materialId: "M", location: "warehouse", quantity: 100 }],
       }),
     );
-    expect(result.blockers).toEqual([{ reason: "no_material_mapping", penetrationId: "p-bare", internalCode: "BARE" }]);
+    expect(result.blockers).toEqual([openBlocker("no_material_mapping", "p-bare", "BARE")]);
     expect(result.shortages).toEqual([]);
     expect(result.crewStatus).toBe("blocked");
   });
@@ -304,6 +318,83 @@ describe("computeSiteReadiness blockers and crew status", () => {
     expect(result.shortages.map((shortage) => shortage.materialId)).toEqual(["sealant"]);
     expect(result.shortages[0]?.penetrationIds).toEqual(["p-ok"]);
     expect(result.crewStatus).toBe("blocked");
+  });
+
+  it("an escalation on a blocker makes it escalated and the crew stays blocked", () => {
+    const result = readiness(
+      input({
+        penetrations: [penetration({ id: "p-missing", nominatedCode: "NO-SUCH" })],
+        actions: [
+          action({
+            id: "escalate",
+            createdAt: "2026-10-02T00:00:00.000Z",
+            kind: "escalate",
+            escalateTo: "purchasing",
+            shortageId: "site-a:blocker.p-missing",
+            shortfallQtyAtTime: null,
+            note: "missing code",
+          }),
+        ],
+      }),
+    );
+    expect(result.crewStatus).toBe("blocked");
+    expect(result.shortages).toEqual([]);
+    expect(result.blockers).toEqual([
+      {
+        ...openBlocker("unknown_solution_code", "p-missing", "NO-SUCH"),
+        state: "escalated",
+        actions: [
+          expect.objectContaining({
+            id: "escalate",
+            kind: "escalate",
+            current: true,
+            shortfallQtyAtTime: null,
+            shortageId: "site-a:blocker.p-missing",
+          }),
+        ],
+      },
+    ]);
+  });
+
+  it("an action for another site does not attach to a blocker", () => {
+    const result = readiness(
+      input({
+        penetrations: [penetration({ id: "p-missing", nominatedCode: "NO-SUCH" })],
+        actions: [
+          action({
+            id: "elsewhere",
+            createdAt: "2026-10-02T00:00:00.000Z",
+            kind: "escalate",
+            escalateTo: "warehouse",
+            siteId: "site-b",
+            shortageId: "site-a:blocker.p-missing",
+            shortfallQtyAtTime: null,
+          }),
+        ],
+      }),
+    );
+    expect(result.blockers).toEqual([openBlocker("unknown_solution_code", "p-missing", "NO-SUCH")]);
+    expect(result.crewStatus).toBe("blocked");
+  });
+
+  it("a blocker action with a recorded shortfall is not current", () => {
+    const result = readiness(
+      input({
+        penetrations: [penetration({ id: "p-missing", nominatedCode: "NO-SUCH" })],
+        actions: [
+          action({
+            id: "numbered",
+            createdAt: "2026-10-02T00:00:00.000Z",
+            kind: "escalate",
+            escalateTo: "purchasing",
+            shortageId: "site-a:blocker.p-missing",
+            shortfallQtyAtTime: 1,
+          }),
+        ],
+      }),
+    );
+    expect(result.blockers[0]?.state).toBe("open");
+    expect(result.blockers[0]?.actions).toEqual([expect.objectContaining({ id: "numbered", current: false })]);
   });
 
   it("AC 8: a site with no penetrations is nothing_planned", () => {
@@ -518,7 +609,7 @@ describe("fail-closed quantities", () => {
       }),
     );
     expect(result.crewStatus).toBe("blocked");
-    expect(result.blockers).toEqual([{ reason: "invalid_quantity", penetrationId: "credit", internalCode: "S2" }]);
+    expect(result.blockers).toEqual([openBlocker("invalid_quantity", "credit", "S2")]);
     expect(result.shortages).toEqual([
       expect.objectContaining({
         materialId: "M",
@@ -546,7 +637,7 @@ describe("fail-closed quantities", () => {
       }),
     );
     expect(result.crewStatus).toBe("blocked");
-    expect(result.blockers).toEqual([{ reason: "invalid_quantity", penetrationId: "credit", internalCode: "S2" }]);
+    expect(result.blockers).toEqual([openBlocker("invalid_quantity", "credit", "S2")]);
     expect(result.shortages[0]).toEqual(expect.objectContaining({ requiredQty: 1, penetrationIds: ["needs"], kind: "short" }));
   });
 
@@ -563,7 +654,7 @@ describe("fail-closed quantities", () => {
       }),
     );
     expect(result.crewStatus).toBe("blocked");
-    expect(result.blockers).toEqual([{ reason: "invalid_quantity", penetrationId: "p1", internalCode: "S1" }]);
+    expect(result.blockers).toEqual([openBlocker("invalid_quantity", "p1", "S1")]);
     expect(result.shortages).toEqual([]);
   });
 
@@ -578,7 +669,7 @@ describe("fail-closed quantities", () => {
         stock: [{ materialId: "M", location: "warehouse", quantity: 0 }],
       }),
     );
-    expect(result.blockers).toEqual([{ reason: "invalid_quantity", penetrationId: "p1", internalCode: "S1" }]);
+    expect(result.blockers).toEqual([openBlocker("invalid_quantity", "p1", "S1")]);
     expect(result.shortages).toEqual([]);
     expect(result.crewStatus).toBe("blocked");
   });
@@ -599,9 +690,9 @@ describe("fail-closed quantities", () => {
       }),
     );
     expect(result.blockers).toEqual([
-      { reason: "unknown_solution_code", penetrationId: "p-unknown", internalCode: "NO-SUCH" },
-      { reason: "no_material_mapping", penetrationId: "p-bare", internalCode: "BARE" },
-      { reason: "invalid_quantity", penetrationId: "p-bad", internalCode: "S1" },
+      openBlocker("unknown_solution_code", "p-unknown", "NO-SUCH"),
+      openBlocker("no_material_mapping", "p-bare", "BARE"),
+      openBlocker("invalid_quantity", "p-bad", "S1"),
     ]);
     expect(result.shortages).toEqual([]);
     expect(result.crewStatus).toBe("blocked");

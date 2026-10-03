@@ -68,13 +68,28 @@ export interface ShortageActionView extends ShortageAction {
 
 export type BlockerReason = "unknown_solution_code" | "no_material_mapping" | "invalid_quantity";
 
+export type ShortageState = "open" | "waiting" | "escalated";
+
 export interface Blocker {
+  readonly id: string;
   readonly reason: BlockerReason;
   readonly penetrationId: string;
   readonly internalCode: string;
+  readonly state: ShortageState;
+  readonly actions: readonly ShortageActionView[];
 }
 
-export type ShortageState = "open" | "waiting" | "escalated";
+export interface SubstitutionProposal {
+  readonly id: string;
+  readonly siteId: string;
+  readonly penetrationId: string;
+  readonly fromInternalCode: string;
+  readonly toInternalCode: string;
+  readonly reason: string;
+  readonly status: "proposed";
+  readonly createdBy: string;
+  readonly createdAt: string;
+}
 
 export interface Shortage {
   readonly id: string;
