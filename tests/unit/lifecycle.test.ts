@@ -6,6 +6,7 @@ import {
   viewActions,
   type Shortage,
   type ShortageAction,
+  type ShortageLookup,
 } from "@/domain";
 
 function action(partial: Partial<ShortageAction> & Pick<ShortageAction, "id" | "createdAt" | "kind">): ShortageAction {
@@ -208,6 +209,20 @@ describe("classifyActionsForList", () => {
       shortfallQtyAtTime: null,
     });
     const listed = classifyActionsForList([recorded], [shortage({ id: "site-a:M", shortfallQty: null, kind: "unknown" })]);
+    expect(listed[0]?.status).toBe("current");
+  });
+
+  it("treats a blocker lookup with a null shortfall as current", () => {
+    const recorded = action({
+      id: "blocker-escalation",
+      createdAt: "2026-10-02T00:00:00.000Z",
+      kind: "escalate",
+      escalateTo: "purchasing",
+      shortageId: "site-a:blocker.p1",
+      shortfallQtyAtTime: null,
+    });
+    const blocker: ShortageLookup = { id: "site-a:blocker.p1", siteId: "site-a", shortfallQty: null };
+    const listed = classifyActionsForList([recorded], [blocker]);
     expect(listed[0]?.status).toBe("current");
   });
 });
