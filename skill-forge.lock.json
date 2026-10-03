@@ -3,8 +3,8 @@
   "registry": {
     "name": "skill-forge",
     "version": "1.3.0",
-    "commit": "63c4b16b57f4fd8d485e3c20a07398cb43bbc7c5",
-    "lockIntegrity": "sha256-L4KzAQFl4kFYZoM9RIZB0HX7PajUZgp0R7gxV1sIuuo="
+    "commit": "b3b22070df9dbfa5b450706a6066517eb7af8eeb",
+    "lockIntegrity": "sha256-Aze+sXE3AXyHPv7YhHq36qeBaCrPfWHeqdwLaLvVSds="
   },
   "skills": {
     "code-quality": {
@@ -18,13 +18,13 @@
       "source": "registry"
     },
     "external-worker-delegation": {
-      "version": "0.8.3",
-      "integrity": "sha256-eSCoO9fmJ/Ynwa8D0P1GL+SWzMQCGo7QBAXv7T56rEc=",
+      "version": "0.8.4",
+      "integrity": "sha256-0RbejzlLzdKpt9uVfev7M3JRjippsup/nLY3Q+Feqsc=",
       "source": "registry"
     },
     "grok-build-harness": {
-      "version": "0.5.4",
-      "integrity": "sha256-UxNGdMEFvZkLcBobepiyIUWO5LFyIo0yO1y7cfyOd5I=",
+      "version": "0.5.6",
+      "integrity": "sha256-IbYmlQ1wvEhk1lXFGS8P4lPDwZgNAsnmvOjjYzfv6kw=",
       "source": "registry"
     },
     "security-baseline": {
