@@ -1,0 +1,29 @@
+{
+  "label": "INVENTED SAMPLE DATA. Stands in for the existing spec system.",
+  "sites": [
+    {
+      "id": "site-a",
+      "name": "Riverside Plaza, Block A",
+      "reference": "RP-A2",
+      "address": "12 Quay Road"
+    },
+    {
+      "id": "site-b",
+      "name": "Harbour Point, Levels 3 to 5",
+      "reference": "HP-345",
+      "address": "4 Dock Street"
+    },
+    {
+      "id": "site-c",
+      "name": "Kingsway Works, Phase 2",
+      "reference": "KW-P2",
+      "address": "88 Kingsway"
+    },
+    {
+      "id": "site-d",
+      "name": "Old Mill Annex",
+      "reference": "OM-01",
+      "address": "1 Mill Lane"
+    }
+  ]
+}

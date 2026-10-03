@@ -1,0 +1,41 @@
+{
+  "label": "INVENTED SAMPLE DATA. Stands in for the inventory system's GET /stock.",
+  "asOf": "2026-10-03T08:00:00Z",
+  "balances": [
+    {
+      "materialId": "MAT-SEALANT",
+      "location": "Warehouse",
+      "quantity": 6
+    },
+    {
+      "materialId": "MAT-SEALANT",
+      "location": "Van 2",
+      "quantity": 2
+    },
+    {
+      "materialId": "MAT-COLLAR-25",
+      "location": "Warehouse",
+      "quantity": 2
+    },
+    {
+      "materialId": "MAT-COLLAR-32",
+      "location": "Warehouse",
+      "quantity": 5
+    },
+    {
+      "materialId": "MAT-WRAP",
+      "location": "Warehouse",
+      "quantity": 12
+    },
+    {
+      "materialId": "MAT-BATT",
+      "location": "Warehouse",
+      "quantity": 10
+    },
+    {
+      "materialId": "MAT-PUTTY",
+      "location": "Warehouse",
+      "quantity": 20
+    }
+  ]
+}
