@@ -1,6 +1,6 @@
 import type { CrewStatus } from "@/domain";
 import { UpstreamError, type Site } from "@/ports";
-import { log } from "@/server/log";
+import { log } from "./log";
 import { getSiteReadiness } from "./readiness";
 import type { Dependencies } from "./types";
 

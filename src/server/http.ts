@@ -11,7 +11,7 @@ import {
   UpstreamError,
   ValidationFailedError,
 } from "@/ports";
-import { log } from "./log";
+import { log } from "@/application/log";
 
 const MAX_BODY_BYTES = 10_000;
 const PATH_ID = /^[A-Za-z0-9._-]{1,64}$/;

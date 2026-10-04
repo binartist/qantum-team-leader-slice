@@ -23,11 +23,23 @@ export interface CandidateView {
   readonly materials: Readonly<Record<string, { readonly name: string; readonly unit: string }>>;
 }
 
+export interface PenetrationSummary {
+  readonly id: string;
+  readonly floor: string;
+  readonly location: string;
+  readonly serviceType: string;
+  readonly serviceSize: string;
+  readonly nominatedCode: string;
+  readonly requiredIntegrityMinutes: number | null;
+  readonly requiredInsulationMinutes: number | null;
+}
+
 export interface CandidateList {
   readonly penetrationId: string;
   readonly nominatedCode: string;
   readonly status: CandidateStatus;
   readonly notice: typeof CANDIDATE_NOTICE;
+  readonly penetration: PenetrationSummary;
   readonly candidates: readonly CandidateView[];
 }
 
@@ -84,6 +96,16 @@ export async function listCandidates(deps: Dependencies, siteId: string, penetra
     nominatedCode: penetration.nominatedCode,
     status: found.status,
     notice: CANDIDATE_NOTICE,
+    penetration: {
+      id: penetration.id,
+      floor: penetration.floor,
+      location: penetration.location,
+      serviceType: penetration.serviceType,
+      serviceSize: penetration.serviceSize,
+      nominatedCode: penetration.nominatedCode,
+      requiredIntegrityMinutes: penetration.requiredIntegrityMinutes,
+      requiredInsulationMinutes: penetration.requiredInsulationMinutes,
+    },
     candidates,
   };
 }

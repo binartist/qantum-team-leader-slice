@@ -111,7 +111,49 @@ describe("site readiness over HTTP", () => {
       ["0451", "in_stock"],
       ["0464", "no_material_mapping"],
     ]);
+    const detailed = candidates.body.candidates as {
+      internalCode: string;
+      insulationMinutes: number | null;
+      materials: Record<string, { name: string; unit: string }>;
+    }[];
+    expect(detailed.find((row) => row.internalCode === "0451")).toMatchObject({
+      insulationMinutes: 60,
+      materials: { "MAT-PUTTY": { name: "Fire putty pad", unit: "each" } },
+    });
+    expect(candidates.body.penetration).toEqual({
+      id: "pen-b-01",
+      floor: "L3",
+      location: "Riser 2",
+      serviceType: "PEX Pipe",
+      serviceSize: "Ø25mm",
+      nominatedCode: "0438",
+      requiredIntegrityMinutes: 60,
+      requiredInsulationMinutes: 30,
+    });
     expect(candidates.text).not.toMatch(/compatible|approved/i);
+
+    const listed = await expectCache(await getActions(new Request("http://local/api/sites/site-b/actions"), routeContext({ id: "site-b" })));
+    expect(listed.body.materials).toMatchObject({
+      "MAT-SEALANT": { name: "Intumescent sealant, 310 ml cartridge", unit: "cartridge" },
+      "MAT-COLLAR-25": { name: "Pipe collar for 25 mm pipe", unit: "each" },
+    });
+    expect(listed.body.penetrations).toMatchObject({
+      "pen-b-01": { floor: "L3", location: "Riser 2", nominatedCode: "0438" },
+    });
+    expect(Object.keys(listed.body.penetrations as object)).toHaveLength(12);
+
+    const siteAActions = await expectCache(await getActions(new Request("http://local/api/sites/site-a/actions"), routeContext({ id: "site-a" })));
+    const siteAReadiness = await expectCache(await readiness("site-a"));
+    expect(siteAReadiness.body.materials).toEqual({});
+    expect(siteAReadiness.body.penetrations).toEqual({});
+    expect(siteAActions.body.materials).toMatchObject({
+      "MAT-WRAP": { name: "Intumescent wrap strip", unit: "metre" },
+      "MAT-SEALANT": { name: "Intumescent sealant, 310 ml cartridge", unit: "cartridge" },
+    });
+    expect(siteAActions.body.penetrations).toMatchObject({
+      "pen-a-01": { floor: "L2", location: "Corridor north", nominatedCode: "0344" },
+    });
+    expect(Object.keys(siteAActions.body.penetrations as object)).toHaveLength(6);
   });
 
   it("AC 9: stock down is 502 and never clear, malformed stock is upstream_invalid, and one failing site stays unavailable", async () => {
@@ -165,6 +207,25 @@ describe("site readiness over HTTP", () => {
 });
 
 describe("shortage actions over HTTP", () => {
+  it("an action recorded below the live shortfall lists as earlier, not current", async () => {
+    const input: NewShortageAction = {
+      siteId: "site-b",
+      shortageId: "site-b:MAT-SEALANT",
+      kind: "wait",
+      escalateTo: null,
+      note: "recorded below the live shortfall",
+      shortfallQtyAtTime: 1,
+      createdBy: "demo-leader",
+      idempotencyKey: "earlier-sealant",
+    };
+    await deps.actions.appendShortageAction(input);
+    const listed = await readResponse(await getActions(new Request("http://local/api/sites/site-b/actions"), routeContext({ id: "site-b" })));
+    const actions = listed.body.actions as { status: string; note: string | null }[];
+    const row = actions.find((action) => action.note === "recorded below the live shortfall");
+    expect(row?.status).toBe("earlier");
+    expect(actions.filter((action) => action.note === "recorded below the live shortfall").map((action) => action.status)).not.toContain("current");
+  });
+
   it("AC 5, 6: wait and escalate are accepted for unknown stock, and a blocker can be escalated but not waited on", async () => {
     const waited = await expectCache(await wait("site-c", "site-c:MAT-MASTIC", JSON.stringify({ note: "check the van" }), "wait-mastic"));
     expect(waited.status).toBe(201);
@@ -407,6 +468,20 @@ describe("candidate outcomes over HTTP", () => {
     expect(unknown.status).toBe(200);
     expect(unknown.body.status).toBe("nominated_code_unknown");
     expect(unknown.body.candidates).toEqual([]);
+
+    const nullInsulation = await expectCache(
+      await getCandidates(new Request("http://local/candidates"), routeContext({ id: "site-b", pid: "pen-b-11" })),
+    );
+    expect(nullInsulation.body.penetration).toEqual({
+      id: "pen-b-11",
+      floor: "L5",
+      location: "Riser 3",
+      serviceType: "Copper Pipe",
+      serviceSize: "Ø100mm",
+      nominatedCode: "0334",
+      requiredIntegrityMinutes: 60,
+      requiredInsulationMinutes: null,
+    });
   });
 });
 
