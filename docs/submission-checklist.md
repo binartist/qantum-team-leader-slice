@@ -112,3 +112,4 @@ From `technical-design.md` section 11 and 12.
 | 2026-10-03 | Committed locally on `dev` in four per-intent commits (docs and data, scaffold, skills, domain core). Fresh-clone gates pass. Not pushed. |
 | 2026-10-03 | Sample data proposed (data/sample/*.json, docs/sample-data-and-stubs.md), verified by running the real domain over it. Caught own generator bug (siteId mismatch). Approved and committed. |
 | 2026-10-04 | API layer accepted and documented (docs/api.md). Gates: typecheck, lint, 196 tests, build, prod audit, CSV traced in all 7 routes, shuffled run, live HTTP walk. |
+| 2026-10-04 | UI defaults proposed (docs/ui-design.md, screens drawn in conversation). Approved. Chromium installed, frontend-engineering and ui-portability-baseline added. |
