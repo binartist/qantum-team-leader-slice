@@ -130,7 +130,7 @@ On every push and pull request, in order:
 4. Start local Supabase, apply migrations, run database tests.
 5. Build, then the client bundle check for credentials.
 6. Secret scan and dependency audit.
-7. Playwright end-to-end and axe on a preview build.
+7. Playwright end-to-end and axe on a dev server (four projects: reads, writes, and two stock-failure servers started with `STUB_STOCK_MODE=down` and `malformed`, each with its own build directory).
 8. AC coverage script.
 
 Merge to the default branch is blocked on any failure. Deployment to Vercel runs only from a green default branch. After deploy, a smoke run of the end-to-end scenario against the public URL is the evidence of a working deployment.

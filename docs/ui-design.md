@@ -63,7 +63,7 @@ Plain reason: "Solution code 9999 isn't in the catalogue", "No materials recorde
 
 | Situation | Message |
 | --- | --- |
-| No candidates (`ok`, empty) | No catalogue match for this penetration. Escalate instead. (with an Escalate action) |
+| No candidates (`ok`, empty) | With a related shortage or data problem: "No catalogue match for this penetration. Escalate instead." and an Escalate action. With none: "No catalogue match for this penetration." only, because there is nothing the API could escalate |
 | `substrate_incomplete` | The catalogue entry for this substrate is incomplete, so we can't suggest substitutes. |
 | `nominated_code_unknown` | The nominated solution isn't in the catalogue, so we can't suggest substitutes. |
 | Candidate availability `no_material_mapping` | We can't tell if its materials are in stock. |
@@ -126,3 +126,24 @@ Browser tests use Playwright (already configured) with `@axe-core/playwright`:
 ## 8. Out of scope for this slice
 
 Login, offline use, push notifications, editing or cancelling a recorded action, site search, and a map or floor plan view.
+
+## 9. As built: changes after review (2026-10-04)
+
+Three independent reviews of the built UI led to these changes to the design above. The wording is in `src/ui/messages.ts`.
+
+| Topic | As built |
+| --- | --- |
+| Empty substitutes | The "Escalate instead" sentence and button appear only when the penetration is on a shortage or a data problem (see the table in section 3) |
+| Sites list failure | Whole list fails: "Can't check the sites right now. Don't assume any site is clear. Try again." One site fails: chip "Can't check" |
+| Data-problem only site | "Blocked: N data problem(s). Hold the crew until they are sorted." With any shortage the original sentence is kept |
+| Unreachable server | "Couldn't reach the server. The decision may not have been recorded. Send again to retry; it won't be recorded twice." The retry reuses the dialog's idempotency key |
+| Dialog while sending | Escape and Cancel cannot close it while a request is in flight. The response always refreshes the page and announces |
+| Live region | In memory only. It starts empty on every full page load |
+| Substitute cards | Material name and quantity per install only. On-hand counts are not shown there, because that screen has no shared-stock label |
+| Unknown values | An unknown crew status shows the can't-check banner. An unknown shortage state or action status shows "Unknown", never "Escalated", "Resolved" or "Crew can go" |
+| Character count | Counts the trimmed text, as the limit does |
+| Inputs | A darker input border (at least 3:1 on both backgrounds) and a visible invalid state |
+| Links | Data-problem cards link the penetration to its substitutes screen. Every unavailable screen keeps its back link |
+| Error screens | `error.tsx` and `global-error.tsx` show fixed copy and a retry button, never the message or digest |
+
+Limits recorded rather than built: an open tab keeps the banner it loaded until the next navigation; the three dialogs repeat their form code; no end-to-end test shows the "Earlier decision" badge (the sample stock cannot change during a run), which is covered at the API.

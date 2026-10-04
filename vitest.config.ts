@@ -8,7 +8,7 @@ export default defineConfig({
     include: ["tests/unit/**/*.test.ts", "tests/data/**/*.test.ts", "tests/api/**/*.test.ts", "tests/db/**/*.test.ts"],
     coverage: {
       provider: "v8",
-      include: ["src/domain/**/*.ts"],
+      include: ["src/domain/**/*.ts", "src/ui/*.ts", "src/ui/decisions/api-client.ts", "src/ui/decisions/form.ts"],
       // Floor from docs/test-strategy.md section 7. Applies once src/domain has code.
       thresholds: { lines: 95, branches: 95, functions: 95, statements: 95 },
     },

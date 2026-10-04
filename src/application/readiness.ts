@@ -1,4 +1,4 @@
-import { computeSiteReadiness, type SiteReadiness } from "@/domain";
+import { computeSiteReadiness, type ShortageAction, type SiteReadiness } from "@/domain";
 import { SiteNotFoundError, UpstreamError, type Material, type NominatedPenetration } from "@/ports";
 import { uniqueIds, type Dependencies } from "./types";
 
@@ -11,14 +11,24 @@ export interface SiteReadinessView extends SiteReadiness {
   readonly penetrations: Readonly<Record<string, { readonly floor: string; readonly location: string; readonly nominatedCode: string }>>;
 }
 
-function materialsForShortages(readiness: SiteReadiness, materials: readonly Material[]): SiteReadinessView["materials"] {
-  const wanted = new Set(readiness.shortages.map((shortage) => shortage.materialId));
+function namedMaterials(materials: readonly Material[], wanted: ReadonlySet<string>): SiteReadinessView["materials"] {
   const result: Record<string, { name: string; unit: string }> = {};
   for (const material of materials) {
-    if (!wanted.has(material.id)) continue;
+    if (!wanted.has(material.id) || result[material.id]) continue;
     result[material.id] = { name: material.name, unit: material.unit };
   }
   return result;
+}
+
+function materialsForShortages(readiness: SiteReadiness, materials: readonly Material[]): SiteReadinessView["materials"] {
+  return namedMaterials(materials, new Set(readiness.shortages.map((shortage) => shortage.materialId)));
+}
+
+function materialsReferenced(
+  items: readonly { readonly materialId: string }[],
+  materials: readonly Material[],
+): SiteReadinessView["materials"] {
+  return namedMaterials(materials, new Set(items.map((item) => item.materialId)));
 }
 
 function penetrationsForReadiness(
@@ -42,7 +52,26 @@ function penetrationsForReadiness(
   return result;
 }
 
-export async function getSiteReadiness(deps: Dependencies, siteId: string): Promise<SiteReadinessView> {
+export interface SiteData {
+  readonly readiness: SiteReadinessView;
+  readonly shortageActions: readonly ShortageAction[];
+  readonly referencedMaterials: SiteReadinessView["materials"];
+  readonly sitePenetrations: SiteReadinessView["penetrations"];
+}
+
+function penetrationsForSite(nominations: readonly NominatedPenetration[]): SiteReadinessView["penetrations"] {
+  const result: Record<string, { floor: string; location: string; nominatedCode: string }> = {};
+  for (const penetration of nominations) {
+    result[penetration.id] = {
+      floor: penetration.floor,
+      location: penetration.location,
+      nominatedCode: penetration.nominatedCode,
+    };
+  }
+  return result;
+}
+
+export async function loadSiteData(deps: Dependencies, siteId: string): Promise<SiteData> {
   const site = await deps.sites.getSite(siteId);
   if (!site) throw new SiteNotFoundError();
   const nominations = await deps.nominations.getNominations(siteId);
@@ -66,11 +95,21 @@ export async function getSiteReadiness(deps: Dependencies, siteId: string): Prom
     asOf: deps.now().toISOString(),
   });
 
-  return {
+  const view: SiteReadinessView = {
     ...readiness,
     stockNotice: STOCK_NOTICE,
     stockAsOf: stock.asOf,
     materials: materialsForShortages(readiness, solutionMaterials.materials),
     penetrations: penetrationsForReadiness(readiness, nominations),
   };
+  return {
+    readiness: view,
+    shortageActions: actions,
+    referencedMaterials: materialsReferenced(solutionMaterials.items, solutionMaterials.materials),
+    sitePenetrations: penetrationsForSite(nominations),
+  };
+}
+
+export async function getSiteReadiness(deps: Dependencies, siteId: string): Promise<SiteReadinessView> {
+  return (await loadSiteData(deps, siteId)).readiness;
 }

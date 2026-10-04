@@ -1,5 +1,5 @@
 import { classifyActionsForList, type ShortageAction, type ShortageLookup, type SubstitutionProposal } from "@/domain";
-import { getSiteReadiness } from "./readiness";
+import { loadSiteData, type SiteReadinessView } from "./readiness";
 import type { Dependencies } from "./types";
 
 export interface ListedShortageAction extends ShortageAction {
@@ -9,6 +9,8 @@ export interface ListedShortageAction extends ShortageAction {
 export interface SiteActions {
   readonly actions: readonly ListedShortageAction[];
   readonly proposals: readonly SubstitutionProposal[];
+  readonly materials: SiteReadinessView["materials"];
+  readonly penetrations: SiteReadinessView["penetrations"];
 }
 
 function byNewest<T extends { createdAt: string }>(left: T, right: T): number {
@@ -19,17 +21,17 @@ function byNewest<T extends { createdAt: string }>(left: T, right: T): number {
 }
 
 export async function listActions(deps: Dependencies, siteId: string): Promise<SiteActions> {
-  const readiness = await getSiteReadiness(deps, siteId);
-  const [storedActions, proposals] = await Promise.all([
-    deps.actions.listShortageActions(siteId),
-    deps.actions.listSubstitutionProposals(siteId),
-  ]);
+  const loaded = await loadSiteData(deps, siteId);
+  const proposals = await deps.actions.listSubstitutionProposals(siteId);
+  const storedActions = loaded.shortageActions;
   const lookups: ShortageLookup[] = [
-    ...readiness.shortages,
-    ...readiness.blockers.map((blocker) => ({ id: blocker.id, siteId: readiness.siteId, shortfallQty: null })),
+    ...loaded.readiness.shortages,
+    ...loaded.readiness.blockers.map((blocker) => ({ id: blocker.id, siteId: loaded.readiness.siteId, shortfallQty: null })),
   ];
   return {
     actions: classifyActionsForList(storedActions, lookups),
     proposals: [...proposals].sort(byNewest),
+    materials: loaded.referencedMaterials,
+    penetrations: loaded.sitePenetrations,
   };
 }

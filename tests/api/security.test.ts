@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { clientBoundaryOffenders } from "./client-boundary.mjs";
 import { GET as getActions } from "@/app/api/sites/[id]/actions/route";
 import { GET as getCandidates } from "@/app/api/sites/[id]/penetrations/[pid]/substitution-candidates/route";
 import { GET as getReadiness } from "@/app/api/sites/[id]/readiness/route";
@@ -8,7 +9,7 @@ import { POST as postWait } from "@/app/api/sites/[id]/shortages/[shortageId]/wa
 import { GET as getSites } from "@/app/api/sites/route";
 import { buildDependencies, getDependencies, setDependenciesForTests } from "@/server/deps";
 import { readEnv } from "@/server/env";
-import { log } from "@/server/log";
+import { log } from "@/application/log";
 import { InternalError } from "@/ports";
 import { postRequest, readResponse, routeContext, testDependencies } from "./support";
 
@@ -25,37 +26,18 @@ function filesUnder(dir: string): string[] {
   });
 }
 
-function forbiddenSpecifier(file: string, specifier: string): boolean {
-  if (specifier.startsWith("@/")) {
-    const target = specifier.slice(2);
-    return target === "server" || target.startsWith("server/") || target === "adapters" || target.startsWith("adapters/") || target === "ports" || target.startsWith("ports/");
-  }
-  if (!specifier.startsWith(".")) return false;
-  const resolved = path.resolve(path.dirname(file), specifier);
-  const relative = path.relative(path.resolve("src"), resolved);
-  return relative === "server" || relative.startsWith(`server${path.sep}`) || relative === "adapters" || relative.startsWith(`adapters${path.sep}`) || relative === "ports" || relative.startsWith(`ports${path.sep}`);
-}
-
 describe("server boundary", () => {
   it("AC 28: no client module imports server code, and no public env name is a secret", () => {
     const sourceFiles = [...filesUnder("src"), "next.config.ts", ".env.example"].filter((file) => statSync(file, { throwIfNoEntry: false })?.isFile());
-    const offenders: string[] = [];
     const secretNames: string[] = [];
     for (const file of sourceFiles) {
       const text = readFileSync(file, "utf8");
-      if (text.includes('"use client"') || text.includes("'use client'")) {
-        for (const match of text.matchAll(/(?:from|import)\s*\(?\s*["']([^"']+)["']/g)) {
-          const specifier = match[1];
-          if (specifier && forbiddenSpecifier(file, specifier)) offenders.push(`${file} -> ${specifier}`);
-        }
-      }
       for (const match of text.matchAll(/NEXT_PUBLIC_[A-Z0-9_]+/g)) {
         if (/SERVICE_KEY|SERVICE_ROLE|SECRET|PASSWORD|TOKEN|CREDENTIAL|service_role/i.test(match[0])) secretNames.push(match[0]);
       }
     }
-    expect(offenders).toEqual([]);
+    expect(clientBoundaryOffenders(process.cwd())).toEqual([]);
     expect(secretNames).toEqual([]);
-
   });
 
   const staticDir = path.join(".next", "static");

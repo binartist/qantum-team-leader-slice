@@ -67,8 +67,12 @@ Blocker reasons: `unknown_solution_code`, `no_material_mapping`, `invalid_quanti
     availability: { internalCode,
       overall: "in_stock" | "short" | "unknown" | "no_material_mapping" | "invalid_quantity",
       lines: Array<{ materialId, quantityPerInstall, requiredQty, onHandQty, status }> },
-    materials: Record<id, { name, unit }> }> }
+    materials: Record<id, { name, unit }> }>,
+  penetration: { id, floor, location, serviceType, serviceSize, nominatedCode,
+    requiredIntegrityMinutes: number | null, requiredInsulationMinutes: number | null } }
 ```
+
+`penetration` is the summary the substitutes screen shows. `id` and `nominatedCode` repeat the top-level fields. It carries no substrate, orientation or stock.
 
 Candidate lines are one per material (quantities summed per material). The notice is present whatever the status. The API never says "compatible" or "approved".
 
@@ -80,8 +84,12 @@ Body `{ fromInternalCode, toInternalCode, reason }`. `from` must be the penetrat
 
 ```ts
 { actions: Array<ShortageAction & { status: "current" | "earlier" | "resolved" }>, // newest first
-  proposals: SubstitutionProposal[] }                                              // newest first
+  proposals: SubstitutionProposal[],                                               // newest first
+  materials: Record<id, { name, unit }>,                                           // every material mapped to a nominated solution on the site
+  penetrations: Record<id, { floor, location, nominatedCode }> }                   // every penetration on the site
 ```
+
+`materials` and `penetrations` let the log name what an action was about. They are present even when `actions` and `proposals` are empty, and they are wider than the readiness maps, which hold only current shortages and blockers.
 
 ## Errors
 
@@ -105,6 +113,7 @@ Every error is `{ code, message }` and nothing else: no stack, path, SQL, note o
 | `ACTIONS_STORE` | `memory` or `supabase`. Outside production the default is `memory`. In production anything but a working `supabase` configuration returns 500, never memory |
 | `SUPABASE_URL`, `SUPABASE_SERVICE_KEY` | Server-side only. In production the URL must be `https:` |
 | `DEMO_USER_ID` | Demo identity, default `demo-leader` |
+| `STUB_STOCK_MODE` | Testing only: `normal` (default), `down`, `empty` or `malformed` for the stock stub. Read outside production only, ignored in production. Used by the end-to-end stock-failure projects |
 
 Config failures return a generic 500 and log one fixed reason token (`config_invalid`, `store_forbidden`, `supabase_unconfigured`, `supabase_url_insecure`), never a value.
 

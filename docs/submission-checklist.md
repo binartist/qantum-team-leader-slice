@@ -23,8 +23,8 @@ Legend: `[x]` done, `[~]` partial, `[ ]` not started.
 | 11 | Technical design (md) | [x] | `docs/technical-design.md`. Section 11 additions awaiting confirmation. |
 | 12 | Test strategy (md) | [x] | `docs/test-strategy.md`: layers, all 32 ACs mapped, risks, CI gates. Awaiting your review. |
 | 13 | Agent instructions and context files | [~] | Repo guidance in `AGENTS.md` (tool-neutral; `CLAUDE.md` is a one-line `@AGENTS.md` import), plus six Skill Forge skills vendored in `.agents/skills` (declared in `skill-forge.json`, locked in `skill-forge.lock.json`). Add per-task briefs (domain core `BRIEF.md`, review briefs) to the repo before submission. |
-| 14 | Working application code | [~] | Domain core, upstream stubs, actions repositories (memory, Supabase), use cases and the seven-route HTTP API are built and reviewed (docs/api.md). The three screens (UI) are still to build. | |
-| 15 | Automated tests | [~] | 196 tests (5 skipped: live Supabase contract), 100% coverage of src/domain, ACs 1-29 referenced (only UI ACs 30-32 outstanding), ACs 1-8, 10, 14, 15, 18-22, 25, 26 referenced. API, DB, e2e still to write. | |
+| 14 | Working application code | [x] | Domain core, upstream stubs, actions repositories (memory, Supabase), use cases, the seven-route HTTP API and the four screens (sites, readiness, substitutes, actions log) are built, reviewed and documented (docs/api.md, docs/ui-design.md). Supabase adapter not yet proven on a live database. | |
+| 15 | Automated tests | [~] | 269 unit and API tests (5 skipped: live Supabase contract), 11 Playwright tests with axe (light and dark, 375px), 100% coverage of src/domain and src/ui, all 32 ACs referenced and `check:ac` exits 0. Database contract run and CI wiring still to do. | |
 | 16 | CI/CD config | [~] | `.github/workflows/ci.yml` runs typecheck, lint, tests with coverage, build, prod audit, secret scan. DB tests, Playwright, AC check and Vercel deploy still to add. |
 | 17 | Pipeline inspectable, with successful deploy evidence | [ ] | Link a green run and the deployment. |
 | 18 | Agentic coding account | [ ] | See section 3. |
@@ -65,7 +65,14 @@ Corrections log:
 
 | Date | Agent suggestion | What was wrong | Decision |
 | --- | --- | --- | --- |
-| | | | |
+| 2026-10-03 | Spec and design said 24 substitute candidates | The count included rows with truncated substrates that must get none; exactly 20 solutions have candidates | Corrected in spec, design and test strategy before the domain brief was dispatched |
+| 2026-10-03 | Domain build accepted negative, infinite or NaN quantities and ratings | Bad numbers failed open: a negative need could cancel another penetration's need | Review found it; fix round added the `invalid_quantity` blocker and unknown-stock handling; 19 mutants killed |
+| 2026-10-03 | Own sample-data generator stamped `siteId` as `a` and `b` | Caught by running the real domain over the data; every penetration silently dropped | Fixed and guarded by a contract test |
+| 2026-10-04 | API build checked idempotency after business rules, let a reused key drop a decision, and buffered the whole body before the size check | Reviewers showed a retry could fail after the shortage had cleared, and a 10 kB cap that was not a cap | Lookup-first idempotency with 409 on target mismatch; streaming body limit; whitespace-only reasons rejected |
+| 2026-10-04 | Reviewer suggested a module-relative catalogue path, `server-only`, and a CSV path jail | The relative path breaks in bundled output; `server-only` needs a new dependency; the path is trusted configuration | Rejected with reasons. `server-only` recorded as a production item |
+| 2026-10-04 | UI worker reported its Playwright specs as written but unrun | Its sandbox crashes Chromium, so the UI had never been exercised | Orchestrator ran them outside the sandbox: two failed. The app was right in one case (pages and API routes held different in-memory stores, so a recorded escalation never showed) and the test helper was wrong in the others (it matched `<body>`) |
+| 2026-10-04 | UI build passed its own gates with 100% coverage | Reviewers found `pen-a-01` offered "Escalate instead" with nothing to escalate, a closed dialog dropped its refresh after a write, a repeat announcement on page load, 1.4:1 input borders, and unknown values failing open to "Crew can go" | Fix round with 25 triaged decisions; reviewer mutants re-run and killed |
+| 2026-10-04 | Reviewer suggested a shared dialog form shell and refreshing a stale tab on focus | Real but outside this slice | Recorded as limits, not built |
 
 ## 4. Decisions awaiting confirmation
 
@@ -113,3 +120,4 @@ From `technical-design.md` section 11 and 12.
 | 2026-10-03 | Sample data proposed (data/sample/*.json, docs/sample-data-and-stubs.md), verified by running the real domain over it. Caught own generator bug (siteId mismatch). Approved and committed. |
 | 2026-10-04 | API layer accepted and documented (docs/api.md). Gates: typecheck, lint, 196 tests, build, prod audit, CSV traced in all 7 routes, shuffled run, live HTTP walk. |
 | 2026-10-04 | UI defaults proposed (docs/ui-design.md, screens drawn in conversation). Approved. Chromium installed, frontend-engineering and ui-portability-baseline added. |
+| 2026-10-04 | UI built by Grok (116 turns, $3.29), then three fresh review sessions ($4.10) and a fix round (108 turns, $3.24). Orchestrator gates: typecheck, lint, 269 tests, 100% coverage, build, `check:ac`, 11 Playwright tests stable over three runs, reviewer mutants killed, CSV traced in all 11 routes. Docs updated: api.md, ui-design.md section 9, spec AC 9, test strategy. |

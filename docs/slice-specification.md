@@ -50,7 +50,7 @@ Numbered for use as test names. Sample data is defined in section 7.
 6. Given a nominated code absent from the catalogue, a blocker `unknown_solution_code` is shown, crew is blocked, and wait is rejected with 422 while escalate is accepted.
 7. Given a nominated code with no material mapping, a blocker `no_material_mapping` is shown and crew is blocked. Given a mapped quantity that is negative or not finite, a blocker `invalid_quantity` is shown, the penetration adds no requirement, and crew is blocked (it never cancels another penetration's need).
 8. Given a site with no penetrations, status is "nothing planned", not clear.
-9. Given the stock service fails, the API returns 502, the UI shows "stock unavailable", and no clear status is shown.
+9. Given the stock service fails, the API returns 502, the UI shows the approved can't-check banner ("Can't check this site right now. Don't assume it's clear. Try again."), and no clear status is shown. On the sites list that site shows the chip "Can't check".
 10. Given two sites that each need 10 units of M with 15 on hand, both show clear, and the screen labels the figure "on hand, shared, not reserved".
 
 **Decisions**
