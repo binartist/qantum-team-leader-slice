@@ -8,7 +8,9 @@
       "code-quality": "^0.1.1",
       "testing-strategy": "^0.1.1",
       "external-worker-delegation": "^0.8.3",
-      "grok-build-harness": "^0.5.3"
+      "grok-build-harness": "^0.5.3",
+      "frontend-engineering": "^0.1.0",
+      "ui-portability-baseline": "^0.2.0"
     },
     "shims": [
       "claude-code"

@@ -22,6 +22,11 @@
       "integrity": "sha256-0RbejzlLzdKpt9uVfev7M3JRjippsup/nLY3Q+Feqsc=",
       "source": "registry"
     },
+    "frontend-engineering": {
+      "version": "0.1.0",
+      "integrity": "sha256-rbOEDp8wUACQMwcT8Z/G9XQNb36SM1Y7d1EhhCFld/E=",
+      "source": "registry"
+    },
     "grok-build-harness": {
       "version": "0.5.6",
       "integrity": "sha256-IbYmlQ1wvEhk1lXFGS8P4lPDwZgNAsnmvOjjYzfv6kw=",
@@ -35,6 +40,11 @@
     "testing-strategy": {
       "version": "0.1.1",
       "integrity": "sha256-KsqNmZ/F+oxg+PFicC4Q/6LMl+1FtbkwoX7JCgJ8h4A=",
+      "source": "registry"
+    },
+    "ui-portability-baseline": {
+      "version": "0.2.0",
+      "integrity": "sha256-dL2aKMurLJySGa4oU8xO+UymCQCfIqlz/5hKTyMKzwc=",
       "source": "registry"
     }
   }
