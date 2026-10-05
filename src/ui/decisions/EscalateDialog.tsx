@@ -2,7 +2,7 @@
 
 import { useId, useState, type FormEvent } from "react";
 import { Button } from "../Button";
-import { ANNOUNCE, BUTTONS, CREW_STAYS } from "../messages";
+import { ANNOUNCE, BUTTONS, CREW_STAYS, RECORDS_ONLY } from "../messages";
 import styles from "../primitives.module.css";
 import { shortageActionUrl } from "./api-client";
 import { Dialog, TextControl, useDecisionDialog } from "./Dialog";
@@ -60,6 +60,7 @@ export function EscalateDialog({ siteId, shortageId, target }: { siteId: string;
       >
         <form className={dialogStyles.form} onSubmit={onSubmit}>
           <p>{CREW_STAYS}</p>
+          <p>{RECORDS_ONLY}</p>
           <div className={dialogStyles.field}>
             <label className={dialogStyles.label} htmlFor={sendToId}>
               Send to

@@ -5,11 +5,11 @@ import { listActions } from "@/application";
 import { SiteNotFoundError } from "@/ports";
 import { getDependencies } from "@/server/deps";
 import { getCachedSite } from "../../../_lib/cached";
-import { Banner } from "@/ui/Banner";
+import { AppBar } from "@/ui/AppBar";
 import { ActionRow, ProposalRow } from "@/ui/ActionRow";
+import { UnavailablePanel } from "@/ui/UnavailablePanel";
 import { actionTarget, actionSentence, sitePath } from "@/ui/format";
-import { LinkButton } from "@/ui/LinkButton";
-import { BUTTONS, EMPTY, readinessBanner } from "@/ui/messages";
+import { EMPTY, readinessBanner } from "@/ui/messages";
 import styles from "@/ui/primitives.module.css";
 import { loadPage } from "../../../_lib/load";
 
@@ -38,11 +38,12 @@ export default async function ActionsPage({ params }: RouteParams) {
   });
   if (siteLoad.status === "unavailable") {
     return (
-      <main>
-        <LinkButton href="/">{BUTTONS.backToSites}</LinkButton>
-        <h1>This site</h1>
-        <Banner status={readinessBanner("unavailable", 0, 0)} />
-      </main>
+      <>
+        <AppBar title="This site" backHref="/" backName="Sites" />
+        <main>
+          <UnavailablePanel status={readinessBanner("unavailable", 0, 0)} />
+        </main>
+      </>
     );
   }
 
@@ -50,61 +51,62 @@ export default async function ActionsPage({ params }: RouteParams) {
   const site = siteLoad.value;
   if (actionsLoad.status === "unavailable") {
     return (
-      <main>
-        <LinkButton href={sitePath(site.id)}>{BUTTONS.backToSite}</LinkButton>
-        <h1>{site.name}</h1>
-        <Banner status={readinessBanner("unavailable", 0, 0)} />
-      </main>
+      <>
+        <AppBar title={site.name} backHref={sitePath(site.id)} backName={site.name} />
+        <main>
+          <UnavailablePanel status={readinessBanner("unavailable", 0, 0)} />
+        </main>
+      </>
     );
   }
 
   const listed = actionsLoad.value;
   const empty = listed.actions.length === 0 && listed.proposals.length === 0;
   return (
-    <main>
-      <LinkButton href={sitePath(site.id)}>{BUTTONS.backToSite}</LinkButton>
-      <h1>Actions log</h1>
-      <p className={styles.muted}>{site.name}</p>
-      {empty ? <p>{EMPTY.actions}</p> : null}
-      {listed.actions.length > 0 ? (
-        <section>
-          <h2>Recorded actions</h2>
-          <ul className={styles.list}>
-            {listed.actions.map((action) => {
-              const target = actionTarget(site.id, action.shortageId, listed.materials, listed.penetrations);
-              return (
-                <li key={action.id}>
-                  <ActionRow
-                    sentence={actionSentence(action.kind, action.escalateTo, target)}
-                    recordedAt={action.createdAt}
-                    createdBy={action.createdBy}
-                    note={action.note}
-                    status={action.status}
+    <>
+      <AppBar title="Actions log" backHref={sitePath(site.id)} backName={site.name} />
+      <main>
+        {empty ? <p>{EMPTY.actions}</p> : null}
+        {listed.actions.length > 0 ? (
+          <section>
+            <h2>Recorded actions</h2>
+            <ul className={styles.list}>
+              {listed.actions.map((action) => {
+                const target = actionTarget(site.id, action.shortageId, listed.materials, listed.penetrations);
+                return (
+                  <li key={action.id}>
+                    <ActionRow
+                      sentence={actionSentence(action.kind, action.escalateTo, target)}
+                      recordedAt={action.createdAt}
+                      createdBy={action.createdBy}
+                      note={action.note}
+                      status={action.status}
+                    />
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        ) : null}
+        {listed.proposals.length > 0 ? (
+          <section>
+            <h2>Proposed substitutes</h2>
+            <ul className={styles.list}>
+              {listed.proposals.map((proposal) => (
+                <li key={proposal.id}>
+                  <ProposalRow
+                    fromCode={proposal.fromInternalCode}
+                    toCode={proposal.toInternalCode}
+                    reason={proposal.reason}
+                    recordedAt={proposal.createdAt}
+                    createdBy={proposal.createdBy}
                   />
                 </li>
-              );
-            })}
-          </ul>
-        </section>
-      ) : null}
-      {listed.proposals.length > 0 ? (
-        <section>
-          <h2>Proposed substitutes</h2>
-          <ul className={styles.list}>
-            {listed.proposals.map((proposal) => (
-              <li key={proposal.id}>
-                <ProposalRow
-                  fromCode={proposal.fromInternalCode}
-                  toCode={proposal.toInternalCode}
-                  reason={proposal.reason}
-                  recordedAt={proposal.createdAt}
-                  createdBy={proposal.createdBy}
-                />
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
-    </main>
+              ))}
+            </ul>
+          </section>
+        ) : null}
+      </main>
+    </>
   );
 }

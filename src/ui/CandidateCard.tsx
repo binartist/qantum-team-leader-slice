@@ -1,8 +1,8 @@
 import { Card } from "./Card";
 import { ProposeDialog } from "./decisions/ProposeDialog";
-import { formatRating } from "./format";
+import { formatRating, supplierRefLine } from "./format";
 import { StatusChip } from "./StatusChip";
-import { availabilityStatus, type AvailabilityChip } from "./status";
+import { availabilityStatus, ratingComparison, type AvailabilityChip } from "./status";
 
 export function CandidateCard({
   siteId,
@@ -11,6 +11,9 @@ export function CandidateCard({
   toCode,
   integrityMinutes,
   insulationMinutes,
+  requiredIntegrityMinutes,
+  requiredInsulationMinutes,
+  supplierRefCode,
   overall,
   summary,
 }: {
@@ -20,12 +23,20 @@ export function CandidateCard({
   toCode: string;
   integrityMinutes: number | null;
   insulationMinutes: number | null;
+  requiredIntegrityMinutes: number | null;
+  requiredInsulationMinutes: number | null;
+  supplierRefCode: string;
   overall: AvailabilityChip;
   summary: string;
 }) {
+  const supplier = supplierRefLine(supplierRefCode);
   return (
     <Card title={toCode}>
-      <p>{`Rating ${formatRating(integrityMinutes, insulationMinutes)}`}</p>
+      <p>{formatRating(integrityMinutes, insulationMinutes)}</p>
+      {supplier ? <p>{supplier}</p> : null}
+      <StatusChip
+        status={ratingComparison(integrityMinutes, insulationMinutes, requiredIntegrityMinutes, requiredInsulationMinutes)}
+      />
       <StatusChip status={availabilityStatus(overall)} />
       {summary ? <p>{summary}</p> : null}
       <ProposeDialog siteId={siteId} penetrationId={penetrationId} fromCode={fromCode} toCode={toCode} />

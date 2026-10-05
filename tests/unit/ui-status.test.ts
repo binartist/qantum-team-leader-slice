@@ -9,7 +9,9 @@ import {
   crewStatus,
   earlierDecision,
   hasEarlierDecision,
+  ratingComparison,
   shortageState,
+  siteChip,
   type StatusView,
 } from "@/ui/status";
 
@@ -33,8 +35,8 @@ describe("crew status", () => {
 });
 
 describe("shortage state", () => {
-  it("maps open, waiting, and escalated, including an earlier decision", () => {
-    expectView(shortageState("open"), { label: "Open", tone: "neutral", icon: "dashed-circle" });
+  it("AC 30: maps no decision yet, waiting, and escalated, including an earlier decision", () => {
+    expectView(shortageState("open"), { label: "No decision yet", tone: "neutral", icon: "dashed-circle" });
     expectView(shortageState("waiting"), { label: "Waiting", tone: "warning", icon: "warning" });
     expectView(shortageState("escalated"), { label: "Escalated", tone: "warning", icon: "warning" });
     expectView(earlierDecision(), { label: "Earlier decision, shortfall has grown", tone: "warning", icon: "warning" });
@@ -105,11 +107,55 @@ describe("candidate status and availability", () => {
   });
 });
 
+describe("home chip", () => {
+  it("names shortages and data problems on a blocked site, and leaves other statuses alone", () => {
+    expectView(siteChip("blocked", 2, 0), { label: "Blocked · 2 shortages", tone: "danger", icon: "cross" });
+    expectView(siteChip("blocked", 1, 0), { label: "Blocked · 1 shortage", tone: "danger", icon: "cross" });
+    expectView(siteChip("blocked", 1, 2), { label: "Blocked · 1 shortage, 2 data problems", tone: "danger", icon: "cross" });
+    expectView(siteChip("blocked", 2, 1), { label: "Blocked · 2 shortages, 1 data problem", tone: "danger", icon: "cross" });
+    expectView(siteChip("blocked", 0, 2), { label: "Blocked · 2 data problems", tone: "danger", icon: "cross" });
+    expectView(siteChip("blocked", 0, 1), { label: "Blocked · 1 data problem", tone: "danger", icon: "cross" });
+    expectView(siteChip("blocked", 0, 0), { label: "Blocked", tone: "danger", icon: "cross" });
+    expect(siteChip("clear", 2, 2)).toEqual(crewStatus("clear"));
+    expect(siteChip("nothing_planned", 1, 1)).toEqual(crewStatus("nothing_planned"));
+    expect(siteChip("unavailable", 1, 1)).toEqual(crewStatus("unavailable"));
+    expect(siteChip("bogus", 1, 1).label).toBe("Can't check");
+  });
+});
+
+describe("rating comparison", () => {
+  const meets: StatusView = { label: "Meets the required rating", tone: "success", icon: "check" };
+  const below: StatusView = { label: "Below the required rating", tone: "warning", icon: "warning" };
+
+  it("meets when both candidate minutes cover the requirement, and a null requirement is met by anything", () => {
+    expectView(ratingComparison(60, 30, 60, 30), meets);
+    expectView(ratingComparison(60, 60, 60, 30), meets);
+    expectView(ratingComparison(120, 90, 60, 30), meets);
+    expectView(ratingComparison(null, null, null, null), meets);
+    expectView(ratingComparison(null, 30, null, 30), meets);
+    expectView(ratingComparison(60, null, 60, null), meets);
+    expectView(ratingComparison(0, 0, null, null), meets);
+  });
+
+  it("is below when a candidate minute misses a stated requirement, including a null or non-finite minute", () => {
+    expectView(ratingComparison(59, 30, 60, 30), below);
+    expectView(ratingComparison(60, 29, 60, 30), below);
+    expectView(ratingComparison(null, null, 60, null), below);
+    expectView(ratingComparison(60, null, 60, 30), below);
+    expectView(ratingComparison(null, 90, 60, 30), below);
+    expectView(ratingComparison(Number.NaN, 30, 60, 30), below);
+    expectView(ratingComparison(60, Number.POSITIVE_INFINITY, 60, 30), below);
+    expectView(ratingComparison(60, 30, Number.NaN, 30), below);
+    expect(below.label).not.toMatch(/compatible|approved/i);
+  });
+});
+
 describe("action status", () => {
   it("AC 15: maps current, earlier, and resolved", () => {
-    expectView(actionStatus("current"), { label: "Current", tone: "success", icon: "check" });
-    expectView(actionStatus("earlier"), { label: "Earlier decision, shortfall has grown", tone: "warning", icon: "warning" });
-    expectView(actionStatus("resolved"), { label: "Resolved", tone: "neutral", icon: "check" });
+    expectView(actionStatus("current"), { label: "Still applies", tone: "neutral", icon: "dashed-circle" });
+    expect(actionStatus("current").icon).not.toBe("check");
+    expectView(actionStatus("earlier"), { label: "Shortfall has grown since", tone: "warning", icon: "warning" });
+    expectView(actionStatus("resolved"), { label: "Shortage resolved", tone: "success", icon: "check" });
   });
 
   it("an unknown action status is Unknown, never Resolved", () => {
@@ -143,6 +189,10 @@ describe("forbidden words", () => {
       actionStatus("current"),
       actionStatus("earlier"),
       actionStatus("resolved"),
+      siteChip("blocked", 1, 2),
+      siteChip("clear", 0, 0),
+      ratingComparison(60, 60, 60, 30),
+      ratingComparison(30, 30, 60, 60),
     ].map((view) => view.label);
     for (const label of labels) expect(label).not.toMatch(/compatible|approved/i);
   });

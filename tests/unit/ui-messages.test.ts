@@ -8,6 +8,10 @@ import {
   EMPTY,
   GIVE_REASON,
   MANAGER_CHECK,
+  OPEN_PENETRATION,
+  RECORDS_ONLY,
+  STOCK_STALE,
+  SUBSTITUTES,
   apiErrorMessage,
   readinessBanner,
 } from "@/ui/messages";
@@ -92,6 +96,10 @@ describe("banners and empty states", () => {
     expect(CREW_STAYS).toBe("This does not release the crew.");
     expect(GIVE_REASON).toBe("Give a reason.");
     expect(MANAGER_CHECK).toBe("A manager has to verify this catalogue match.");
+    expect(RECORDS_ONLY).toBe("This records your decision here. Nobody is notified automatically yet.");
+    expect(OPEN_PENETRATION).toBe("Open a penetration to see possible substitutes.");
+    expect(STOCK_STALE).toBe("These stock figures are more than a day old. Check with the warehouse before relying on them.");
+    expect(SUBSTITUTES).toBe("Substitutes");
     expect(BUTTONS).toEqual({
       wait: "Wait",
       escalate: "Escalate",
@@ -102,8 +110,6 @@ describe("banners and empty states", () => {
       cancel: "Cancel",
       sending: "Sending…",
       tryAgain: "Try again",
-      backToSites: "Back to sites",
-      backToSite: "Back to site",
       actionsLog: "Actions log",
     });
     expect(ANNOUNCE).toEqual({
@@ -133,6 +139,10 @@ describe("forbidden words", () => {
       CREW_STAYS,
       GIVE_REASON,
       MANAGER_CHECK,
+      RECORDS_ONLY,
+      OPEN_PENETRATION,
+      STOCK_STALE,
+      SUBSTITUTES,
       SITES_UNAVAILABLE,
       DEMO_BANNER,
     ];

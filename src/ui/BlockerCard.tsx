@@ -29,8 +29,8 @@ export function BlockerCard({
     <Card title={place} heading="h3" titleHref={penetrationPath(siteId, penetrationId)}>
       <p>{detail.label}</p>
       <div className={styles.row}>
-        <StatusChip status={shortageState(state)} />
-        {earlier ? <StatusChip status={earlierDecision()} /> : null}
+        <StatusChip status={shortageState(state)} appearance="label" />
+        {earlier ? <StatusChip status={earlierDecision()} appearance="label" /> : null}
       </div>
       <div className={styles.row}>
         <EscalateDialog siteId={siteId} shortageId={blockerId} target={place} />

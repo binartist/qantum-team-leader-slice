@@ -17,7 +17,8 @@ A team leader checks a site before the crew leaves, usually on a phone in a van 
 | Layout | Single column. Max width 720px, centred. Fits 375px with no horizontal scroll | AC 32 |
 | Targets | At least 44px high and wide for anything tappable | AC 31 |
 | Motion | None needed. Respect `prefers-reduced-motion` | |
-| Demo honesty | A permanent small banner on every screen: "Demo: sample data, no login" | The app is a demonstration. Do not let it look like production |
+| Demo honesty | A permanent bar at the **bottom** of every screen: "Demo: sample data, no login". It is a sticky footer, so it stays in view and never covers the last content | The app is a demonstration. Do not let it look like production. At the bottom it stays out of the way of the title and the decisions |
+| Navigation | A sticky top header holds only the page title (the one `h1`). Inner screens show a back row directly below it: a chevron and the name of the screen it returns to ("‹ Sites", "‹ Harbour Point, Levels 3 to 5"), at least 44 high, with the accessible name "Back to <name>". It scrolls with the page. No transition animation | Familiar on a phone, one place to see where you are and how to go back |
 | Styling tech | CSS Modules and CSS custom properties. **No new dependencies** (no Tailwind, no component library) | Small app, nothing to justify a dependency. Tokens give one place for colours |
 | Rendering | Next.js server components for pages, small client islands only for dialogs and forms | Less client code, no loading flicker, nothing secret in the browser |
 | Data in pages | Server components call the application use cases through the composition root directly, not over HTTP | No self-request, faster, one fewer failure mode. Writes from the browser go through the real `/api` routes, so the API is still exercised end to end |
@@ -26,7 +27,7 @@ A team leader checks a site before the crew leaves, usually on a phone in a van 
 
 | Route | Screen | Content |
 | --- | --- | --- |
-| `/` | Sites | Demo banner, one card per site with name, reference and a crew status chip |
+| `/` | Sites | One card per site with name, reference (shown as "Ref RP-A2") and a crew status chip |
 | `/sites/[id]` | Site readiness | Back link, site name, status banner, stock notice and "as of" time, shortage cards, a separate "Data problems" section for blockers, link to the actions log |
 | `/sites/[id]/penetrations/[pid]` | Substitutes | Penetration summary, the "Catalogue match, not verified" notice, one card per candidate with an availability chip, "Propose this" |
 | `/sites/[id]/actions` | Actions log | Newest first: what was recorded, when, by whom, and whether it is current, earlier or resolved. Proposals listed separately |
@@ -95,7 +96,7 @@ Plain words, sentence case, no exclamation marks, no "please", no "successfully"
 
 ## 5. Accessibility (WCAG 2.2 AA)
 
-- One `h1` per page, ordered headings, landmarks (`header`, `main`).
+- One `h1` per page (in the sticky header), ordered headings, landmarks: one `banner` (the header), one `main`, one `contentinfo` (the demo bar).
 - Status chips and banners carry text and an icon with `aria-hidden`, so colour is never the only signal.
 - Visible focus ring on every control, logical tab order, dialogs return focus to the control that opened them.
 - Form fields have visible labels, errors are announced next to the field, character counts are text.
@@ -146,4 +147,21 @@ Three independent reviews of the built UI led to these changes to the design abo
 | Links | Data-problem cards link the penetration to its substitutes screen. Every unavailable screen keeps its back link |
 | Error screens | `error.tsx` and `global-error.tsx` show fixed copy and a retry button, never the message or digest |
 
-Limits recorded rather than built: an open tab keeps the banner it loaded until the next navigation; the three dialogs repeat their form code; no end-to-end test shows the "Earlier decision" badge (the sample stock cannot change during a run), which is covered at the API.
+Navigation shell (same day, after a phone review): the demo bar moved to a sticky footer; a sticky header carries the title and, on inner screens, a chevron back row sits just below it, named after the parent screen, replacing the full-width Back button (the chevron first sat inside the header; moved below it after review); the site reference reads "Ref RP-A2". The page scrolls as a whole (not an inner scroller), so the browser restores scroll position when going back.
+
+Usability round (2026-10-05, from a review against the exercise brief's UX question):
+
+| Topic | As built |
+| --- | --- |
+| Sites list | A blocked chip says why: "Blocked · 2 shortages", "Blocked · 1 shortage, 2 data problems" |
+| Stock age | "Stock figures from 3 Oct 2026, 08:00 UTC (2 days old)". Older than a day adds "These stock figures are more than a day old. Check with the warehouse before relying on them." Warning only; crew status is unchanged. Hidden on a nothing-planned site |
+| Shortage state | Flat labels, not chips: "No decision yet", "Waiting", "Escalated" |
+| Units | `each` is omitted ("short 2"); other units pluralise ("2 cartridges", "2.5 metres") |
+| Penetrations | Disclosure "Penetrations and substitutes (n)" with a chevron and the line "Open a penetration to see possible substitutes." Rows are grouped under "Solution 0438 · 4"; each row is "{floor}, {location} · {service} {size}" with "Substitutes ›" |
+| Ratings | "Fire rating: 60 min integrity, 30 min insulation" (a missing part says "no insulation rating"). Candidates add "Supplier ref …" and "Meets the required rating" or "Below the required rating" against the penetration |
+| Catalogue notice | "Catalogue match, not verified" only when at least one candidate is listed |
+| Decisions | Wait and Escalate dialogs add "This records your decision here. Nobody is notified automatically yet." |
+| Actions log | "Still applies" (neutral), "Shortfall has grown since" (warning), "Shortage resolved"; the repeated site name is gone |
+| Failure | Every can't-check screen has a "Try again" button that reloads the page |
+
+Limits recorded rather than built: an open tab keeps the banner it loaded until the next navigation; the three dialogs repeat their form code; no end-to-end test shows the "Earlier decision" badge (the sample stock cannot change during a run), which is covered at the API. From the usability review, not built: a separate escalation target for data problems (they are not a purchasing matter), a "substitute proposed" marker on shortage cards, a "what was checked" summary on a clear site, and a planned work date per site. Penetrations at the same place with the same service read the same (four in the sample); real data would add the floor-plan pin reference.

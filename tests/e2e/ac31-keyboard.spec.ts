@@ -50,6 +50,6 @@ test("AC 31: escalate with the keyboard only, and targets are at least 44 by 44"
   await page.keyboard.press("Escape");
 
   await gotoApp(page, "/sites/site-b");
-  await collar.getByText("Show affected penetrations").click();
+  await collar.getByText("Penetrations and substitutes (4)").click();
   await assertTargets(page);
 });

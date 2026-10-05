@@ -28,6 +28,7 @@ test("scenario: escalate sealant, propose 0451, then Kingsway still cannot go", 
   await sealant.getByRole("button", { name: /Escalate/ }).click();
   const dialog = page.getByRole("dialog");
   await expect(dialog.getByText("This does not release the crew.")).toBeVisible();
+  await expect(dialog.getByText("This records your decision here. Nobody is notified automatically yet.")).toBeVisible();
   await expect(dialog.getByLabel("Send to")).toHaveValue("purchasing");
   await dialog.getByLabel("Note").fill("Order more sealant");
 
@@ -65,13 +66,16 @@ test("scenario: escalate sealant, propose 0451, then Kingsway still cannot go", 
   );
   await expect(page.locator("[data-announcer]")).toHaveText("Already recorded");
 
-  await sealant.getByText("Show affected penetrations").click();
+  await sealant.getByText("Penetrations and substitutes (12)").click();
   await sealant.locator("a[href$='pen-b-01']").click();
   const inStock = page.getByRole("article").filter({ has: page.getByRole("heading", { name: "0451" }) });
   const unmapped = page.getByRole("article").filter({ has: page.getByRole("heading", { name: "0464" }) });
   await expect(page.getByText("Catalogue match, not verified")).toBeVisible();
   await expect(inStock.getByText("Materials in stock")).toBeVisible();
-  await expect(inStock.getByText("Rating 60/60")).toBeVisible();
+  await expect(page.getByText("Fire rating: 60 min integrity, 30 min insulation")).toBeVisible();
+  await expect(inStock.getByText("Fire rating: 60 min integrity, 60 min insulation")).toBeVisible();
+  await expect(inStock.getByText("Meets the required rating")).toBeVisible();
+  await expect(inStock.getByText("Supplier ref V21.27-22SFR00053-158-E")).toBeVisible();
   await expect(inStock.getByText("Fire putty pad x1")).toBeVisible();
   await expect(inStock.getByText("on hand")).toHaveCount(0);
   await expect(unmapped.getByText("We can't tell if its materials are in stock.")).toBeVisible();

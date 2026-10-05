@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { EscalateDialog } from "./decisions/EscalateDialog";
 import { WaitDialog } from "./decisions/WaitDialog";
-import { affectedCount, formatNeed, penetrationPath } from "./format";
+import { affectedCount, formatNeed, penetrationDisclosureLabel, penetrationGroups, penetrationLine, penetrationPath, type PenetrationRow } from "./format";
+import { Icon } from "./Icon";
 import { Card } from "./Card";
+import { OPEN_PENETRATION, SUBSTITUTES } from "./messages";
 import { StatusChip } from "./StatusChip";
 import { earlierDecision, shortageState, type ShortageChip } from "./status";
 import styles from "./primitives.module.css";
@@ -28,28 +30,47 @@ export function ShortageCard({
   unit: string;
   state: ShortageChip;
   earlier: boolean;
-  places: readonly { readonly id: string; readonly label: string }[];
+  places: readonly (PenetrationRow & { readonly id: string })[];
 }) {
   return (
     <Card title={materialName}>
       <p>{formatNeed(requiredQty, onHandQty, shortfallQty, unit)}</p>
       <p>{affectedCount(places.length)}</p>
       <div className={styles.row}>
-        <StatusChip status={shortageState(state)} />
-        {earlier ? <StatusChip status={earlierDecision()} /> : null}
+        <StatusChip status={shortageState(state)} appearance="label" />
+        {earlier ? <StatusChip status={earlierDecision()} appearance="label" /> : null}
       </div>
       {places.length > 0 ? (
-        <details>
-          <summary className={styles.summary}>Show affected penetrations</summary>
-          <ul className={styles.list}>
-            {places.map((place) => (
-              <li key={place.id}>
-                <Link className={styles.blockLink} href={penetrationPath(siteId, place.id)}>
-                  {place.label}
-                </Link>
-              </li>
+        <details className={styles.disclosure}>
+          <summary className={styles.summary}>
+            <span className={styles.disclosureChevron}>
+              <Icon name="chevron-right" />
+            </span>
+            {penetrationDisclosureLabel(places.length)}
+          </summary>
+          <div className={styles.disclosureBody}>
+            <p>{OPEN_PENETRATION}</p>
+            {penetrationGroups(places).map((group) => (
+              <div key={group.heading}>
+                <h3 className={styles.groupHeading}>{group.heading}</h3>
+                <ul className={styles.list}>
+                  {group.places.map((place) => {
+                    return (
+                      <li key={place.id}>
+                        <Link className={styles.penetrationLink} href={penetrationPath(siteId, place.id)}>
+                          <span className={styles.penetrationLines}>{penetrationLine(place)}</span>
+                          <span className={styles.substitutesCue}>
+                            <span>{SUBSTITUTES}</span>
+                            <Icon name="chevron-right" />
+                          </span>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
             ))}
-          </ul>
+          </div>
         </details>
       ) : null}
       <div className={styles.row}>

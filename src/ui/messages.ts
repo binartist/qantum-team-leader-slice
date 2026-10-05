@@ -1,6 +1,10 @@
 import { crewStatus, type StatusView } from "./status";
 
 export const CREW_STAYS = "This does not release the crew.";
+export const RECORDS_ONLY = "This records your decision here. Nobody is notified automatically yet.";
+export const OPEN_PENETRATION = "Open a penetration to see possible substitutes.";
+export const STOCK_STALE = "These stock figures are more than a day old. Check with the warehouse before relying on them.";
+export const SUBSTITUTES = "Substitutes";
 export const GIVE_REASON = "Give a reason.";
 export const MANAGER_CHECK = "A manager has to verify this catalogue match.";
 
@@ -22,8 +26,6 @@ export const BUTTONS = {
   cancel: "Cancel",
   sending: "Sending…",
   tryAgain: "Try again",
-  backToSites: "Back to sites",
-  backToSite: "Back to site",
   actionsLog: "Actions log",
 } as const;
 

@@ -23,7 +23,9 @@ export async function gotoApp(page: Page, path: string): Promise<void> {
 }
 
 export async function assertNoOverflow(page: Page): Promise<void> {
-  const fits = await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth);
+  const fits = await page.evaluate(() => {
+    return document.documentElement.scrollWidth <= document.documentElement.clientWidth;
+  });
   expect(fits).toBe(true);
 }
 

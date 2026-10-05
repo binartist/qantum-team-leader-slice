@@ -2,7 +2,7 @@
 
 import { useId, useState, type FormEvent } from "react";
 import { Button } from "../Button";
-import { ANNOUNCE, BUTTONS, CREW_STAYS } from "../messages";
+import { ANNOUNCE, BUTTONS, CREW_STAYS, RECORDS_ONLY } from "../messages";
 import styles from "../primitives.module.css";
 import { shortageActionUrl } from "./api-client";
 import { Dialog, TextControl, useDecisionDialog } from "./Dialog";
@@ -54,6 +54,7 @@ export function WaitDialog({ siteId, shortageId, target }: { siteId: string; sho
       >
         <form className={dialogStyles.form} onSubmit={onSubmit}>
           <p>{CREW_STAYS}</p>
+          <p>{RECORDS_ONLY}</p>
           <TextControl id={noteId} label="Note" value={note} onChange={setNote} error={fieldError} />
           {formError ? (
             <p className={dialogStyles.fieldError} role="alert">
