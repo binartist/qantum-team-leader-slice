@@ -236,9 +236,9 @@ describe("action wording", () => {
 });
 
 describe("site reference", () => {
-  it("labels the code with the word Ref", () => {
-    expect(formatReference("RP-A2")).toBe("Ref RP-A2");
-    expect(formatReference("HP-345")).toBe("Ref HP-345");
+  it("labels the code as a job reference", () => {
+    expect(formatReference("RP-A2")).toBe("Job ref RP-A2");
+    expect(formatReference("HP-345")).toBe("Job ref HP-345");
   });
 });
 

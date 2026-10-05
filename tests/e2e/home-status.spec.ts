@@ -14,11 +14,11 @@ test("home shows crew can go for Riverside and nothing planned for Old Mill", as
   await expect(mill.getByText("Nothing planned")).toBeVisible();
 });
 
-test("navigation shell, bottom demo bar, and labelled reference", async ({ page }) => {
+test("navigation shell, bottom demo bar, and job reference on the site screen only", async ({ page }) => {
   // Read-only. Opens a site and follows the back control. Does not record an action.
   await gotoApp(page, "/");
   await expect(page.getByRole("heading", { level: 1, name: "Sites" })).toBeVisible();
-  await expect(page.getByText("Ref RP-A2", { exact: true })).toBeVisible();
+  await expect(page.getByText(/\bref RP-A2\b/i)).toHaveCount(0);
   await expect(page.getByRole("link", { name: "Back to sites" })).toHaveCount(0);
   await expect(page.getByRole("link", { name: "Back to site" })).toHaveCount(0);
 
@@ -26,7 +26,7 @@ test("navigation shell, bottom demo bar, and labelled reference", async ({ page 
   await expect(page.getByRole("heading", { level: 1, name: "Harbour Point, Levels 3 to 5" })).toBeVisible();
   await expect(page.getByText(/Stock figures from 3 Oct 2026, 08:00 UTC \(\d+ days? old\)/)).toBeVisible();
   await expect(page.getByText("These stock figures are more than a day old. Check with the warehouse before relying on them.")).toBeVisible();
-  await expect(page.getByText("Ref HP-345", { exact: true })).toBeVisible();
+  await expect(page.getByText("Job ref HP-345", { exact: true })).toBeVisible();
   const footer = page.getByRole("contentinfo");
   await expect(footer).toContainText("Demo: sample data, no login");
 

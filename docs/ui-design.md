@@ -27,7 +27,7 @@ A team leader checks a site before the crew leaves, usually on a phone in a van 
 
 | Route | Screen | Content |
 | --- | --- | --- |
-| `/` | Sites | One card per site with name, reference (shown as "Ref RP-A2") and a crew status chip |
+| `/` | Sites | One card per site with name and a crew status chip |
 | `/sites/[id]` | Site readiness | Back link, site name, status banner, stock notice and "as of" time, shortage cards, a separate "Data problems" section for blockers, link to the actions log |
 | `/sites/[id]/penetrations/[pid]` | Substitutes | Penetration summary, the "Catalogue match, not verified" notice, one card per candidate with an availability chip, "Propose this" |
 | `/sites/[id]/actions` | Actions log | Newest first: what was recorded, when, by whom, and whether it is current, earlier or resolved. Proposals listed separately |
@@ -147,7 +147,7 @@ Three independent reviews of the built UI led to these changes to the design abo
 | Links | Data-problem cards link the penetration to its substitutes screen. Every unavailable screen keeps its back link |
 | Error screens | `error.tsx` and `global-error.tsx` show fixed copy and a retry button, never the message or digest |
 
-Navigation shell (same day, after a phone review): the demo bar moved to a sticky footer; a sticky header carries the title and, on inner screens, a chevron back row sits just below it, named after the parent screen, replacing the full-width Back button (the chevron first sat inside the header; moved below it after review); the site reference reads "Ref RP-A2". The page scrolls as a whole (not an inner scroller), so the browser restores scroll position when going back.
+Navigation shell (same day, after a phone review): the demo bar moved to a sticky footer; a sticky header carries the title and, on inner screens, a chevron back row sits just below it, named after the parent screen, replacing the full-width Back button (the chevron first sat inside the header; moved below it after review); the site reference reads "Job ref RP-A2" and appears on the site screen only, under the title, where an escalation would quote it (removed from the list cards after review, 2026-10-06). The page scrolls as a whole (not an inner scroller), so the browser restores scroll position when going back.
 
 Usability round (2026-10-05, from a review against the exercise brief's UX question):
 
