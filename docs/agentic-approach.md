@@ -43,6 +43,15 @@ Each worker run went through the same ladder, cheapest checks first:
 - **A spec gap found after delivery.** Walking the live demo again showed substitute `0451` as "Materials in stock" although it uses sealant, the very material that site is short of. The spec only said "shows whether its materials are in stock", and the code checked one install against raw stock. The spec was clarified first (AC 33), then the code.
 - **Suggestions declined, with reasons.** A module-relative CSV path (breaks once bundled), adding `server-only` (a new dependency, logged for production), a shared dialog form shell and refresh on tab focus (real, but outside the slice).
 
+## Where I overruled or redirected the AI
+
+The agents proposed; I decided. Each case is logged with the reason in `docs/submission-checklist.md` (section 3). The pattern: the AI's defaults were reasonable but generic, and the changes came from looking at the product as a team leader would on a phone.
+
+- **Navigation.** The design had a top demo bar, a full-width Back button and an unlabelled site code. From my own phone review I moved the demo label to the bottom, put the title in the header with a chevron back row below it, and had the code labelled.
+- **Review approach.** Instead of the proposed fan-out of review subagents, I gave my own observations, which were faster and more specific.
+- **Worker model.** A worker run went out on the fast model by default. I stopped it and set the default model as the rule, fast only when I ask.
+- **What the screens carry.** I questioned the site reference on every card (now only on the site screen, as "Job ref") and replaced the permanent demo bar with a landing page that explains the demo, keeping a small Demo tag in each header after the AI pointed out that deep links would otherwise skip the explanation.
+
 ## Cost
 
 Worker runs totalled about $31 across nine implementation runs and nine review sessions. Per-run figures are in `docs/agent-work/README.md`.
