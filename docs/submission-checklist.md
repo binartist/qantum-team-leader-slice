@@ -56,6 +56,19 @@ Logged so far:
 
 Capture these while working, not afterwards.
 
+Human decisions that differed from the AI's suggestion or default (log each as it happens):
+
+| Date | AI suggested or did | I decided | Why |
+| --- | --- | --- | --- |
+| 2026-10-04 | Fan out review subagents over the UI, after naming the model to use | Skipped the fan-out and gave my own phone observations instead | Faster and more direct than a review round; my observations drove the navigation rework |
+| 2026-10-04 | Demo bar at the top, a full-width Back button, an unlabelled site code | Demo bar at the bottom, title in the header, a chevron back control, the code labelled "Ref" | A phone navigation pattern people already know; an unlabelled code means nothing to a reader |
+| 2026-10-04 | Chevron back control inside the header | Back row directly below the header, the header holding only the title | One clear title line; back stays near the content it returns from |
+| 2026-10-05 | Navigation worker dispatched on the fast Grok model by default | Default (non-fast) model unless I ask for fast on a run | Quality over speed for build work; fast is opt-in per run |
+| 2026-10-06 | Keep the site reference everywhere, labelled "Ref" | Asked whether it is needed at all. Agreed outcome: off the sites list, kept on the site screen as "Job ref" | Site names already tell sites apart on the list; the job number matters where an escalation quotes it |
+| 2026-10-06 | "Open sites" placed after the intro on the landing page, so it sits above the fold | Stick it to the bottom of the screen | Always in view and in the thumb zone, whatever the reader has scrolled to |
+| 2026-10-06 | Specified job-ref page URLs (`/sites/hp-345`) with redirects from the old ones, at my request | Dropped it before any code | Team leaders tap through screens and never read the URL; a new lookup, redirects and a uniqueness assumption for no user-facing gain |
+| 2026-10-06 | Permanent bottom demo bar on every screen | Replace it with a landing page that explains the demo. Agreed outcome: landing page at `/`, sites list at `/sites`, a small Demo tag in every header linking back to it | The bar took space on every screen; the explanation belongs in one place. The tag keeps deep-linked screens honest |
+
 - [ ] Tools used (Claude Code, which models, which skills or subagents).
 - [ ] How work was planned and directed (spec first, tiering, approval points).
 - [ ] How outputs were verified (gates, tests, review lenses).
