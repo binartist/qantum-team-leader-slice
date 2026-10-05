@@ -15,7 +15,7 @@ I made the product and scope decisions: which slice, shared versus reserved stoc
 
 ## How the work was planned and directed
 
-1. **Docs before code.** The business path, glossary, iteration plan, specification (16 requirements, 32 numbered acceptance criteria), technical design and test strategy were written and reviewed first. Code was then measured against them; when they disagreed, the spec was fixed first.
+1. **Docs before code.** The business path, glossary, iteration plan, specification (16 requirements, 32 numbered acceptance criteria, 34 after the post-delivery walkthrough), technical design and test strategy were written and reviewed first. Code was then measured against them; when they disagreed, the spec was fixed first.
 2. **Risk tiers.** Each change was classified by blast radius. Contract and storage changes (the HTTP API, the move to Postgres) were Tier 3 and needed my written approval of a spec with a contract diff and rollback plan.
 3. **Orchestrator and worker.** Claude wrote a self-contained brief for each piece of work, as a file in the repo: role, facts, decisions not to relitigate, files the worker may touch, test-first method, verification commands and honesty rules ("do not claim a command passed unless you ran it"). Grok carried it out. Briefs were cheap to write and saved rounds of rework; the expensive model spent its tokens on decisions and checking, not on typing code.
 4. **Small rounds.** Domain core, API, UI, navigation, usability, then storage and delivery. Each round ended accepted and committed before the next began.
@@ -40,6 +40,7 @@ Each worker run went through the same ladder, cheapest checks first:
 - **Wrong numbers in our own spec.** The orchestrator's first spec said 24 solutions had substitutes; recomputing under the design's own rules gave 20. Corrected before the brief went out.
 - **A layout departure reversed.** A worker made the page body an inner scroller, claiming a sticky footer could not stay in view. Measured in a browser, it could; the inner scroller would have broken scroll position on "back", so it was reverted.
 - **Usability that tests could not see.** After every gate and review passed, walking the screens against the brief's question ("can a team leader understand the information and act?") found identical penetration rows, substitution buried two levels down, unexplained "Rating 60/30", and two-day-old stock with no warning. Fixed in a dedicated round.
+- **A spec gap found after delivery.** Walking the live demo again showed substitute `0451` as "Materials in stock" although it uses sealant, the very material that site is short of. The spec only said "shows whether its materials are in stock", and the code checked one install against raw stock. The spec was clarified first (AC 33), then the code.
 - **Suggestions declined, with reasons.** A module-relative CSV path (breaks once bundled), adding `server-only` (a new dependency, logged for production), a shared dialog form shell and refresh on tab focus (real, but outside the slice).
 
 ## Cost

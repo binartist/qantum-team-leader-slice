@@ -139,7 +139,8 @@ describe("site readiness over HTTP", () => {
     expect(candidates.body.status).toBe("ok");
     const rows = candidates.body.candidates as { internalCode: string; availability: { overall: string } }[];
     expect(rows.map((row) => [row.internalCode, row.availability.overall])).toEqual([
-      ["0451", "in_stock"],
+      // AC 33 (API): 0451 uses sealant, which Harbour Point is already short of, so one install fitting on hand is not enough.
+      ["0451", "short"],
       ["0464", "no_material_mapping"],
     ]);
     const detailed = candidates.body.candidates as {

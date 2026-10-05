@@ -69,8 +69,10 @@ export function readinessBanner(status: string, shortages: number, blockers: num
       }
       const shortageText = `${shortages} ${shortages === 1 ? "shortage" : "shortages"}`;
       const problem = blockers > 0 ? ` (and ${blockers} ${blockers === 1 ? "data problem" : "data problems"})` : "";
+      // Stock arriving does not fix a data problem, so the next step names both.
+      const nextStep = blockers > 0 ? "Hold the crew until stock arrives and the data problems are sorted." : "Hold the crew until stock arrives.";
       return {
-        label: `Blocked: ${shortageText}${problem}. Hold the crew until stock arrives.`,
+        label: `Blocked: ${shortageText}${problem}. ${nextStep}`,
         tone: "danger",
         icon: "cross",
       };

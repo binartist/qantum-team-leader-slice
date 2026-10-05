@@ -1,4 +1,11 @@
-import { describeCandidateAvailability, findCandidates, type CandidateAvailability, type CandidateStatus, type SubstitutionProposal } from "@/domain";
+import {
+  describeCandidateAvailability,
+  findCandidates,
+  type CandidateAvailability,
+  type CandidateStatus,
+  type SiteShortageKinds,
+  type SubstitutionProposal,
+} from "@/domain";
 import {
   IdempotencyKeyReusedError,
   NotACandidateError,
@@ -8,6 +15,7 @@ import {
   ValidationFailedError,
   type NominatedPenetration,
 } from "@/ports";
+import { loadSiteData } from "./readiness";
 import { uniqueIds, type Dependencies } from "./types";
 
 export const CANDIDATE_NOTICE = "Catalogue match, not verified";
@@ -63,6 +71,12 @@ async function requirePenetration(deps: Dependencies, siteId: string, penetratio
   return penetration;
 }
 
+// A substitute that uses a material this site is already short of does not get the crew out of the shortage.
+async function siteShortageKinds(deps: Dependencies, siteId: string): Promise<SiteShortageKinds> {
+  const { readiness } = await loadSiteData(deps, siteId);
+  return new Map(readiness.shortages.map((shortage) => [shortage.materialId, shortage.kind]));
+}
+
 export async function listCandidates(deps: Dependencies, siteId: string, penetrationId: string): Promise<CandidateList> {
   const penetration = await requirePenetration(deps, siteId, penetrationId);
   const found = findCandidates(penetration, deps.catalogue);
@@ -70,9 +84,10 @@ export async function listCandidates(deps: Dependencies, siteId: string, penetra
   const mapped = codes.length === 0 ? { materials: [], items: [] } : await deps.solutionMaterials.getSolutionMaterials(codes);
   const materialIds = uniqueIds(mapped.items.map((item) => item.materialId));
   const stock = codes.length === 0 ? { asOf: "", balances: [] } : await deps.stock.getStock(materialIds);
+  const siteShortages = codes.length === 0 ? new Map() : await siteShortageKinds(deps, siteId);
 
   const candidates = found.candidates.map((solution) => {
-    const availability = describeCandidateAvailability(solution.internalCode, mapped.items, stock.balances);
+    const availability = describeCandidateAvailability(solution.internalCode, mapped.items, stock.balances, siteShortages);
     const materials: Record<string, { name: string; unit: string }> = {};
     for (const line of availability.lines) {
       const material = mapped.materials.find((item) => item.id === line.materialId);

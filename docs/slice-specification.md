@@ -30,7 +30,7 @@ Before a crew leaves for a site, the team leader needs to know whether the mater
 | FR8 | A leader can record **escalate** on a current shortage to purchasing or the warehouse, with a note. |
 | FR9 | Wait and escalate do not change crew status. The screen says so when they are recorded. |
 | FR10 | A recorded action is current only while the shortfall has not grown beyond what it was when recorded. Otherwise it appears as an earlier decision. Actions always show date and author. |
-| FR11 | For a penetration, the app suggests substitutes from the catalogue using the matching rules in `technical-design.md` section 6. Each suggestion is labelled "catalogue match, not verified" and shows whether its materials are in stock. |
+| FR11 | For a penetration, the app suggests substitutes from the catalogue using the matching rules in `technical-design.md` section 6. Each suggestion is labelled "catalogue match, not verified" and shows whether its materials are in stock. A material this site is already short of, or has no stock record for, never counts as in stock. |
 | FR12 | A leader can record a **proposed substitute** for a penetration, choosing only from the suggested candidates and giving a reason. Status is always proposed. The nomination is not changed. |
 | FR13 | When there are no candidates, the app says so and offers escalate. When the substrate is incomplete in the catalogue, it says that. |
 | FR14 | A leader can list all recorded actions for a site, newest first. |
@@ -82,6 +82,8 @@ Numbered for use as test names. Sample data is defined in section 7.
 30. Every shortage row shows material, required, on hand, short by, affected penetrations and state without relying on colour alone.
 31. All controls are keyboard operable, and interactive targets are at least 44px.
 32. On a 375px wide screen, nothing needs horizontal scrolling.
+33. A candidate that uses a material the site is already short of has availability `short`, even when one install fits in the stock on hand. A material whose site stock is unknown makes the candidate `unknown`. Shortages of other materials leave a candidate that fits on hand `in_stock`.
+34. A blocked banner with both shortages and data problems says to hold the crew until stock arrives and the data problems are sorted. With shortages only, it reads as before.
 
 ## 5. Non-functional requirements
 
@@ -129,7 +131,7 @@ Real authentication, a real inventory or nomination service, approval of substit
 1. Open the sites list. Site B is blocked.
 2. Open site B. The banner says blocked with N shortages, and the stock figures are labelled shared and not reserved.
 3. Escalate the sealant shortage to purchasing with a note. State shows escalated. Crew is still blocked, and the screen says why.
-4. Open the penetration nominating `0438`. See candidates `0451` and `0464` labelled not verified. Propose `0451` with a reason. It is listed as proposed and nothing else changes.
+4. Open the penetration nominating `0438`. See candidates `0451` and `0464` labelled not verified. `0451` uses sealant, which this site is short of, and says so. Propose `0451` with a reason. It is listed as proposed and nothing else changes.
 5. Open the penetration nominating `0344`. See "no catalogue match, escalate instead".
 6. Open site C. See the missing-data blockers with reasons, not a clear status.
 7. Open the actions list. See the three recorded actions with date and author.

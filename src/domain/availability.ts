@@ -19,10 +19,14 @@ export interface CandidateAvailability {
   readonly lines: readonly MaterialLine[];
 }
 
+/** Materials the site is already short of, or has no stock record for, keyed by material id. */
+export type SiteShortageKinds = ReadonlyMap<string, "short" | "unknown">;
+
 export function describeCandidateAvailability(
   internalCode: string,
   solutionMaterials: readonly SolutionMaterial[],
   stock: readonly StockBalance[],
+  siteShortages: SiteShortageKinds = new Map(),
 ): CandidateAvailability {
   const rows = solutionMaterials.filter((row) => row.internalCode === internalCode);
   if (rows.length === 0) return { internalCode, overall: "no_material_mapping", lines: [] };
@@ -43,8 +47,11 @@ export function describeCandidateAvailability(
     }
     const onHandQty = onHandFromQuantities(quantities);
     const requiredQty = roundUpQuantity(quantityPerInstall);
+    // A material the site is already short of cannot cover a substitute too, whatever one install needs.
+    const siteShortage = siteShortages.get(materialId);
     let status: AvailabilityStatus;
-    if (onHandQty === null) status = "unknown";
+    if (siteShortage === "short") status = "short";
+    else if (onHandQty === null || siteShortage === "unknown") status = "unknown";
     else if (requiredQty <= onHandQty) status = "in_stock";
     else status = "short";
     return {

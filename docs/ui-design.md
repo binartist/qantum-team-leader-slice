@@ -39,7 +39,7 @@ There is also a not-found page and one error page with a retry link. All pages a
 | Crew status | Banner text | Icon |
 | --- | --- | --- |
 | clear | Crew can go | check |
-| blocked | Blocked: N shortages (and M data problems when present). Hold the crew until stock arrives. | cross |
+| blocked | Blocked: N shortages. Hold the crew until stock arrives. With data problems too: Blocked: N shortages (and M data problems). Hold the crew until stock arrives and the data problems are sorted. | cross |
 | nothing_planned | Nothing planned for this site | dashed circle |
 | API 502 | Can't check this site right now. Don't assume it's clear. Try again. | warning |
 
@@ -69,7 +69,7 @@ Plain reason: "Solution code 9999 isn't in the catalogue", "No materials recorde
 | `nominated_code_unknown` | The nominated solution isn't in the catalogue, so we can't suggest substitutes. |
 | Candidate availability `no_material_mapping` | We can't tell if its materials are in stock. |
 | Candidate availability `unknown` | No stock record for one of its materials. |
-| Candidate availability `short` | Some of its materials are short. |
+| Candidate availability `short` | Uses a material this site is short of. |
 | Candidate availability `invalid_quantity` | Its material quantities look invalid. |
 | Sites list empty | No sites to show. |
 | Site `unavailable` in the list | Can't check |

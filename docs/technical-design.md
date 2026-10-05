@@ -173,7 +173,7 @@ Service size formats also vary (`Ø50mm`, `80mm`, `1100x10mm`, `900mm x 50mm`). 
 
 **Empty state.** When there are no candidates the UI says "No catalogue match for this penetration. Escalate instead." and offers the escalate action. A nominated code that is not in the catalogue says so and gives the same option. Against the supplied CSV only 20 of 148 solutions have any candidate (section 9), so this is the common case, not an edge.
 
-Each candidate also shows whether its materials are in stock, since a substitute that needs a different missing material does not help. Material mappings for candidates are seeded in the sample data for the demo codes only. Others show "No material mapping".
+Each candidate also shows whether its materials are in stock, since a substitute that needs a different missing material does not help. A material the site is already short of counts as `short` for every candidate that uses it, and one with unknown site stock counts as `unknown`, whatever one install needs. The check does not net off what the swap would free from the nominated solution: that would be a reservation model, which this slice excludes, and erring towards "short" never implies a crew can go. Material mappings for candidates are seeded in the sample data for the demo codes only. Others show "No material mapping".
 
 How suitability and approval work:
 

@@ -92,7 +92,7 @@ describe("candidate status and availability", () => {
 
   it("maps each availability", () => {
     expectView(availabilityStatus("in_stock"), { label: "Materials in stock", tone: "success", icon: "check" });
-    expectView(availabilityStatus("short"), { label: "Some of its materials are short.", tone: "danger", icon: "cross" });
+    expectView(availabilityStatus("short"), { label: "Uses a material this site is short of.", tone: "danger", icon: "cross" });
     expectView(availabilityStatus("unknown"), { label: "No stock record for one of its materials.", tone: "warning", icon: "warning" });
     expectView(availabilityStatus("no_material_mapping"), {
       label: "We can't tell if its materials are in stock.",
