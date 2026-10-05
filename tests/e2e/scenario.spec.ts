@@ -68,19 +68,20 @@ test("scenario: escalate sealant, propose 0451, then Kingsway still cannot go", 
 
   await sealant.getByText("Penetrations and substitutes (12)").click();
   await sealant.locator("a[href$='pen-b-01']").click();
-  const inStock = page.getByRole("article").filter({ has: page.getByRole("heading", { name: "0451" }) });
+  const usesShort = page.getByRole("article").filter({ has: page.getByRole("heading", { name: "0451" }) });
   const unmapped = page.getByRole("article").filter({ has: page.getByRole("heading", { name: "0464" }) });
   await expect(page.getByText("Catalogue match, not verified")).toBeVisible();
-  await expect(inStock.getByText("Materials in stock")).toBeVisible();
+  await expect(usesShort.getByText("Uses a material this site is short of.")).toBeVisible();
+  await expect(page.getByText("Materials in stock")).toHaveCount(0);
   await expect(page.getByText("Fire rating: 60 min integrity, 30 min insulation")).toBeVisible();
-  await expect(inStock.getByText("Fire rating: 60 min integrity, 60 min insulation")).toBeVisible();
-  await expect(inStock.getByText("Meets the required rating")).toBeVisible();
-  await expect(inStock.getByText("Supplier ref V21.27-22SFR00053-158-E")).toBeVisible();
-  await expect(inStock.getByText("Fire putty pad x1")).toBeVisible();
-  await expect(inStock.getByText("on hand")).toHaveCount(0);
+  await expect(usesShort.getByText("Fire rating: 60 min integrity, 60 min insulation")).toBeVisible();
+  await expect(usesShort.getByText("Meets the required rating")).toBeVisible();
+  await expect(usesShort.getByText("Supplier ref V21.27-22SFR00053-158-E")).toBeVisible();
+  await expect(usesShort.getByText("Fire putty pad x1")).toBeVisible();
+  await expect(usesShort.getByText("on hand")).toHaveCount(0);
   await expect(unmapped.getByText("We can't tell if its materials are in stock.")).toBeVisible();
 
-  await inStock.getByRole("button", { name: /Propose this/ }).click();
+  await usesShort.getByRole("button", { name: /Propose this/ }).click();
   const propose = page.getByRole("dialog");
   await expect(propose.getByText("A manager has to verify this catalogue match.")).toBeVisible();
   const posts: string[] = [];

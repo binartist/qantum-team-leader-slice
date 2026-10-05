@@ -81,7 +81,7 @@ All use real catalogue fields copied from the CSV row of the nominated code, wit
 
 - **Sealant is held in two places** (6 and 2), so on hand is 8 only if locations are summed (AC 3).
 - **Sites A and B both draw on sealant and collar-25.** A needs 2 of each and is clear. B needs 10 sealant and 4 collar-25 and is short. Together they need more than exists, which is exactly the over-commit that shared, unreserved stock cannot see. The screen label says so, and the demo can point at it (AC 10).
-- **Site B's substitutes are all different kinds.** `0438` has two candidates: `0451` (materials in stock) and `0464` (no mapping, so "no material mapping" is shown). `0434` has one in-stock candidate. `0789` has two candidates that need the same scarce sealant. `0334` has one candidate with in-stock materials. `0344` has none, so the empty state with the escalate option appears.
+- **Site B's substitutes are all different kinds.** `0438` has two candidates: `0451` (uses sealant, which site B is short of, so it shows as short; AC 33) and `0464` (no mapping, so "no material mapping" is shown). `0434` has one candidate, `0435`, also short because it uses sealant. `0789` has two candidates that need the same scarce sealant. `0334` has one candidate, `0347`, whose materials are all in stock: the one "Materials in stock" case. `0344` has none, so the empty state with the escalate option appears.
 - **Site C's penetration nominating `0943`** is mapped, so the site is not blocked by it, but its substitute view says the catalogue substrate is incomplete (AC 21). The mapped mastic has no stock record, which gives an unknown-stock shortage that the leader can act on.
 - **Site D** is the nothing-planned case (AC 8).
 

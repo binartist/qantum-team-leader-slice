@@ -119,7 +119,7 @@ export function emptyCatalogueLabel(hasRelated: boolean): string {
 
 export function availabilityStatus(overall: AvailabilityChip): StatusView {
   if (overall === "in_stock") return { label: "Materials in stock", tone: "success", icon: "check" };
-  if (overall === "short") return { label: "Some of its materials are short.", tone: "danger", icon: "cross" };
+  if (overall === "short") return { label: "Uses a material this site is short of.", tone: "danger", icon: "cross" };
   if (overall === "unknown") return { label: "No stock record for one of its materials.", tone: "warning", icon: "warning" };
   if (overall === "no_material_mapping") {
     return { label: "We can't tell if its materials are in stock.", tone: "warning", icon: "warning" };

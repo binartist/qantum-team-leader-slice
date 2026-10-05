@@ -38,5 +38,6 @@ export {
   type CandidateAvailability,
   type CandidateOverall,
   type MaterialLine,
+  type SiteShortageKinds,
 } from "./availability";
 export { isNonNegativeFinite, onHandFromQuantities, roundUpQuantity, snapQuantity } from "./quantities";

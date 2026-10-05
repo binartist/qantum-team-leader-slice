@@ -72,10 +72,10 @@ describe("banners and empty states", () => {
     expect(readinessBanner("blocked", 2, 0).label).toBe("Blocked: 2 shortages. Hold the crew until stock arrives.");
     expect(readinessBanner("blocked", 1, 0).label).toBe("Blocked: 1 shortage. Hold the crew until stock arrives.");
     expect(readinessBanner("blocked", 1, 2).label).toBe(
-      "Blocked: 1 shortage (and 2 data problems). Hold the crew until stock arrives.",
+      "Blocked: 1 shortage (and 2 data problems). Hold the crew until stock arrives and the data problems are sorted.",
     );
     expect(readinessBanner("blocked", 3, 1).label).toBe(
-      "Blocked: 3 shortages (and 1 data problem). Hold the crew until stock arrives.",
+      "Blocked: 3 shortages (and 1 data problem). Hold the crew until stock arrives and the data problems are sorted.",
     );
     expect(readinessBanner("blocked", 2, 0).tone).toBe("danger");
     expect(readinessBanner("blocked", 2, 0).icon).toBe("cross");
@@ -83,6 +83,11 @@ describe("banners and empty states", () => {
     expect(readinessBanner("blocked", 0, 1).label).toBe("Blocked: 1 data problem. Hold the crew until they are sorted.");
     expect(readinessBanner("blocked", 0, 0).label).toBe("Blocked: 0 shortages. Hold the crew until stock arrives.");
     expect(readinessBanner("clear", 0, 0)).toEqual({ label: "Crew can go", tone: "success", icon: "check" });
+  });
+
+  it("AC 34: a banner with shortages and data problems names both as the next step; shortages alone read as before", () => {
+    expect(readinessBanner("blocked", 1, 2).label).toMatch(/until stock arrives and the data problems are sorted\.$/);
+    expect(readinessBanner("blocked", 2, 0).label).toBe("Blocked: 2 shortages. Hold the crew until stock arrives.");
   });
 
   it("an unknown crew status uses the unavailable banner, never Crew can go", () => {
