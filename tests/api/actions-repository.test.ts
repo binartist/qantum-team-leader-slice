@@ -1,21 +1,14 @@
-import { describe, expect, it, vi } from "vitest";
-import { createClient } from "@supabase/supabase-js";
+import { describe, expect, it } from "vitest";
 import { createMemoryActionsRepository } from "@/adapters/memory/actions-repository";
 import {
   createActionsRepository,
-  createSupabaseActionsRepository,
   shortageActionFromRow,
   shortageActionToInsert,
   substitutionProposalFromRow,
   substitutionProposalToInsert,
   type ActionsStore,
-} from "@/adapters/supabase/actions-repository";
+} from "@/adapters/postgres/repository";
 import { UpstreamError, type ActionsRepository, type NewShortageAction, type NewSubstitutionProposal } from "@/ports";
-
-vi.mock("@supabase/supabase-js", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@supabase/supabase-js")>();
-  return { ...actual, createClient: vi.fn(actual.createClient) };
-});
 
 function actionInput(overrides: Partial<NewShortageAction> = {}): NewShortageAction {
   return {
@@ -179,7 +172,7 @@ const actionRow = {
   secret: "do-not-surface",
 };
 
-describe("supabase actions repository mapping", () => {
+describe("actions repository mapping", () => {
   it("maps a shortage row, including a numeric string, and drops unknown fields", () => {
     expect(shortageActionFromRow(actionRow)).toEqual({
       id: actionRow.id,
@@ -338,70 +331,4 @@ describe("supabase actions repository mapping", () => {
       { table: "proposal", createdBy: "demo-leader", idempotencyKey: "proposal-1" },
     ]);
   });
-
-  it("filters both list queries by the requested site id", async () => {
-    const filters: { table: string; column: string; value: string }[] = [];
-    function table(name: string) {
-      const api = {
-        insert() {
-          return api;
-        },
-        select() {
-          return api;
-        },
-        eq(column: string, value: string) {
-          filters.push({ table: name, column, value });
-          return api;
-        },
-        order() {
-          return Promise.resolve({ data: [], error: null });
-        },
-        single() {
-          return Promise.resolve({ data: null, error: null });
-        },
-        maybeSingle() {
-          return Promise.resolve({ data: null, error: null });
-        },
-      };
-      return api;
-    }
-    vi.mocked(createClient).mockImplementationOnce((url, key) => {
-      expect(url).toBe("https://example.supabase.co");
-      expect(key).toBe("service-key-marker");
-      const client = { from(name: string) { return table(name); } };
-      return client as unknown as ReturnType<typeof createClient>;
-    });
-    const repo = createSupabaseActionsRepository({ url: "https://example.supabase.co", serviceKey: "service-key-marker" });
-    expect(await repo.listShortageActions("site-b")).toEqual([]);
-    expect(await repo.listSubstitutionProposals("site-b")).toEqual([]);
-    expect(filters).toEqual([
-      { table: "shortage_action", column: "site_id", value: "site-b" },
-      { table: "substitution_proposal", column: "site_id", value: "site-b" },
-    ]);
-  });
-});
-
-const supabaseConfigured = Boolean(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_KEY);
-const requireSupabaseContract = process.env.REQUIRE_SUPABASE_CONTRACT === "1";
-
-describe("supabase actions repository against a configured test project", () => {
-  if (requireSupabaseContract && !supabaseConfigured) {
-    it("fails when REQUIRE_SUPABASE_CONTRACT=1 and Supabase variables are missing", () => {
-      throw new Error(
-        "REQUIRE_SUPABASE_CONTRACT=1 but SUPABASE_URL or SUPABASE_SERVICE_KEY is missing. Set both to run the actions repository contract against Supabase.",
-      );
-    });
-    return;
-  }
-
-  actionsRepositoryContract(
-    () =>
-      createSupabaseActionsRepository({
-        url: process.env.SUPABASE_URL ?? "",
-        serviceKey: process.env.SUPABASE_SERVICE_KEY ?? "",
-      }),
-    (name, fn) => {
-      it.skipIf(!supabaseConfigured)(name, fn);
-    },
-  );
 });

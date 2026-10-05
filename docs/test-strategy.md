@@ -18,13 +18,13 @@ How the slice is verified. Acceptance criteria (AC) are numbered in `slice-speci
 | Catalogue and data checks | Vitest | CSV load counts, raw text preserved, sample data references | Every push |
 | Contract | Vitest and Zod | Each upstream stub validates against its schema | Every push |
 | API | Vitest, calling route handlers directly | Status codes, validation, idempotency, headers | Every push |
-| Database | Vitest against a local Supabase Postgres | Constraints, uniqueness, row-level security deny-all | Every push |
+| Database | Vitest against a real Postgres 17 (`npm run test:db`) | Constraints, idempotent uniqueness, ordering, and the app role's refused update, delete, truncate and DDL | Every push |
 | End to end | Playwright | The demonstration scenario and failure states in a browser | Every push, and after deploy against the public URL |
 | Accessibility | axe-core inside Playwright, plus a manual keyboard pass | Contrast, labels, focus order, status without colour | Every push (automated), release (manual) |
 | Static checks | TypeScript strict, ESLint | Types, unsafe patterns, import boundaries | Every push |
 | Secrets and dependencies | Secret scan, dependency audit | No credentials in repo, known vulnerabilities | Every push |
 
-Boundary rule enforced by lint: the domain core may not import Next.js, Supabase or file system modules.
+Boundary rule enforced by lint: the domain core may not import Next.js, React, the database driver (`pg`) or file system modules, and client code may not import `pg` or server modules.
 
 ## 3. Acceptance criteria to tests
 
@@ -90,7 +90,7 @@ A script lists every AC number and fails CI if one has no test referencing it.
 
 ## 4a. API layer verification (added after independent review)
 
-The vitest coverage floor measures only `src/domain`, so the API layer is judged by mutation checks. After the first review, 24 deliberately broken rules survived the suite. The fix round added tests for each, and the orchestrator re-ran the rules as mutants: 13 of 15 were killed, and the 2 survivors were equivalent (the numeric `Content-Length` early reject is an optimisation behind the streaming limit, and the note length is enforced by both the schema and the use case). Contract tests run against the in-memory repository, and against Supabase only when credentials are present. `REQUIRE_SUPABASE_CONTRACT=1` and `REQUIRE_BUNDLE_SCAN=1` make a skipped run fail, for CI.
+The vitest coverage floor measures only `src/domain`, so the API layer is judged by mutation checks. After the first review, 24 deliberately broken rules survived the suite. The fix round added tests for each, and the orchestrator re-ran the rules as mutants: 13 of 15 were killed, and the 2 survivors were equivalent (the numeric `Content-Length` early reject is an optimisation behind the streaming limit, and the note length is enforced by both the schema and the use case). Contract tests run against the in-memory repository, and against a real Postgres 17 when `TEST_DB_ADMIN_URL` is set. `REQUIRE_DB_CONTRACT=1` and `REQUIRE_BUNDLE_SCAN=1` make a skipped run fail, for CI. A mutation that grants the app role `update, delete` fails the database suite.
 
 ## 5. Failure and risk coverage
 
@@ -127,11 +127,12 @@ On every push and pull request, in order:
 1. Install with a locked lockfile.
 2. Typecheck and lint, including the import-boundary rule.
 3. Unit, contract, catalogue and API tests, with coverage.
-4. Start local Supabase, apply migrations, run database tests.
+4. Start a Postgres 17 service, run `db/setup.sql` and the migrations, run the database contract suite with `REQUIRE_DB_CONTRACT=1`.
 5. Build, then the client bundle check for credentials.
 6. Secret scan and dependency audit.
 7. Playwright end-to-end and axe on a dev server (four projects: reads, writes, and two stock-failure servers started with `STUB_STOCK_MODE=down` and `malformed`, each with its own build directory).
 8. AC coverage script.
+9. On `main` only, after all of the above: deploy to Vercel (`vercel pull`, `build --prod`, `deploy --prebuilt --prod`), then `scripts/smoke.mjs` against the production URL (`/api/sites` is 200, `no-store`, four sites; `/` renders "Sites").
 
 Merge to the default branch is blocked on any failure. Deployment to Vercel runs only from a green default branch. After deploy, a smoke run of the end-to-end scenario against the public URL is the evidence of a working deployment.
 

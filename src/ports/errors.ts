@@ -89,7 +89,7 @@ export class IdempotencyKeyReusedError extends AppError {
   }
 }
 
-export type InternalReason = "config_invalid" | "store_forbidden" | "supabase_unconfigured" | "supabase_url_insecure";
+export type InternalReason = "config_invalid" | "store_forbidden" | "db_unconfigured" | "db_tls_insecure";
 
 export class InternalError extends AppError {
   readonly reason: InternalReason | undefined;

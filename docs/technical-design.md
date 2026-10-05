@@ -12,7 +12,7 @@ The slice is a small web app on the current stack. No new technology is introduc
 | --- | --- | --- |
 | UI and API | Next.js (App Router, React, TypeScript) | One deployable. Route handlers serve the endpoints in `slice-decisions.md`. Matches the web team's skills. |
 | Hosting | Vercel | Already used. Preview deploy per PR. |
-| Persistence | Supabase Postgres | Already used. Holds actions only. |
+| Persistence | Postgres on the existing Supabase server, its own database `qantum_slice`, reached with `pg` through the Sydney transaction pooler | Already used (the same server hosts another app in its own database). Holds actions only. Supabase Auth and the Data API are not used |
 | Mobile (Flutter) | Not touched | Install, pins and photos stay there. |
 | Offline | Not in this slice | The leader checks before leaving, usually with signal. See section 8. |
 
@@ -40,7 +40,7 @@ Ports (interfaces)
    |  CataloguePort · ActionsRepository
    |
 Adapters
-      Stub JSON (sample)      CSV catalogue      Supabase actions repo
+      Stub JSON (sample)      CSV catalogue      Postgres actions repo (pg)
       (swap for real HTTP      (build-time load)  (the only real DB)
        clients later)
 ```
@@ -59,7 +59,7 @@ Rules:
 | Sites, penetrations, nominations | Existing spec system | Read via stub of `GET /sites`, `GET /sites/{id}/nominations`. |
 | Stock balances | Upstream inventory | Read via stub of `GET /stock`. |
 | Solution to material quantities | Sample (not in CSV) | Read from a clearly labelled sample file. Same port shape as a future catalogue extension. |
-| Wait, escalation, substitution proposal | This app | Written to Supabase. |
+| Wait, escalation, substitution proposal | This app | Written to Postgres (`qantum_slice`). |
 
 Sample data lives under `data/sample/` with a README stating it is invented. Penetrations must reference real `internal_code` values from the CSV, and a test asserts that.
 
@@ -91,7 +91,7 @@ SiteReadiness{ siteId, crewStatus: clear | blocked | nothing_planned,
   - A nominated code with no solution-material mapping, one that is not in the catalogue, or one whose mapped quantity is negative or not finite, becomes a **blocker** with a stated reason (`no_material_mapping`, `unknown_solution_code`, `invalid_quantity`). Precedence in that order of checking: unknown code, then no mapping, then invalid quantity. A blocked penetration adds no requirement, so a bad value can never cancel another penetration's need. It cannot be waited on, because there is nothing to wait for. The leader can only escalate it as a data problem.
   - A site with no nominations is `nothing_planned`, never "clear".
 
-Stored (Supabase), append-only:
+Stored (Postgres), append-only:
 
 ```text
 shortage_action
@@ -197,7 +197,7 @@ Requirements: keyboard and screen-reader usable, status never conveyed by colour
 | Area | Exercise | Production change |
 | --- | --- | --- |
 | Auth | One demo identity set on the server. No login. `created_by` is always set server-side, never taken from the request. | Supabase Auth, or the web app's session (a separate origin cannot reuse that session without SSO or a shared cookie domain). Leader role required to write. |
-| DB access | RLS enabled on both tables with **no policies** (deny by default), so the Data API and anon key can reach nothing. The server uses the service key from Vercel env, server-side only, and it never reaches the browser. The data is invented, so a narrower database role is left to production. | Per-user JWT and RLS policies by site membership, so the database enforces access. |
+| DB access | A separate database `qantum_slice` on the shared server. The app connects as role `qantum_slice`, which has only `SELECT, INSERT` on the two tables, so append-only is enforced by the database; tables are owned by the admin that runs migrations. No Data API, no anon key. Credentials live in Vercel env, server-side only; a lint rule and a test keep `pg` and server code out of client bundles. TLS is `require` (encrypted, server not authenticated) because the pooler chain is not in Node's trust store; `verify-full` is supported with a CA. | Per-user JWT and RLS policies by site membership, so the database enforces access. |
 | Public write abuse | Cap note and reason length. Accepted risk: anyone with the URL can add demo actions. | Authenticated users only, a dedicated database role, rate limiting and alerting. |
 | Secrets | Env vars, none in the repo. `.env.example` lists names only. | Same, with a secret manager. |
 | Offline | Not supported. Readiness and actions are never cached (`no-store`). | Queue writes with the idempotency key and replay. The Flutter app's sync pattern is the reference. |
@@ -219,7 +219,7 @@ Requirements: keyboard and screen-reader usable, status never conveyed by colour
 - Unit: requirement and shortage maths, id stability, crew status, missing-data states, candidate matching (including null insulation and the coarse-field traps), CSV parsing and normalisation.
 - Contract: each upstream stub validates against its schema. Sample penetrations reference real catalogue codes.
 - API: validation failures, 404 for non-existent shortages, idempotent repeats, upstream failure returns 502 and never "clear".
-- Database: constraints (`status = proposed`, `escalate_to` required for escalate) against a real Postgres, local Supabase in CI.
+- Database: constraints (`status = proposed`, `escalate_to` required for escalate), idempotent replay and the app role's refused update, delete, truncate and DDL, against a real Postgres 17 (podman locally, a service container in CI).
 - End to end: the demo scenario, shortage to escalate to a blocked crew that stays blocked.
 
 ## 11. Additions to earlier docs

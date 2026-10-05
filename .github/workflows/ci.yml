@@ -12,22 +12,100 @@ jobs:
   checks:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        with: { fetch-depth: 0 }
-      - uses: actions/setup-node@v4
-        with: { node-version: 22, cache: npm }
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
       - run: npm ci
       - run: npm run typecheck
       - run: npm run lint
       - run: npm run test:coverage
       - run: npm run build
+      - name: Bundle credential scan
+        run: REQUIRE_BUNDLE_SCAN=1 npx vitest run tests/api/security.test.ts
       - name: Dependency audit (production dependencies)
         run: npm audit --omit=dev --audit-level=high
       - name: Secret scan
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  # Added with the build step, as the tests they run come into existence:
-  #   database tests (local Supabase), Playwright + axe, `npm run check:ac`,
-  #   client-bundle credential check, deploy to Vercel from green main,
-  #   post-deploy smoke run against the public URL. See docs/test-strategy.md section 7.
+
+  db:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Database contract
+        env:
+          TEST_DB_ADMIN_URL: postgres://postgres:postgres@127.0.0.1:5432/postgres
+          REQUIRE_DB_CONTRACT: "1"
+        run: npm run test:db
+
+  e2e:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - run: npm run check:ac
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          if-no-files-found: ignore
+
+  deploy:
+    needs: [checks, db, e2e]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: deploy-production
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx vercel@62.2.0 pull --yes --environment=production --token "$VERCEL_TOKEN"
+      - run: npx vercel@62.2.0 build --prod --token "$VERCEL_TOKEN"
+      - run: npx vercel@62.2.0 deploy --prebuilt --prod --token "$VERCEL_TOKEN"
+      - name: Smoke
+        env:
+          PRODUCTION_URL: ${{ vars.PRODUCTION_URL }}
+        run: node scripts/smoke.mjs
