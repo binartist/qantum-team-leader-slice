@@ -47,5 +47,5 @@ async function openPropose(page: Page): Promise<void> {
 async function openDisclosure(page: Page): Promise<void> {
   await gotoApp(page, "/sites/site-b");
   const collar = page.getByRole("article").filter({ has: page.getByRole("heading", { name: "Pipe collar for 25 mm pipe" }) });
-  await collar.getByText("Show affected penetrations").click();
+  await collar.getByText("Penetrations and substitutes (4)").click();
 }

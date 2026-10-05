@@ -9,6 +9,7 @@ test("malformed stock shows can't check and never crew can go", async ({ page })
 
   await gotoApp(page, "/sites/site-b");
   await expect(page.getByText("Can't check this site right now. Don't assume it's clear. Try again.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Try again" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Back to sites" })).toBeVisible();
   await expect(page.getByText("Crew can go")).toHaveCount(0);
 });

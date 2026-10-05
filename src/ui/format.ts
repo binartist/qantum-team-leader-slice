@@ -1,16 +1,41 @@
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"] as const;
 
-export function formatQuantity(value: number): string {
-  if (!Number.isFinite(value)) return "unknown";
+export function formatReference(reference: string): string {
+  return `Ref ${reference}`;
+}
+
+function snappedQuantity(value: number): number | null {
+  if (!Number.isFinite(value)) return null;
   const rounded = Math.round(value * 1e6) / 1e6;
-  if (Object.is(rounded, -0)) return "0";
-  if (Number.isInteger(rounded)) return String(rounded);
-  return rounded.toFixed(6).replace(/0+$/, "").replace(/\.$/, "");
+  return Object.is(rounded, -0) ? 0 : rounded;
+}
+
+export function formatQuantity(value: number): string {
+  const snapped = snappedQuantity(value);
+  if (snapped === null) return "unknown";
+  if (Number.isInteger(snapped)) return String(snapped);
+  return snapped.toFixed(6).replace(/0+$/, "").replace(/\.$/, "");
+}
+
+const UNIT_PLURAL: Readonly<Record<string, string>> = {
+  cartridge: "cartridges",
+  tube: "tubes",
+  metre: "metres",
+};
+
+export function formatUnit(quantity: number, unit: string): string {
+  if (unit === "each" || unit.length === 0) return "";
+  const snapped = snappedQuantity(quantity);
+  if (snapped === 1) return unit;
+  return UNIT_PLURAL[unit] ?? `${unit}s`;
 }
 
 export function formatNeed(required: number, onHand: number | null, shortfall: number | null, unit: string): string {
   if (onHand === null || shortfall === null) return `Need ${formatQuantity(required)}, stock unknown`;
-  return `Need ${formatQuantity(required)}, have ${formatQuantity(onHand)}, short ${formatQuantity(shortfall)} ${unit}`;
+  // The unit is printed once, beside the shortfall, so plural follows that number.
+  const unitWord = formatUnit(shortfall, unit);
+  const amounts = `Need ${formatQuantity(required)}, have ${formatQuantity(onHand)}, short ${formatQuantity(shortfall)}`;
+  return unitWord.length > 0 ? `${amounts} ${unitWord}` : amounts;
 }
 
 function utcStamp(iso: string): string | null {
@@ -22,9 +47,44 @@ function utcStamp(iso: string): string | null {
   return `${date.getUTCDate()} ${month} ${date.getUTCFullYear()}, ${hours}:${minutes} UTC`;
 }
 
-export function formatAsOf(iso: string): string {
-  const stamp = utcStamp(iso);
-  return stamp ? `As of ${stamp}` : "As of unknown";
+const MINUTE_MS = 60_000;
+const HOUR_MS = 60 * MINUTE_MS;
+const DAY_MS = 24 * HOUR_MS;
+
+function ageMs(stockAsOf: string, asOf: string): number | null {
+  const stock = Date.parse(stockAsOf);
+  const request = Date.parse(asOf);
+  if (Number.isNaN(stock) || Number.isNaN(request)) return null;
+  const delta = request - stock;
+  if (delta < 0) return null;
+  return delta;
+}
+
+function agePhrase(deltaMs: number): string {
+  if (deltaMs < HOUR_MS) {
+    const minutes = Math.floor(deltaMs / MINUTE_MS);
+    return minutes === 1 ? "1 minute old" : `${minutes} minutes old`;
+  }
+  if (deltaMs < DAY_MS) {
+    const hours = Math.floor(deltaMs / HOUR_MS);
+    return hours === 1 ? "1 hour old" : `${hours} hours old`;
+  }
+  const days = Math.floor(deltaMs / DAY_MS);
+  return days === 1 ? "1 day old" : `${days} days old`;
+}
+
+export function stockFiguresLine(stockAsOf: string, asOf: string): string {
+  const stamp = utcStamp(stockAsOf);
+  if (!stamp) return "Stock figures from an unknown time";
+  const delta = ageMs(stockAsOf, asOf);
+  if (delta === null) return `Stock figures from ${stamp}`;
+  return `Stock figures from ${stamp} (${agePhrase(delta)})`;
+}
+
+/** True only when the snapshot is strictly older than 24 hours. An unreadable or future time is not called stale. */
+export function stockIsStale(stockAsOf: string, asOf: string): boolean {
+  const delta = ageMs(stockAsOf, asOf);
+  return delta !== null && delta > DAY_MS;
 }
 
 export function formatRecordedAt(iso: string): string {
@@ -47,10 +107,66 @@ export function characterCountLabel(value: string): string {
   return `${value.trim().length} of 500 characters`;
 }
 
+function ratingPart(minutes: number | null, kind: "integrity" | "insulation"): string {
+  if (minutes === null) return kind === "integrity" ? "no integrity rating" : "no insulation rating";
+  return `${formatQuantity(minutes)} min ${kind}`;
+}
+
 export function formatRating(integrity: number | null, insulation: number | null): string {
-  const left = integrity === null ? "not claimed" : formatQuantity(integrity);
-  const right = insulation === null ? "not claimed" : formatQuantity(insulation);
-  return `${left}/${right}`;
+  return `Fire rating: ${ratingPart(integrity, "integrity")}, ${ratingPart(insulation, "insulation")}`;
+}
+
+export function supplierRefLine(code: string): string | null {
+  const trimmed = code.trim();
+  if (trimmed.length === 0) return null;
+  return `Supplier ref ${trimmed}`;
+}
+
+export interface PenetrationRow {
+  readonly floor: string;
+  readonly location: string;
+  readonly serviceType: string;
+  readonly serviceSize: string;
+  readonly nominatedCode: string;
+}
+
+// Display only: catalogue text keeps its raw spacing for matching, the screen collapses runs of spaces.
+function tidy(text: string): string {
+  return text.replace(/\s+/g, " ").trim();
+}
+
+export function serviceLine(place: Pick<PenetrationRow, "serviceType" | "serviceSize">): string {
+  return `${tidy(place.serviceType)}, ${tidy(place.serviceSize)}`;
+}
+
+// The solution code is the group heading, so a row names only the place and the service.
+export function penetrationLine(place: PenetrationRow): string {
+  return `${place.floor}, ${place.location} · ${tidy(place.serviceType)} ${tidy(place.serviceSize)}`;
+}
+
+export function penetrationDisclosureLabel(count: number): string {
+  return `Penetrations and substitutes (${count})`;
+}
+
+export function penetrationGroups<T extends { readonly nominatedCode: string }>(
+  places: readonly T[],
+): { heading: string; places: T[] }[] {
+  const groups: { code: string; places: T[] }[] = [];
+  const index = new Map<string, { code: string; places: T[] }>();
+  for (const place of places) {
+    const existing = index.get(place.nominatedCode);
+    if (existing) {
+      existing.places.push(place);
+      continue;
+    }
+    const created = { code: place.nominatedCode, places: [place] };
+    index.set(place.nominatedCode, created);
+    groups.push(created);
+  }
+  return groups.map((group) => ({
+    heading: `Solution ${group.code} · ${group.places.length}`,
+    places: group.places,
+  }));
 }
 
 export function affectedCount(count: number): string {

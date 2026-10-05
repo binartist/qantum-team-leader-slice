@@ -4,10 +4,11 @@ import { connection } from "next/server";
 import type { SiteReadinessView } from "@/application";
 import { SiteNotFoundError } from "@/ports";
 import { getCachedCandidates, getCachedReadiness, getCachedSite } from "../../../../_lib/cached";
-import { Banner } from "@/ui/Banner";
+import { AppBar } from "@/ui/AppBar";
 import { CandidateCard } from "@/ui/CandidateCard";
+import { UnavailablePanel } from "@/ui/UnavailablePanel";
 import { EscalateDialog } from "@/ui/decisions/EscalateDialog";
-import { formatMaterialSummary, formatRating, sitePath, actionsPath } from "@/ui/format";
+import { formatMaterialSummary, formatRating, sitePath, actionsPath, serviceLine } from "@/ui/format";
 import { LinkButton } from "@/ui/LinkButton";
 import { Notice } from "@/ui/Notice";
 import { BUTTONS, readinessBanner } from "@/ui/messages";
@@ -38,17 +39,17 @@ export default async function SubstitutesPage({ params }: RouteParams) {
     if (!site) throw new SiteNotFoundError();
     return site;
   });
-  if (siteLoad.status === "unavailable") return unavailable("This site", "/", BUTTONS.backToSites);
+  if (siteLoad.status === "unavailable") return unavailable("This site", "/", "Sites");
 
   const listedLoad = await loadPage(() => getCachedCandidates(id, pid));
-  if (listedLoad.status === "unavailable") return unavailable(siteLoad.value.name, sitePath(id), BUTTONS.backToSite);
+  if (listedLoad.status === "unavailable") return unavailable(siteLoad.value.name, sitePath(id), siteLoad.value.name);
 
   const listed = listedLoad.value;
   const needsEscalate = listed.status !== "ok" || listed.candidates.length === 0;
   let related: { id: string; target: string }[] = [];
   if (needsEscalate) {
     const readinessLoad = await loadPage(() => getCachedReadiness(id));
-    if (readinessLoad.status === "unavailable") return unavailable(siteLoad.value.name, sitePath(id), BUTTONS.backToSite);
+    if (readinessLoad.status === "unavailable") return unavailable(siteLoad.value.name, sitePath(id), siteLoad.value.name);
     related = relatedDecisions(readinessLoad.value, pid);
   }
 
@@ -61,54 +62,59 @@ export default async function SubstitutesPage({ params }: RouteParams) {
       : candidateStatus(listed.status).label;
 
   return (
-    <main>
-      <LinkButton href={sitePath(id)}>{BUTTONS.backToSite}</LinkButton>
-      <h1>Substitutes</h1>
-      <p>{`${penetration.floor}, ${penetration.location}`}</p>
-      <p>{`${penetration.serviceType}, ${penetration.serviceSize}`}</p>
-      <p>{`Nominated solution ${penetration.nominatedCode}`}</p>
-      <p>{`Rating ${formatRating(penetration.requiredIntegrityMinutes, penetration.requiredInsulationMinutes)}`}</p>
-      <Notice>{listed.notice}</Notice>
-      {message ? <p>{message}</p> : null}
-      {needsEscalate && related.length > 0 ? (
-        <ul className={styles.list}>
-          {related.map((item) => (
-            <li key={item.id}>
-              <EscalateDialog siteId={id} shortageId={item.id} target={item.target} />
-            </li>
-          ))}
-        </ul>
-      ) : null}
-      {listed.status === "ok" && listed.candidates.length > 0 ? (
-        <ul className={styles.list}>
-          {listed.candidates.map((candidate) => (
-            <li key={candidate.internalCode}>
-              <CandidateCard
-                siteId={id}
-                penetrationId={pid}
-                fromCode={listed.nominatedCode}
-                toCode={candidate.internalCode}
-                integrityMinutes={candidate.integrityMinutes}
-                insulationMinutes={candidate.insulationMinutes}
-                overall={candidate.availability.overall}
-                summary={formatMaterialSummary(candidate.availability.lines, candidate.materials)}
-              />
-            </li>
-          ))}
-        </ul>
-      ) : null}
-      <LinkButton href={actionsPath(id)}>{BUTTONS.actionsLog}</LinkButton>
-    </main>
+    <>
+      <AppBar title="Substitutes" backHref={sitePath(id)} backName={siteLoad.value.name} />
+      <main>
+        <p>{`${penetration.floor}, ${penetration.location}`}</p>
+        <p>{serviceLine(penetration)}</p>
+        <p>{`Nominated solution ${penetration.nominatedCode}`}</p>
+        <p>{formatRating(penetration.requiredIntegrityMinutes, penetration.requiredInsulationMinutes)}</p>
+        {listed.candidates.length > 0 ? <Notice>{listed.notice}</Notice> : null}
+        {message ? <p>{message}</p> : null}
+        {needsEscalate && related.length > 0 ? (
+          <ul className={styles.list}>
+            {related.map((item) => (
+              <li key={item.id}>
+                <EscalateDialog siteId={id} shortageId={item.id} target={item.target} />
+              </li>
+            ))}
+          </ul>
+        ) : null}
+        {listed.status === "ok" && listed.candidates.length > 0 ? (
+          <ul className={styles.list}>
+            {listed.candidates.map((candidate) => (
+              <li key={candidate.internalCode}>
+                <CandidateCard
+                  siteId={id}
+                  penetrationId={pid}
+                  fromCode={listed.nominatedCode}
+                  toCode={candidate.internalCode}
+                  integrityMinutes={candidate.integrityMinutes}
+                  insulationMinutes={candidate.insulationMinutes}
+                  requiredIntegrityMinutes={penetration.requiredIntegrityMinutes}
+                  requiredInsulationMinutes={penetration.requiredInsulationMinutes}
+                  supplierRefCode={candidate.supplierRefCode}
+                  overall={candidate.availability.overall}
+                  summary={formatMaterialSummary(candidate.availability.lines, candidate.materials)}
+                />
+              </li>
+            ))}
+          </ul>
+        ) : null}
+        <LinkButton href={actionsPath(id)}>{BUTTONS.actionsLog}</LinkButton>
+      </main>
+    </>
   );
 }
 
-function unavailable(title: string, backHref: string, backLabel: string) {
+function unavailable(title: string, backHref: string, backName: string) {
   return (
-    <main>
-      <LinkButton href={backHref}>{backLabel}</LinkButton>
-      <h1>{title}</h1>
-      <Banner status={readinessBanner("unavailable", 0, 0)} />
-    </main>
+    <>
+      <AppBar title={title} backHref={backHref} backName={backName} />
+      <main>
+        <UnavailablePanel status={readinessBanner("unavailable", 0, 0)} />
+      </main>
+    </>
   );
 }
 

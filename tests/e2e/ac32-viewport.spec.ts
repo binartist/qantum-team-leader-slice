@@ -29,6 +29,6 @@ test("AC 32: a 375px screen does not scroll sideways, including with a dialog op
 
   await gotoApp(page, "/sites/site-b");
   const collar = page.getByRole("article").filter({ has: page.getByRole("heading", { name: "Pipe collar for 25 mm pipe" }) });
-  await collar.getByText("Show affected penetrations").click();
+  await collar.getByText("Penetrations and substitutes (4)").click();
   await assertNoOverflow(page);
 });

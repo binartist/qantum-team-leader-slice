@@ -43,7 +43,7 @@ describe("fixed screen copy", () => {
 
   it("an actions page whose site did not resolve still links back to sites", () => {
     const page = readFileSync("src/app/sites/[id]/actions/page.tsx", "utf8");
-    expect(page).toContain("BUTTONS.backToSites");
+    expect(page).toContain('backName="Sites"');
   });
 
   it("error.tsx copy does not include error.message or the digest value", () => {
@@ -58,11 +58,54 @@ describe("fixed screen copy", () => {
     expect(existsSync("src/app/global-error.tsx")).toBe(true);
     const source = readFileSync("src/app/global-error.tsx", "utf8");
     expect(source).toContain("Demo: sample data, no login");
+    expect(source).toContain("<footer");
+    expect(source).toContain("<AppBar");
     expect(source).toContain("Something went wrong");
     expect(source).toContain("Try again.");
     expect(source).toContain("retry");
     expect(source).not.toContain("error.message");
     expect(source).not.toContain("error.digest");
+  });
+});
+
+const SCREEN_SOURCES = [
+  "src/app/page.tsx",
+  "src/app/loading.tsx",
+  "src/app/not-found.tsx",
+  "src/app/error.tsx",
+  "src/app/global-error.tsx",
+  "src/app/sites/[id]/page.tsx",
+  "src/app/sites/[id]/actions/page.tsx",
+  "src/app/sites/[id]/penetrations/[pid]/page.tsx",
+];
+
+function linkButtonBlocks(source: string): string[] {
+  return source.match(/<LinkButton\b[\s\S]*?<\/LinkButton>/g) ?? [];
+}
+
+describe("navigation shell", () => {
+  it("every screen renders AppBar and none uses LinkButton to go back", () => {
+    for (const file of SCREEN_SOURCES) {
+      const source = readFileSync(file, "utf8");
+      expect(source, file).toContain("<AppBar");
+      const backBlocks = linkButtonBlocks(source).filter((block) => /backHref|backName/.test(block));
+      expect(backBlocks, file).toEqual([]);
+    }
+  });
+
+  it("the root layout has a footer and no header", () => {
+    const layout = readFileSync("src/app/layout.tsx", "utf8");
+    expect(layout).toContain("<footer");
+    expect(layout).toContain("DEMO_BANNER");
+    expect(layout).not.toMatch(/<header\b/);
+  });
+
+  it("labels the site reference where it is shown", () => {
+    const card = readFileSync("src/ui/SiteCard.tsx", "utf8");
+    const site = readFileSync("src/app/sites/[id]/page.tsx", "utf8");
+    expect(card).toContain("formatReference(reference)");
+    expect(site).toContain("formatReference(site.reference)");
+    expect(site).not.toMatch(/\{site\.reference\}/);
   });
 });
 

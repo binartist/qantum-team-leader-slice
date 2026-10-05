@@ -23,10 +23,46 @@ export function crewStatus(status: CrewChip): StatusView {
 
 const UNKNOWN: StatusView = { label: "Unknown", tone: "neutral", icon: "dashed-circle" };
 
+function countLabel(count: number, singular: string, plural: string): string {
+  return `${count} ${count === 1 ? singular : plural}`;
+}
+
+function blockedChipLabel(shortages: number, problems: number): string {
+  const shortageText = countLabel(shortages, "shortage", "shortages");
+  const problemText = countLabel(problems, "data problem", "data problems");
+  if (shortages > 0 && problems > 0) return `Blocked · ${shortageText}, ${problemText}`;
+  if (problems > 0) return `Blocked · ${problemText}`;
+  if (shortages > 0) return `Blocked · ${shortageText}`;
+  return "Blocked";
+}
+
+export function siteChip(status: string, shortageCount: number, dataProblemCount: number): StatusView {
+  if (status === "blocked") return { label: blockedChipLabel(shortageCount, dataProblemCount), tone: "danger", icon: "cross" };
+  if (status === "clear" || status === "nothing_planned" || status === "unavailable") return crewStatus(status);
+  return crewStatus("unavailable");
+}
+
+function minuteMeets(candidate: number | null, required: number | null): boolean {
+  if (required === null) return true;
+  if (candidate === null || !Number.isFinite(candidate) || !Number.isFinite(required)) return false;
+  return candidate >= required;
+}
+
+export function ratingComparison(
+  candidateIntegrity: number | null,
+  candidateInsulation: number | null,
+  requiredIntegrity: number | null,
+  requiredInsulation: number | null,
+): StatusView {
+  const meets = minuteMeets(candidateIntegrity, requiredIntegrity) && minuteMeets(candidateInsulation, requiredInsulation);
+  if (meets) return { label: "Meets the required rating", tone: "success", icon: "check" };
+  return { label: "Below the required rating", tone: "warning", icon: "warning" };
+}
+
 export function shortageState(state: string): StatusView {
   switch (state) {
     case "open":
-      return { label: "Open", tone: "neutral", icon: "dashed-circle" };
+      return { label: "No decision yet", tone: "neutral", icon: "dashed-circle" };
     case "waiting":
       return { label: "Waiting", tone: "warning", icon: "warning" };
     case "escalated":
@@ -94,11 +130,11 @@ export function availabilityStatus(overall: AvailabilityChip): StatusView {
 export function actionStatus(status: string): StatusView {
   switch (status) {
     case "current":
-      return { label: "Current", tone: "success", icon: "check" };
+      return { label: "Still applies", tone: "neutral", icon: "dashed-circle" };
     case "earlier":
-      return earlierDecision();
+      return { label: "Shortfall has grown since", tone: "warning", icon: "warning" };
     case "resolved":
-      return { label: "Resolved", tone: "neutral", icon: "check" };
+      return { label: "Shortage resolved", tone: "success", icon: "check" };
     default:
       return UNKNOWN;
   }

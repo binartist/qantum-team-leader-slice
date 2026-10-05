@@ -60,7 +60,14 @@ body {
   max-width: 100%;
 }
 
+html {
+  scroll-padding-top: 6.5rem;
+}
+
 body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   font-size: 1rem;
   line-height: 1.45;
@@ -104,8 +111,16 @@ main {
   margin-inline: auto;
   padding: var(--space);
   display: flex;
+  flex: 1 0 auto;
   flex-direction: column;
   gap: var(--space);
+}
+
+footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  flex: none;
 }
 
 main > * {

@@ -4,13 +4,15 @@ import { connection } from "next/server";
 import type { SiteReadinessView } from "@/application";
 import { SiteNotFoundError } from "@/ports";
 import { getCachedReadiness, getCachedSite } from "../../_lib/cached";
+import { AppBar } from "@/ui/AppBar";
 import { Banner } from "@/ui/Banner";
 import { BlockerCard } from "@/ui/BlockerCard";
 import { LinkButton } from "@/ui/LinkButton";
 import { Notice } from "@/ui/Notice";
 import { ShortageCard } from "@/ui/ShortageCard";
-import { actionsPath, formatAsOf } from "@/ui/format";
-import { BUTTONS, readinessBanner } from "@/ui/messages";
+import { UnavailablePanel } from "@/ui/UnavailablePanel";
+import { actionsPath, formatReference, stockFiguresLine, stockIsStale } from "@/ui/format";
+import { BUTTONS, readinessBanner, STOCK_STALE } from "@/ui/messages";
 import { hasEarlierDecision } from "@/ui/status";
 import styles from "@/ui/primitives.module.css";
 import { loadPage } from "../../_lib/load";
@@ -40,11 +42,12 @@ export default async function SitePage({ params }: RouteParams) {
   });
   if (siteLoad.status === "unavailable") {
     return (
-      <main>
-        <LinkButton href="/">{BUTTONS.backToSites}</LinkButton>
-        <h1>This site</h1>
-        <Banner status={readinessBanner("unavailable", 0, 0)} />
-      </main>
+      <>
+        <AppBar title="This site" backHref="/" backName="Sites" />
+        <main>
+          <UnavailablePanel status={readinessBanner("unavailable", 0, 0)} />
+        </main>
+      </>
     );
   }
 
@@ -52,73 +55,89 @@ export default async function SitePage({ params }: RouteParams) {
   const site = siteLoad.value;
   if (readinessLoad.status === "unavailable") {
     return (
-      <main>
-        <LinkButton href="/">{BUTTONS.backToSites}</LinkButton>
-        <h1>{site.name}</h1>
-        <p className={styles.muted}>{site.reference}</p>
-        <Banner status={readinessBanner("unavailable", 0, 0)} />
-      </main>
+      <>
+        <AppBar title={site.name} backHref="/" backName="Sites" />
+        <main>
+          <p className={styles.muted}>{formatReference(site.reference)}</p>
+          <UnavailablePanel status={readinessBanner("unavailable", 0, 0)} />
+        </main>
+      </>
     );
   }
 
   const readiness = readinessLoad.value;
   return (
-    <main>
-      <LinkButton href="/">{BUTTONS.backToSites}</LinkButton>
-      <h1>{site.name}</h1>
-      <p className={styles.muted}>{site.reference}</p>
-      <Banner status={readinessBanner(readiness.crewStatus, readiness.shortages.length, readiness.blockers.length)} />
-      <Notice>{readiness.stockNotice}</Notice>
-      <p>{formatAsOf(readiness.stockAsOf)}</p>
-      {readiness.shortages.length > 0 ? (
-        <ul className={styles.list}>
-          {readiness.shortages.map((shortage) => {
-            const material = readiness.materials[shortage.materialId];
-            return (
-              <li key={shortage.id}>
-                <ShortageCard
-                  siteId={site.id}
-                  shortageId={shortage.id}
-                  materialName={material?.name ?? shortage.materialId}
-                  requiredQty={shortage.requiredQty}
-                  onHandQty={shortage.onHandQty}
-                  shortfallQty={shortage.shortfallQty}
-                  unit={material?.unit ?? ""}
-                  state={shortage.state}
-                  earlier={hasEarlierDecision(shortage.actions)}
-                  places={shortage.penetrationIds.map((penetrationId) => ({
-                    id: penetrationId,
-                    label: placeLabel(readiness, penetrationId),
-                  }))}
-                />
-              </li>
-            );
-          })}
-        </ul>
-      ) : null}
-      {readiness.blockers.length > 0 ? (
-        <section>
-          <h2>Data problems</h2>
+    <>
+      <AppBar title={site.name} backHref="/" backName="Sites" />
+      <main>
+        <p className={styles.muted}>{formatReference(site.reference)}</p>
+        <Banner status={readinessBanner(readiness.crewStatus, readiness.shortages.length, readiness.blockers.length)} />
+        {readiness.crewStatus === "nothing_planned" ? null : (
+          <>
+            <Notice>{readiness.stockNotice}</Notice>
+            <p>{stockFiguresLine(readiness.stockAsOf, readiness.asOf)}</p>
+            {stockIsStale(readiness.stockAsOf, readiness.asOf) ? (
+              <Banner status={{ label: STOCK_STALE, tone: "warning", icon: "warning" }} />
+            ) : null}
+          </>
+        )}
+        {readiness.shortages.length > 0 ? (
           <ul className={styles.list}>
-            {readiness.blockers.map((blocker) => (
-              <li key={blocker.id}>
-                <BlockerCard
-                  siteId={site.id}
-                  blockerId={blocker.id}
-                  penetrationId={blocker.penetrationId}
-                  place={placeLabel(readiness, blocker.penetrationId)}
-                  reason={blocker.reason}
-                  code={blocker.internalCode}
-                  state={blocker.state}
-                  earlier={hasEarlierDecision(blocker.actions)}
-                />
-              </li>
-            ))}
+            {readiness.shortages.map((shortage) => {
+              const material = readiness.materials[shortage.materialId];
+              return (
+                <li key={shortage.id}>
+                  <ShortageCard
+                    siteId={site.id}
+                    shortageId={shortage.id}
+                    materialName={material?.name ?? shortage.materialId}
+                    requiredQty={shortage.requiredQty}
+                    onHandQty={shortage.onHandQty}
+                    shortfallQty={shortage.shortfallQty}
+                    unit={material?.unit ?? ""}
+                    state={shortage.state}
+                    earlier={hasEarlierDecision(shortage.actions)}
+                    places={shortage.penetrationIds.map((penetrationId) => {
+                      const place = readiness.penetrations[penetrationId];
+                      return {
+                        id: penetrationId,
+                        floor: place?.floor ?? penetrationId,
+                        location: place?.location ?? "",
+                        serviceType: place?.serviceType ?? "",
+                        serviceSize: place?.serviceSize ?? "",
+                        nominatedCode: place?.nominatedCode ?? "",
+                      };
+                    })}
+                  />
+                </li>
+              );
+            })}
           </ul>
-        </section>
-      ) : null}
-      <LinkButton href={actionsPath(site.id)}>{BUTTONS.actionsLog}</LinkButton>
-    </main>
+        ) : null}
+        {readiness.blockers.length > 0 ? (
+          <section>
+            <h2>Data problems</h2>
+            <ul className={styles.list}>
+              {readiness.blockers.map((blocker) => (
+                <li key={blocker.id}>
+                  <BlockerCard
+                    siteId={site.id}
+                    blockerId={blocker.id}
+                    penetrationId={blocker.penetrationId}
+                    place={placeLabel(readiness, blocker.penetrationId)}
+                    reason={blocker.reason}
+                    code={blocker.internalCode}
+                    state={blocker.state}
+                    earlier={hasEarlierDecision(blocker.actions)}
+                  />
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
+        <LinkButton href={actionsPath(site.id)}>{BUTTONS.actionsLog}</LinkButton>
+      </main>
+    </>
   );
 }
 

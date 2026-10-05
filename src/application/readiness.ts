@@ -8,7 +8,18 @@ export interface SiteReadinessView extends SiteReadiness {
   readonly stockNotice: typeof STOCK_NOTICE;
   readonly stockAsOf: string;
   readonly materials: Readonly<Record<string, { readonly name: string; readonly unit: string }>>;
-  readonly penetrations: Readonly<Record<string, { readonly floor: string; readonly location: string; readonly nominatedCode: string }>>;
+  readonly penetrations: Readonly<
+    Record<
+      string,
+      {
+        readonly floor: string;
+        readonly location: string;
+        readonly nominatedCode: string;
+        readonly serviceType: string;
+        readonly serviceSize: string;
+      }
+    >
+  >;
 }
 
 function namedMaterials(materials: readonly Material[], wanted: ReadonlySet<string>): SiteReadinessView["materials"] {
@@ -40,13 +51,15 @@ function penetrationsForReadiness(
     for (const penetrationId of shortage.penetrationIds) wanted.add(penetrationId);
   }
   for (const blocker of readiness.blockers) wanted.add(blocker.penetrationId);
-  const result: Record<string, { floor: string; location: string; nominatedCode: string }> = {};
+  const result: Record<string, { floor: string; location: string; nominatedCode: string; serviceType: string; serviceSize: string }> = {};
   for (const penetration of nominations) {
     if (!wanted.has(penetration.id)) continue;
     result[penetration.id] = {
       floor: penetration.floor,
       location: penetration.location,
       nominatedCode: penetration.nominatedCode,
+      serviceType: penetration.serviceType,
+      serviceSize: penetration.serviceSize,
     };
   }
   return result;
@@ -60,12 +73,14 @@ export interface SiteData {
 }
 
 function penetrationsForSite(nominations: readonly NominatedPenetration[]): SiteReadinessView["penetrations"] {
-  const result: Record<string, { floor: string; location: string; nominatedCode: string }> = {};
+  const result: Record<string, { floor: string; location: string; nominatedCode: string; serviceType: string; serviceSize: string }> = {};
   for (const penetration of nominations) {
     result[penetration.id] = {
       floor: penetration.floor,
       location: penetration.location,
       nominatedCode: penetration.nominatedCode,
+      serviceType: penetration.serviceType,
+      serviceSize: penetration.serviceSize,
     };
   }
   return result;

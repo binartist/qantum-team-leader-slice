@@ -1,14 +1,14 @@
-import { LinkButton } from "@/ui/LinkButton";
-import { BUTTONS } from "@/ui/messages";
+import { AppBar } from "@/ui/AppBar";
 
 export const metadata = { title: "Page not found" };
 
 export default function NotFound() {
   return (
-    <main>
-      <h1>Page not found</h1>
-      <p>That page does not exist.</p>
-      <LinkButton href="/">{BUTTONS.backToSites}</LinkButton>
-    </main>
+    <>
+      <AppBar title="Page not found" backHref="/" backName="Sites" />
+      <main>
+        <p>That page does not exist.</p>
+      </main>
+    </>
   );
 }

@@ -31,8 +31,11 @@ The app's own HTTP API, as built. Requirements are in `slice-specification.md`, 
 
 ```ts
 { sites: Array<{ id, name, reference, address?,
-  crewStatus: "clear" | "blocked" | "nothing_planned" | "unavailable" }> }
+  crewStatus: "clear" | "blocked" | "nothing_planned" | "unavailable",
+  shortageCount: number, dataProblemCount: number }> }
 ```
+
+`shortageCount` and `dataProblemCount` are always present and are 0 unless `crewStatus` is `blocked`, so the list can say why a site is blocked.
 
 `unavailable` means that site's readiness could not be computed. It is logged and never shown as clear. A failure of the sites source itself is a 502.
 
@@ -45,8 +48,10 @@ The app's own HTTP API, as built. Requirements are in `slice-specification.md`, 
   shortages: Shortage[],      // id siteId:materialId, kind short | unknown, required/onHand/shortfall, state, actions
   blockers: Blocker[],        // id, reason, penetrationId, internalCode, state, actions
   materials: Record<id, { name, unit }>,
-  penetrations: Record<id, { floor, location, nominatedCode }> }
+  penetrations: Record<id, { floor, location, nominatedCode, serviceType, serviceSize }> }
 ```
+
+`serviceType` and `serviceSize` are the nomination's raw text (catalogue spacing kept); the screen collapses repeated spaces for display only.
 
 Blocker reasons: `unknown_solution_code`, `no_material_mapping`, `invalid_quantity`. A shortage of kind `unknown` has null on hand and null shortfall.
 
@@ -86,7 +91,7 @@ Body `{ fromInternalCode, toInternalCode, reason }`. `from` must be the penetrat
 { actions: Array<ShortageAction & { status: "current" | "earlier" | "resolved" }>, // newest first
   proposals: SubstitutionProposal[],                                               // newest first
   materials: Record<id, { name, unit }>,                                           // every material mapped to a nominated solution on the site
-  penetrations: Record<id, { floor, location, nominatedCode }> }                   // every penetration on the site
+  penetrations: Record<id, { floor, location, nominatedCode, serviceType, serviceSize }> } // every penetration on the site
 ```
 
 `materials` and `penetrations` let the log name what an action was about. They are present even when `actions` and `proposals` are empty, and they are wider than the readiness maps, which hold only current shortages and blockers.

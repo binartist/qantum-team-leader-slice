@@ -48,13 +48,22 @@ describe("site readiness over HTTP", () => {
   it("AC 10: sites A and B are computed independently, A clear and B blocked, with the shared-stock notice", async () => {
     const listed = await expectCache(await getSites());
     expect(listed.status).toBe(200);
-    const sites = listed.body.sites as { id: string; crewStatus: string }[];
-    expect(sites.map((site) => [site.id, site.crewStatus])).toEqual([
-      ["site-a", "clear"],
-      ["site-b", "blocked"],
-      ["site-c", "blocked"],
-      ["site-d", "nothing_planned"],
+    const sites = listed.body.sites as {
+      id: string;
+      crewStatus: string;
+      shortageCount: number;
+      dataProblemCount: number;
+    }[];
+    expect(sites.map((site) => [site.id, site.crewStatus, site.shortageCount, site.dataProblemCount])).toEqual([
+      ["site-a", "clear", 0, 0],
+      ["site-b", "blocked", 2, 0],
+      ["site-c", "blocked", 1, 2],
+      ["site-d", "nothing_planned", 0, 0],
     ]);
+    for (const site of sites) {
+      expect(Number.isInteger(site.shortageCount)).toBe(true);
+      expect(Number.isInteger(site.dataProblemCount)).toBe(true);
+    }
 
     const siteA = await expectCache(await readiness("site-a"));
     const siteB = await expectCache(await readiness("site-b"));
@@ -84,6 +93,28 @@ describe("site readiness over HTTP", () => {
       "MAT-SEALANT": { name: "Intumescent sealant, 310 ml cartridge", unit: "cartridge" },
       "MAT-COLLAR-25": { name: "Pipe collar for 25 mm pipe", unit: "each" },
     });
+    const siteBPenetrations = siteB.body.penetrations as Record<
+      string,
+      { floor: string; location: string; nominatedCode: string; serviceType: string; serviceSize: string }
+    >;
+    expect(siteBPenetrations["pen-b-01"]).toEqual({
+      floor: "L3",
+      location: "Riser 2",
+      nominatedCode: "0438",
+      serviceType: "PEX Pipe",
+      serviceSize: "Ø25mm",
+    });
+    expect(siteBPenetrations["pen-b-05"]).toEqual({
+      floor: "L4",
+      location: "Corridor south",
+      nominatedCode: "0434",
+      serviceType: "KELOX Pipe  - 13mm PE",
+      serviceSize: "Ø32mm",
+    });
+    for (const penetration of Object.values(siteBPenetrations)) {
+      expect(penetration.serviceType.length).toBeGreaterThan(0);
+      expect(penetration.serviceSize.length).toBeGreaterThan(0);
+    }
 
     const siteC = await expectCache(await readiness("site-c"));
     expect(siteC.body.crewStatus).toBe("blocked");
@@ -138,7 +169,7 @@ describe("site readiness over HTTP", () => {
       "MAT-COLLAR-25": { name: "Pipe collar for 25 mm pipe", unit: "each" },
     });
     expect(listed.body.penetrations).toMatchObject({
-      "pen-b-01": { floor: "L3", location: "Riser 2", nominatedCode: "0438" },
+      "pen-b-01": { floor: "L3", location: "Riser 2", nominatedCode: "0438", serviceType: "PEX Pipe", serviceSize: "Ø25mm" },
     });
     expect(Object.keys(listed.body.penetrations as object)).toHaveLength(12);
 
@@ -164,8 +195,13 @@ describe("site readiness over HTTP", () => {
     expect(failed.body.crewStatus).toBeUndefined();
 
     const listed = await expectCache(await getSites());
-    const sites = listed.body.sites as { id: string; crewStatus: string }[];
-    expect(sites.every((site) => site.crewStatus === "unavailable")).toBe(true);
+    const sites = listed.body.sites as { id: string; crewStatus: string; shortageCount: number; dataProblemCount: number }[];
+    expect(sites.map((site) => [site.crewStatus, site.shortageCount, site.dataProblemCount])).toEqual([
+      ["unavailable", 0, 0],
+      ["unavailable", 0, 0],
+      ["unavailable", 0, 0],
+      ["unavailable", 0, 0],
+    ]);
 
     setDependenciesForTests(testDependencies({ stock: "malformed" }));
     const invalid = await expectCache(await readiness("site-b"));
@@ -183,11 +219,18 @@ describe("site readiness over HTTP", () => {
       },
     });
     const mixed = await expectCache(await getSites());
-    expect((mixed.body.sites as { id: string; crewStatus: string }[]).map((site) => [site.id, site.crewStatus])).toEqual([
-      ["site-a", "clear"],
-      ["site-b", "unavailable"],
-      ["site-c", "blocked"],
-      ["site-d", "nothing_planned"],
+    expect(
+      (mixed.body.sites as { id: string; crewStatus: string; shortageCount: number; dataProblemCount: number }[]).map((site) => [
+        site.id,
+        site.crewStatus,
+        site.shortageCount,
+        site.dataProblemCount,
+      ]),
+    ).toEqual([
+      ["site-a", "clear", 0, 0],
+      ["site-b", "unavailable", 0, 0],
+      ["site-c", "blocked", 1, 2],
+      ["site-d", "nothing_planned", 0, 0],
     ]);
   });
 

@@ -12,11 +12,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <body>
-        <header>
-          <p className="demo-banner">{DEMO_BANNER}</p>
-        </header>
         <Announcer />
         {children}
+        <footer>
+          <p className="demo-banner">{DEMO_BANNER}</p>
+        </footer>
       </body>
     </html>
   );
