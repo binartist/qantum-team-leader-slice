@@ -10,24 +10,24 @@ Legend: `[x]` done, `[~]` partial, `[ ]` not started.
 
 | # | Item | Status | Evidence / next step |
 | --- | --- | --- | --- |
-| 1 | GitHub repository link | [~] | Local repo on branch `dev` with 4 per-intent commits, verified from a fresh clone (npm ci, typecheck, lint, 105 tests, build). No remote and nothing pushed. Creating the GitHub repo and pushing need your go-ahead. |
-| 2 | Public URL for the working experience | [ ] | Vercel deploy. Record URL here. |
-| 3 | Try-it instructions | [ ] | In README. |
-| 4 | README: run locally | [~] | README is a stub. |
-| 5 | README: run tests | [ ] | |
-| 6 | README: deploy | [ ] | |
-| 7 | README: demo scenario | [ ] | Shortage, then escalate, crew stays blocked. |
-| 8 | README: sample data and known limitations | [ ] | Sample data to live in `data/sample/` with a README stating it is invented. |
+| 1 | GitHub repository link | [x] | https://github.com/binartist/qantum-team-leader-slice (public, default branch `main`). |
+| 2 | Public URL for the working experience | [x] | https://qantum-team-leader-slice.vercel.app (Vercel, functions in `syd1`, actions in Postgres database `qantum_slice`). |
+| 3 | Try-it instructions | [x] | README "Try it": a two-minute walk through the live demo. |
+| 4 | README: run locally | [x] | README "Run locally": `npm ci`, `npm run dev`, memory store, no credentials. |
+| 5 | README: run tests | [x] | README "Tests": typecheck, lint, coverage, AC check, Playwright, database contract. |
+| 6 | README: deploy | [x] | README "Deploy": database setup and migration, Vercel settings, GitHub secrets. |
+| 7 | README: demo scenario | [x] | README "Try it", following spec section 9. |
+| 8 | README: sample data and known limitations | [x] | README "Sample data" and "Known limitations"; `data/sample/README.md` labels the data invented. |
 | 9 | Iteration plan (md) | [x] | `docs/iteration-plan.md`: slice rationale, 6 iterations, uncertainties. Awaiting your review. |
 | 10 | First-slice specification (md) | [x] | `docs/slice-specification.md`: 16 FRs, 32 acceptance criteria, NFRs, assumptions, exclusions. Awaiting your review. |
 | 11 | Technical design (md) | [x] | `docs/technical-design.md`. Section 11 additions awaiting confirmation. |
 | 12 | Test strategy (md) | [x] | `docs/test-strategy.md`: layers, all 32 ACs mapped, risks, CI gates. Awaiting your review. |
-| 13 | Agent instructions and context files | [~] | Repo guidance in `AGENTS.md` (tool-neutral; `CLAUDE.md` is a one-line `@AGENTS.md` import), plus six Skill Forge skills vendored in `.agents/skills` (declared in `skill-forge.json`, locked in `skill-forge.lock.json`). Add per-task briefs (domain core `BRIEF.md`, review briefs) to the repo before submission. |
-| 14 | Working application code | [x] | Domain core, upstream stubs, actions repositories (memory, Supabase), use cases, the seven-route HTTP API and the four screens (sites, readiness, substitutes, actions log) are built, reviewed and documented (docs/api.md, docs/ui-design.md). Supabase adapter not yet proven on a live database. | |
-| 15 | Automated tests | [~] | 289 unit and API tests, 5 database contract tests on real Postgres 17, 12 Playwright tests with axe (light and dark, 375px), 100% coverage of src/domain and src/ui, all 32 ACs referenced and `check:ac` exits 0. Database contract run and CI wiring still to do. | |
-| 16 | CI/CD config | [~] | `.github/workflows/ci.yml` runs typecheck, lint, tests with coverage, build, prod audit, secret scan. DB tests, Playwright, AC check and Vercel deploy still to add. |
-| 17 | Pipeline inspectable, with successful deploy evidence | [ ] | Link a green run and the deployment. |
-| 18 | Agentic coding account | [ ] | See section 3. |
+| 13 | Agent instructions and context files | [x] | `AGENTS.md` (tool-neutral; `CLAUDE.md` imports it), 11 Skill Forge skills in `.agents/skills` (`skill-forge.json`, lock file), and every brief, review brief, review report and worker note in `docs/agent-work/`. |
+| 14 | Working application code | [x] | Domain core, stubs, Postgres and memory stores, use cases, seven-route API, four screens. Live and proven against the real database. |
+| 15 | Automated tests | [x] | 289 unit and API tests, 5 database contract tests on Postgres 17, 12 Playwright tests with axe at 375px; all 32 ACs referenced; all run in CI. |
+| 16 | CI/CD config | [x] | `.github/workflows/ci.yml`: checks (typecheck, lint, coverage, build, bundle credential scan, audit, gitleaks), db (contract suite on Postgres 17), e2e (Playwright, axe, AC check), and on `main` a Vercel prebuilt deploy plus smoke test. |
+| 17 | Pipeline inspectable, with successful deploy evidence | [x] | Green run with deploy and smoke: https://github.com/binartist/qantum-team-leader-slice/actions/runs/37309054947. Live check 2026-10-06: `x-vercel-id` syd1, smoke ok, an escalation recorded through the live API survived a production redeploy. |
+| 18 | Agentic coding account | [x] | `docs/agentic-approach.md`: tools, planning, verification ladder, corrections, cost. |
 
 ## 2. Assessment criteria
 
@@ -127,4 +127,5 @@ From `technical-design.md` section 11 and 12.
 | 2026-10-04 | UI built by Grok (116 turns, $3.29), then three fresh review sessions ($4.10) and a fix round (108 turns, $3.24). Orchestrator gates: typecheck, lint, 269 tests, 100% coverage, build, `check:ac`, 11 Playwright tests stable over three runs, reviewer mutants killed, CSV traced in all 11 routes. Docs updated: api.md, ui-design.md section 9, spec AC 9, test strategy. |
 | 2026-10-04 | Navigation shell after phone review (docs/agent-work/16-ui-nav-brief.md): bottom demo bar, sticky title header, chevron back control, "Ref" label. Built by Grok on the fast model (41 turns, $2.39). Gates and 12 e2e tests green over repeated runs. ui-design.md updated. |
 | 2026-10-05 | Usability round from a UX review against the brief (docs/agent-work/18-ui-usability-brief.md), built by Grok on the default model (45 turns, $1.34). Two additive API fields (site counts; service and size on readiness penetrations). 281 tests, 12 e2e green over repeated runs. api.md and ui-design.md updated. Skill lock re-synced (registry pointer only, no skill content changed). |
+| 2026-10-06 | PR #1 merged; CI on main deployed to https://qantum-team-leader-slice.vercel.app with a green smoke test. Orchestrator verified the live region, idempotent replay through Postgres (201 then 200), and that the action survives a redeploy (AC 7 of the delivery spec). |
 | 2026-10-06 | Public repo github.com/binartist/qantum-team-leader-slice created (gitleaks clean over all commits, first CI green). Skills vercel-deploy, supabase-postgres, data-migration added. Storage moved from supabase-js to pg on a new database with an append-only app role (Grok, default model, 50 turns, $1.42); contract suite on real Postgres 17; CI gains db, e2e and deploy jobs. Docs updated. |
