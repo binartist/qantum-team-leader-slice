@@ -45,6 +45,13 @@ Evidence of how the domain core was built and checked. Files are numbered in the
 | `18-ui-usability-brief.md` | Brief from the orchestrator's usability review against the brief's UX question. A first dispatch on the fast model was stopped at the user's request before it changed anything |
 | `19-ui-usability-worker-notes.md` | The worker's notes, including its departures and the two API additions |
 
+### Database and delivery round
+
+| File | What it is |
+| --- | --- |
+| `20-postgres-delivery-brief.md` | Approved Tier 3 spec, verbatim: pg store on a new database on the shared Supabase server, least-privilege role, migrations, contract suite, CI jobs, Vercel config |
+| `21-postgres-delivery-worker-notes.md` | The worker's notes, including the setup and migration commands |
+
 What the orchestrator (Claude) did, as opposed to the workers: wrote the briefs and the decisions in them, ran every gate in its own shell, checked write scope with before and after checksums, ran mutation checks of its own, triaged the review findings (accepting most, rejecting a path jail and a shortage-id re-encoding), and updated the docs.
 
-Cost, domain core: build $0.67, three reviews $2.97, fixes $0.78. API layer: build $2.82 (fast model, 54 turns, 20.5 min), three reviews $4.83 (default model, 35 min), fixes $3.47 (fast model, 61 turns, 16.5 min). UI: build $3.29 (default model, 116 turns, 49 min), three reviews $4.10 (default model, 25 min), fixes $3.24 (default model, 108 turns, 42 min). Navigation: $2.39 (fast model, 41 turns, 10.8 min). Usability: $1.34 (default model, 45 turns, 19.6 min) plus the stopped fast-model start. Total worker spend about $29.90. Corrections and rejections are logged in `docs/submission-checklist.md`.
+Cost, domain core: build $0.67, three reviews $2.97, fixes $0.78. API layer: build $2.82 (fast model, 54 turns, 20.5 min), three reviews $4.83 (default model, 35 min), fixes $3.47 (fast model, 61 turns, 16.5 min). UI: build $3.29 (default model, 116 turns, 49 min), three reviews $4.10 (default model, 25 min), fixes $3.24 (default model, 108 turns, 42 min). Navigation: $2.39 (fast model, 41 turns, 10.8 min). Usability: $1.34 (default model, 45 turns, 19.6 min) plus the stopped fast-model start. Database and delivery: $1.42 (default model, 50 turns, 25 min). Total worker spend about $31.32. Corrections and rejections are logged in `docs/submission-checklist.md`.

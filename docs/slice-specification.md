@@ -75,7 +75,7 @@ Numbered for use as test names. Sample data is defined in section 7.
 **Data and safety**
 26. The catalogue loads all 148 rows, preserves raw text, and flags 6 rows with an incomplete substrate. The load check fails if either count changes.
 27. Every sample penetration references an `internal_code` present in the catalogue (except the one deliberate missing-code case).
-28. The client never receives database credentials or the service key.
+28. The client never receives database credentials.
 29. Readiness and actions responses carry `Cache-Control: no-store`.
 
 **Experience**
@@ -89,7 +89,7 @@ Numbered for use as test names. Sample data is defined in section 7.
 | --- | --- |
 | Performance | Readiness for a site of 200 penetrations returns in under 1 s on the deployed app. |
 | Safety | Fail closed: missing or unavailable data never produces a clear status. |
-| Security | Row-level security on with no policies. Server-side credentials only. Author set on the server. Input validated at the boundary with a schema. Errors return `{code, message}` only. |
+| Security | The app connects as a database role that can only read and insert the two action tables (append-only enforced by the database). Server-side credentials only, TLS in production. Author set on the server. Input validated at the boundary with a schema. Errors return `{code, message}` only. |
 | Privacy | Logs contain ids and codes, not notes or reasons. |
 | Accessibility | Meets WCAG 2.2 AA for the three screens: contrast, focus order, labels, status not by colour alone. |
 | Maintainability | Domain core has no framework or I/O imports. Each upstream sits behind one port. |
@@ -136,7 +136,7 @@ Real authentication, a real inventory or nomination service, approval of substit
 
 ## 10. Production gaps (carried to README)
 
-No login or role checks, a service key rather than a narrow role, no rate limiting, no offline support, stub upstream systems, shared unreserved stock, and no approval workflow.
+No login or role checks, no rate limiting, TLS that encrypts but does not authenticate the database server, no offline support, stub upstream systems, shared unreserved stock, and no approval workflow.
 
 ## 11. Open points
 

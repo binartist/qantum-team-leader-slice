@@ -115,15 +115,17 @@ Every error is `{ code, message }` and nothing else: no stack, path, SQL, note o
 
 | Variable | Meaning |
 | --- | --- |
-| `ACTIONS_STORE` | `memory` or `supabase`. Outside production the default is `memory`. In production anything but a working `supabase` configuration returns 500, never memory |
-| `SUPABASE_URL`, `SUPABASE_SERVICE_KEY` | Server-side only. In production the URL must be `https:` |
+| `ACTIONS_STORE` | `memory` or `postgres`. Outside production the default is `memory`. In production it defaults to `postgres`, and anything but a complete `postgres` configuration returns 500, never memory |
+| `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` | Postgres connection, server-side only. Deployed: the Supabase transaction pooler (port 6543), user `qantum_slice`, database `qantum_slice`. `DB_PORT` defaults to 5432 |
+| `DB_SSL`, `DB_SSL_CA` | `require` (default: encrypted, server not authenticated, a recorded compromise because the pooler chain is not in Node's trust store), `verify-full` with a PEM CA, or `disable` (refused in production) |
+| `DB_POOL_MAX` | Connections per function process, 1 to 10, default 1 (the pooler holds the real sessions) |
 | `DEMO_USER_ID` | Demo identity, default `demo-leader` |
 | `STUB_STOCK_MODE` | Testing only: `normal` (default), `down`, `empty` or `malformed` for the stock stub. Read outside production only, ignored in production. Used by the end-to-end stock-failure projects |
 
-Config failures return a generic 500 and log one fixed reason token (`config_invalid`, `store_forbidden`, `supabase_unconfigured`, `supabase_url_insecure`), never a value.
+Config failures return a generic 500 and log one fixed reason token (`config_invalid`, `store_forbidden`, `db_unconfigured`, `db_tls_insecure`), never a value. A successful start logs `db_config` with host, port, user, database, TLS mode and whether a password is present, never the password.
 
 ## Known limits
 
-- The Supabase repository has not run against a live database. It is covered by row-mapping tests, a fake store and a conditional contract suite that runs when `SUPABASE_URL` and `SUPABASE_SERVICE_KEY` are set. Set `REQUIRE_SUPABASE_CONTRACT=1` to make a skipped run fail.
+- The Postgres store is proven by a contract suite against a real Postgres 17 (locally and in CI): appends, idempotent replay, ordering, constraints, and that the app role cannot update, delete, truncate or create tables. Set `REQUIRE_DB_CONTRACT=1` to make a skipped run fail.
 - No login. Anyone with the URL can add demo actions.
 - `src/server/*` is not yet marked `server-only` (needs a dependency). Nothing client-side imports it today, and a test enforces that.

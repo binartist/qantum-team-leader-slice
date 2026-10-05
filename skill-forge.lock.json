@@ -17,6 +17,11 @@
       "integrity": "sha256-jS3r/aYrv7m5msRqm8PkAZqwyuVXNNTrNfMRiK1zMBg=",
       "source": "registry"
     },
+    "data-migration": {
+      "version": "0.1.0",
+      "integrity": "sha256-A0ow8wOqCGdobWUVEj5uVR5/6AQyoSaZCCfL+T+WoZA=",
+      "source": "registry"
+    },
     "external-worker-delegation": {
       "version": "0.8.4",
       "integrity": "sha256-0RbejzlLzdKpt9uVfev7M3JRjippsup/nLY3Q+Feqsc=",
@@ -37,6 +42,11 @@
       "integrity": "sha256-6BrEv3S5yb6PakSghKmbONVwHilAxmkNQppRNPTv9tc=",
       "source": "registry"
     },
+    "supabase-postgres": {
+      "version": "0.1.0",
+      "integrity": "sha256-FIcq4PFAj+ImVeh0juwdCbptUB5GAY6wkyjB8Kx/szI=",
+      "source": "registry"
+    },
     "testing-strategy": {
       "version": "0.1.1",
       "integrity": "sha256-KsqNmZ/F+oxg+PFicC4Q/6LMl+1FtbkwoX7JCgJ8h4A=",
@@ -45,6 +55,11 @@
     "ui-portability-baseline": {
       "version": "0.2.0",
       "integrity": "sha256-dL2aKMurLJySGa4oU8xO+UymCQCfIqlz/5hKTyMKzwc=",
+      "source": "registry"
+    },
+    "vercel-deploy": {
+      "version": "0.1.0",
+      "integrity": "sha256-lKlLYWznjq3CxaQgR5Wv03BkNo4+7wm0NZXv8YfQXDs=",
       "source": "registry"
     }
   }

@@ -49,7 +49,8 @@ function importSpecifiers(text) {
 }
 
 function forbiddenSpecifier(fromFile, specifier, root) {
-  if (specifier === "@supabase/supabase-js" || specifier.startsWith("@supabase/supabase-js/")) return true;
+  // The database driver is server-only.
+  if (specifier === "pg" || specifier.startsWith("pg/")) return true;
   if (specifier.startsWith("@/")) {
     const rest = specifier.slice(2);
     return FORBIDDEN_ROOTS.some((name) => rest === name || rest.startsWith(`${name}/`));

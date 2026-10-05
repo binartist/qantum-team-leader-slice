@@ -8,10 +8,14 @@ afterEach(() => {
 async function stock(mode: string | undefined, nodeEnv: string) {
   vi.resetModules();
   vi.stubEnv("NODE_ENV", nodeEnv);
-  vi.stubEnv("ACTIONS_STORE", nodeEnv === "production" ? "supabase" : "memory");
+  vi.stubEnv("ACTIONS_STORE", nodeEnv === "production" ? "postgres" : "memory");
   if (nodeEnv === "production") {
-    vi.stubEnv("SUPABASE_URL", "https://example.supabase.co");
-    vi.stubEnv("SUPABASE_SERVICE_KEY", "service-key-marker");
+    vi.stubEnv("DB_HOST", "db.example");
+    vi.stubEnv("DB_PORT", "5432");
+    vi.stubEnv("DB_USER", "qantum_slice");
+    vi.stubEnv("DB_PASSWORD", "db-password-marker");
+    vi.stubEnv("DB_NAME", "qantum_slice");
+    vi.stubEnv("DB_SSL", "require");
   }
   if (mode === undefined) vi.stubEnv("STUB_STOCK_MODE", "");
   else vi.stubEnv("STUB_STOCK_MODE", mode);
