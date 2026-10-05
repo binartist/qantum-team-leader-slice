@@ -1,14 +1,18 @@
 import path from "node:path";
+import { Pool } from "pg";
 import { loadCatalogueFromCsv } from "@/adapters/catalogue-csv";
 import { createMemoryActionsRepository } from "@/adapters/memory/actions-repository";
+import { poolConfig } from "@/adapters/postgres/connection";
+import { createPgActionsStore } from "@/adapters/postgres/pg-store";
+import { createActionsRepository } from "@/adapters/postgres/repository";
 import { makeStubs } from "@/adapters/stub";
-import { createSupabaseActionsRepository } from "@/adapters/supabase/actions-repository";
 import type { Dependencies } from "@/application";
+import { log } from "@/application/log";
 import { InternalError } from "@/ports";
-import { readEnv } from "./env";
+import { readEnv, type AppEnv } from "./env";
 
 // Next bundles each route and page separately, so this module can load more than once per process.
-// The built dependencies (and the memory store inside them) live on globalThis so pages and API routes share them.
+// The built dependencies (and the pool inside them) live on globalThis so pages and API routes share them.
 const CACHE_KEY = Symbol.for("qantum.team-leader.dependencies");
 const OVERRIDE_KEY = Symbol.for("qantum.team-leader.dependencies.override");
 type CacheHolder = { [CACHE_KEY]?: Dependencies; [OVERRIDE_KEY]?: Dependencies | null };
@@ -32,22 +36,10 @@ export function getDependencies(): Dependencies {
 export function buildDependencies(): Dependencies {
   const env = readEnv();
   const production = process.env.NODE_ENV === "production";
-  const store = env.actionsStore ?? (production ? "supabase" : "memory");
-  if (production && store !== "supabase") throw new InternalError("store_forbidden");
-
   const now = (): Date => new Date();
   const newId = (): string => crypto.randomUUID();
   const stubs = makeStubs({ stock: stockMode() });
   const catalogue = loadCatalogueFromCsv(path.join(process.cwd(), "data", "solutions-excerpt.csv"));
-
-  let actions: Dependencies["actions"];
-  if (store === "supabase") {
-    if (!env.supabaseUrl || !env.supabaseServiceKey) throw new InternalError("supabase_unconfigured");
-    if (production && !httpsUrl(env.supabaseUrl)) throw new InternalError("supabase_url_insecure");
-    actions = createSupabaseActionsRepository({ url: env.supabaseUrl, serviceKey: env.supabaseServiceKey });
-  } else {
-    actions = createMemoryActionsRepository({ now, newId });
-  }
 
   return {
     sites: stubs.sites,
@@ -55,9 +47,38 @@ export function buildDependencies(): Dependencies {
     stock: stubs.stock,
     solutionMaterials: stubs.solutionMaterials,
     catalogue,
-    actions,
+    actions: actionsFor(env, production, now, newId),
     now,
   };
+}
+
+function actionsFor(env: AppEnv, production: boolean, now: () => Date, newId: () => string): Dependencies["actions"] {
+  const store = env.actionsStore ?? (production ? "postgres" : "memory");
+  if (store !== "postgres") {
+    if (production) throw new InternalError("store_forbidden");
+    return createMemoryActionsRepository({ now, newId });
+  }
+  if (!env.dbHost || !env.dbUser || !env.dbPassword || !env.dbName) throw new InternalError("db_unconfigured");
+  if (production && env.dbSsl === "disable") throw new InternalError("db_tls_insecure");
+  const config = poolConfig({
+    host: env.dbHost,
+    port: env.dbPort,
+    user: env.dbUser,
+    password: env.dbPassword,
+    database: env.dbName,
+    ssl: env.dbSsl,
+    sslCa: env.dbSslCa,
+    poolMax: env.dbPoolMax,
+  });
+  log("db_config", {
+    host: env.dbHost,
+    port: env.dbPort,
+    user: env.dbUser,
+    database: env.dbName,
+    ssl: env.dbSsl,
+    passwordPresent: env.dbPassword.length > 0,
+  });
+  return createActionsRepository(createPgActionsStore(new Pool(config)));
 }
 
 function stockMode(): "normal" | "down" | "empty" | "malformed" {
@@ -65,12 +86,4 @@ function stockMode(): "normal" | "down" | "empty" | "malformed" {
   const value = process.env.STUB_STOCK_MODE;
   if (value === "normal" || value === "down" || value === "empty" || value === "malformed") return value;
   return "normal";
-}
-
-function httpsUrl(value: string): boolean {
-  try {
-    return new URL(value).protocol === "https:";
-  } catch {
-    return false;
-  }
 }
