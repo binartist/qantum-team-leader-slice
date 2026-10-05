@@ -128,7 +128,7 @@ Real authentication, a real inventory or nomination service, approval of substit
 
 ## 9. Demonstration scenario
 
-1. Open the sites list. Site B is blocked.
+1. Open the app. The landing page says it is a demo with invented data. Open sites: site B is blocked.
 2. Open site B. The banner says blocked with N shortages, and the stock figures are labelled shared and not reserved.
 3. Escalate the sealant shortage to purchasing with a note. State shows escalated. Crew is still blocked, and the screen says why.
 4. Open the penetration nominating `0438`. See candidates `0451` and `0464` labelled not verified. `0451` uses sealant, which this site is short of, and says so. Propose `0451` with a reason. It is listed as proposed and nothing else changes.

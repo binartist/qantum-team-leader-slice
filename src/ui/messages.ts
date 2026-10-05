@@ -14,7 +14,8 @@ export const EMPTY = {
 } as const;
 
 export const SITES_UNAVAILABLE = "Can't check the sites right now. Don't assume any site is clear. Try again.";
-export const DEMO_BANNER = "Demo: sample data, no login";
+export const DEMO_TAG = "Demo";
+export const DEMO_TAG_LABEL = "Demo: sample data, no login. About this demo";
 
 export const BUTTONS = {
   wait: "Wait",

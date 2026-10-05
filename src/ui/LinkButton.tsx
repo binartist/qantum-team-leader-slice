@@ -2,9 +2,9 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import styles from "./primitives.module.css";
 
-export function LinkButton({ href, children }: { href: string; children: ReactNode }) {
+export function LinkButton({ href, children, primary = false }: { href: string; children: ReactNode; primary?: boolean }) {
   return (
-    <Link className={styles.button} href={href}>
+    <Link className={primary ? `${styles.button} ${styles.primary}` : styles.button} href={href}>
       {children}
     </Link>
   );

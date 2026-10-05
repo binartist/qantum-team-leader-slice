@@ -7,9 +7,9 @@ Before sending a crew to site, a team leader checks whether the materials for th
 
 ## Try it (about two minutes)
 
-The live demo uses invented sample data and has no login. Decisions are stored in Postgres and shared by everyone who visits, so some may already be recorded.
+The live demo uses invented sample data and has no login. Decisions are stored in Postgres and shared by everyone who visits, so some may already be recorded. The first page explains this; the **Demo** tag at the top of every screen leads back to it.
 
-1. **Sites.** Harbour Point and Kingsway Works are blocked, and the chip says why. Riverside Plaza can go. Old Mill Annex has nothing planned.
+1. **Sites** ("Open sites" on the first page, or `/sites`). Harbour Point and Kingsway Works are blocked, and the chip says why. Riverside Plaza can go. Old Mill Annex has nothing planned.
 2. **Harbour Point.** "Blocked: 2 shortages". Stock figures are labelled "on hand, shared, not reserved", with their age and a warning when they are more than a day old.
 3. **Escalate the sealant shortage** to Purchasing with a note. The card shows Escalated and the crew is still blocked: a decision records intent, it does not create stock.
 4. **Open "Penetrations and substitutes"** on the sealant card and pick an `L3, Riser 2` row (solution `0438`). Candidates `0451` and `0464` are shown with their fire rating, whether they meet the required rating, and stock. Every candidate is "Catalogue match, not verified", and `0451` warns that it uses sealant, which this site is already short of. **Propose `0451`** with a reason anyway: a manager decides.

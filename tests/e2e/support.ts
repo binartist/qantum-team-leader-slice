@@ -3,6 +3,7 @@ import { expect, type Page } from "@playwright/test";
 
 export const screens = [
   "/",
+  "/sites",
   "/sites/site-a",
   "/sites/site-b",
   "/sites/site-c",

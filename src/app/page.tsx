@@ -1,40 +1,45 @@
-import { listSites } from "@/application";
-import { getDependencies } from "@/server/deps";
 import { AppBar } from "@/ui/AppBar";
-import { EMPTY, SITES_UNAVAILABLE } from "@/ui/messages";
-import { SiteCard } from "@/ui/SiteCard";
-import { siteChip } from "@/ui/status";
-import { UnavailablePanel } from "@/ui/UnavailablePanel";
+import { LinkButton } from "@/ui/LinkButton";
 import styles from "@/ui/primitives.module.css";
-import { loadPage } from "./_lib/load";
 
-export const dynamic = "force-dynamic";
-export const metadata = { title: "Sites" };
+export const metadata = { title: "About this demo" };
 
-export default async function HomePage() {
-  const loaded = await loadPage(() => listSites(getDependencies()));
+/** Explains the demo once, so the working screens only need a small Demo tag. */
+export default function LandingPage() {
   return (
     <>
-      <AppBar title="Sites" />
+      <AppBar title="Ready to send the crew?" demoTag={false} />
       <main>
-        {loaded.status === "unavailable" ? (
-          <UnavailablePanel status={{ label: SITES_UNAVAILABLE, tone: "warning", icon: "warning" }} />
-        ) : loaded.value.sites.length === 0 ? (
-          <p>{EMPTY.sites}</p>
-        ) : (
-          <ul className={styles.list}>
-            {loaded.value.sites.map((site) => (
-              <li key={site.id}>
-                <SiteCard
-                  id={site.id}
-                  name={site.name}
-                  status={siteChip(site.crewStatus, site.shortageCount, site.dataProblemCount)}
-                />
-              </li>
-            ))}
+        <p>
+          Check a site&apos;s materials before the crew goes. If something is short, decide what to do: wait, escalate, or
+          suggest a substitute.
+        </p>
+        <section aria-labelledby="demo-heading">
+          <h2 id="demo-heading">About this demo</h2>
+          <ul>
+            <li>Sample sites and stock. The fire-stopping catalogue is real.</li>
+            <li>No login. Everyone with the link shares the same decisions.</li>
+            <li>Nothing is sent or ordered. A substitute is a suggestion for a manager to check.</li>
           </ul>
-        )}
+        </section>
+        <section aria-labelledby="try-heading">
+          <h2 id="try-heading">Try it in two minutes</h2>
+          <ol>
+            <li>Open Harbour Point. Two shortages block the crew.</li>
+            <li>Escalate the sealant. The crew stays blocked until stock arrives.</li>
+            <li>Under the sealant, open L3, Riser 2 and propose 0451.</li>
+            <li>Open Kingsway Works. Data problems block it too.</li>
+            <li>See what you recorded in the Actions log.</li>
+          </ol>
+        </section>
+        <p className={styles.muted}>Tap Demo at the top of any screen to come back here.</p>
       </main>
+      {/* Last on the page and sticky, so it stays in view while reading and never covers the text at the end. */}
+      <div className={styles.stickyAction}>
+        <LinkButton href="/sites" primary>
+          Open sites
+        </LinkButton>
+      </div>
     </>
   );
 }

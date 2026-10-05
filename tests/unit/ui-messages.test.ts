@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   ANNOUNCE,
   BUTTONS,
-  DEMO_BANNER,
+  DEMO_TAG,
+  DEMO_TAG_LABEL,
   SITES_UNAVAILABLE,
   CREW_STAYS,
   EMPTY,
@@ -149,7 +150,8 @@ describe("forbidden words", () => {
       STOCK_STALE,
       SUBSTITUTES,
       SITES_UNAVAILABLE,
-      DEMO_BANNER,
+      DEMO_TAG,
+      DEMO_TAG_LABEL,
     ];
     for (const text of texts) expect(text).not.toMatch(/compatible|approved/i);
   });

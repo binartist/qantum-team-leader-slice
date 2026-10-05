@@ -17,7 +17,7 @@ A team leader checks a site before the crew leaves, usually on a phone in a van 
 | Layout | Single column. Max width 720px, centred. Fits 375px with no horizontal scroll | AC 32 |
 | Targets | At least 44px high and wide for anything tappable | AC 31 |
 | Motion | None needed. Respect `prefers-reduced-motion` | |
-| Demo honesty | A permanent bar at the **bottom** of every screen: "Demo: sample data, no login". It is a sticky footer, so it stays in view and never covers the last content | The app is a demonstration. Do not let it look like production. At the bottom it stays out of the way of the title and the decisions |
+| Demo honesty | A landing page at `/` ("Ready to send the crew?") explains the demo once, in a few short lines: sample data, no login, shared decisions, nothing sent, and a five-step walkthrough. Every other screen carries a small **Demo** tag in the sticky header (a 44px link, accessible name "Demo: sample data, no login. About this demo") that returns to it | The app is a demonstration and must not look like production, including on a deep-linked screen. One explanation in one place, instead of a bar taking space on every screen |
 | Navigation | A sticky top header holds only the page title (the one `h1`). Inner screens show a back row directly below it: a chevron and the name of the screen it returns to ("‹ Sites", "‹ Harbour Point, Levels 3 to 5"), at least 44 high, with the accessible name "Back to <name>". It scrolls with the page. No transition animation | Familiar on a phone, one place to see where you are and how to go back |
 | Styling tech | CSS Modules and CSS custom properties. **No new dependencies** (no Tailwind, no component library) | Small app, nothing to justify a dependency. Tokens give one place for colours |
 | Rendering | Next.js server components for pages, small client islands only for dialogs and forms | Less client code, no loading flicker, nothing secret in the browser |
@@ -27,12 +27,13 @@ A team leader checks a site before the crew leaves, usually on a phone in a van 
 
 | Route | Screen | Content |
 | --- | --- | --- |
-| `/` | Sites | One card per site with name and a crew status chip |
+| `/` | About this demo | What the app is for, what is invented, the two-minute walkthrough, and a primary "Open sites" button in a full-width bar stuck to the bottom of the screen (the button fills it inside the side gutters, capped at the content width). No Demo tag (this is the page it links to) |
+| `/sites` | Sites | One card per site with name and a crew status chip |
 | `/sites/[id]` | Site readiness | Back link, site name, status banner, stock notice and "as of" time, shortage cards, a separate "Data problems" section for blockers, link to the actions log |
 | `/sites/[id]/penetrations/[pid]` | Substitutes | Penetration summary, the "Catalogue match, not verified" notice, one card per candidate with an availability chip, "Propose this" |
 | `/sites/[id]/actions` | Actions log | Newest first: what was recorded, when, by whom, and whether it is current, earlier or resolved. Proposals listed separately |
 
-There is also a not-found page and one error page with a retry link. All pages are dynamic (never cached).
+There is also a not-found page and one error page with a retry link. All data pages are dynamic (never cached). The landing page has no data and is static.
 
 ### Site readiness banner
 
@@ -96,7 +97,7 @@ Plain words, sentence case, no exclamation marks, no "please", no "successfully"
 
 ## 5. Accessibility (WCAG 2.2 AA)
 
-- One `h1` per page (in the sticky header), ordered headings, landmarks: one `banner` (the header), one `main`, one `contentinfo` (the demo bar).
+- One `h1` per page (in the sticky header), ordered headings, landmarks: one `banner` (the header, holding the title and the Demo tag) and one `main`.
 - Status chips and banners carry text and an icon with `aria-hidden`, so colour is never the only signal.
 - Visible focus ring on every control, logical tab order, dialogs return focus to the control that opened them.
 - Form fields have visible labels, errors are announced next to the field, character counts are text.
@@ -165,3 +166,5 @@ Usability round (2026-10-05, from a review against the exercise brief's UX quest
 | Failure | Every can't-check screen has a "Try again" button that reloads the page |
 
 Limits recorded rather than built: an open tab keeps the banner it loaded until the next navigation; the three dialogs repeat their form code; no end-to-end test shows the "Earlier decision" badge (the sample stock cannot change during a run), which is covered at the API. From the usability review, not built: a separate escalation target for data problems (they are not a purchasing matter), a "substitute proposed" marker on shortage cards, a "what was checked" summary on a clear site, and a planned work date per site. Penetrations at the same place with the same service read the same (four in the sample); real data would add the floor-plan pin reference.
+
+Landing page (2026-10-06, user decision): the bottom demo bar was replaced by a landing page at `/` and a Demo tag in every header. The sites list moved from `/` to `/sites`; every `/sites/...` URL is unchanged, and back links named "Sites" go to `/sites`.

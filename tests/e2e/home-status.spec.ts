@@ -1,9 +1,9 @@
 import { expect, test } from "@playwright/test";
 import { gotoApp } from "./support";
 
-test("home shows crew can go for Riverside and nothing planned for Old Mill", async ({ page }) => {
+test("the sites list shows crew can go for Riverside and nothing planned for Old Mill", async ({ page }) => {
   // Read-only. Does not record an action.
-  await gotoApp(page, "/");
+  await gotoApp(page, "/sites");
   const riverside = page.getByRole("listitem").filter({ hasText: "Riverside Plaza, Block A" });
   await expect(riverside.getByText("Crew can go")).toBeVisible();
   const harbour = page.getByRole("listitem").filter({ hasText: "Harbour Point, Levels 3 to 5" });
@@ -14,9 +14,30 @@ test("home shows crew can go for Riverside and nothing planned for Old Mill", as
   await expect(mill.getByText("Nothing planned")).toBeVisible();
 });
 
-test("navigation shell, bottom demo bar, and job reference on the site screen only", async ({ page }) => {
-  // Read-only. Opens a site and follows the back control. Does not record an action.
+test("landing page explains the demo, every other screen carries a Demo tag, and there is no demo footer", async ({ page }) => {
+  // Read-only. Follows links only. Does not record an action.
   await gotoApp(page, "/");
+  await expect(page.getByRole("heading", { level: 1, name: "Ready to send the crew?" })).toBeVisible();
+  await expect(page.getByText("Sample sites and stock.", { exact: false })).toBeVisible();
+  await expect(page.getByText("No login.", { exact: false })).toBeVisible();
+  await expect(page.getByText("shares the same decisions", { exact: false })).toBeVisible();
+  await expect(page.getByRole("link", { name: /^Demo/ })).toHaveCount(0);
+  await expect(page.getByRole("contentinfo")).toHaveCount(0);
+  // Open sites sticks to the bottom: in view at the top of the page, and still in view at the end without covering text.
+  const open = page.getByRole("link", { name: "Open sites" });
+  await expect(open).toBeInViewport();
+  // It fills the screen width inside the 16px side gutters.
+  const openBox = await open.boundingBox();
+  if (!openBox) throw new Error("open sites has no box");
+  const viewport = page.viewportSize();
+  if (!viewport) throw new Error("no viewport");
+  expect(openBox.width).toBeGreaterThanOrEqual(viewport.width - 32 - 1);
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  await expect(open).toBeInViewport();
+  await expect(page.getByText("Tap Demo at the top of any screen to come back here.")).toBeInViewport();
+  await open.click();
+  await expect(page).toHaveURL(/\/sites$/);
+
   await expect(page.getByRole("heading", { level: 1, name: "Sites" })).toBeVisible();
   await expect(page.getByText(/\bref RP-A2\b/i)).toHaveCount(0);
   await expect(page.getByRole("link", { name: "Back to sites" })).toHaveCount(0);
@@ -27,8 +48,13 @@ test("navigation shell, bottom demo bar, and job reference on the site screen on
   await expect(page.getByText(/Stock figures from 3 Oct 2026, 08:00 UTC \(\d+ days? old\)/)).toBeVisible();
   await expect(page.getByText("These stock figures are more than a day old. Check with the warehouse before relying on them.")).toBeVisible();
   await expect(page.getByText("Job ref HP-345", { exact: true })).toBeVisible();
-  const footer = page.getByRole("contentinfo");
-  await expect(footer).toContainText("Demo: sample data, no login");
+  await expect(page.getByRole("contentinfo")).toHaveCount(0);
+  const tag = page.getByRole("banner").getByRole("link", { name: "Demo: sample data, no login. About this demo" });
+  await expect(tag).toHaveText("Demo");
+  const tagBox = await tag.boundingBox();
+  if (!tagBox) throw new Error("demo tag has no box");
+  expect(tagBox.width).toBeGreaterThanOrEqual(44);
+  expect(tagBox.height).toBeGreaterThanOrEqual(44);
 
   const back = page.getByRole("link", { name: "Back to sites" });
   const box = await back.boundingBox();
@@ -40,33 +66,22 @@ test("navigation shell, bottom demo bar, and job reference on the site screen on
   expect(box.width).toBeGreaterThanOrEqual(44);
   expect(box.height).toBeGreaterThanOrEqual(44);
   await back.click();
-  await expect(page).toHaveURL(/\/$/);
+  await expect(page).toHaveURL(/\/sites$/);
   await expect(page.getByRole("heading", { level: 1, name: "Sites" })).toBeVisible();
 
   await gotoApp(page, "/sites/site-b");
   await expect(page.getByRole("heading", { level: 2, name: "Intumescent sealant, 310 ml cartridge" })).toBeVisible();
-  const demo = page.getByRole("contentinfo").getByText("Demo: sample data, no login");
-  await expect(demo).toBeVisible();
-  const before = await demo.boundingBox();
   const moved = await page.evaluate(() => {
     window.scrollTo(0, document.body.scrollHeight);
     return window.scrollY > 0;
   });
   expect(moved).toBe(true);
-  const header = page.getByRole("banner");
-  await expect(header).toBeInViewport();
-  // At the end of the page the bar sits below the last content and covers none of it.
-  const clear = await page.evaluate(() => {
-    const main = document.querySelector("main");
-    const bar = document.querySelector("footer");
-    if (!main || !bar) return false;
-    return bar.getBoundingClientRect().top >= main.getBoundingClientRect().bottom - 1;
-  });
-  expect(clear).toBe(true);
-  await expect(demo).toBeInViewport();
-  const after = await demo.boundingBox();
-  if (!before || !after) throw new Error("demo bar has no box");
-  expect(Math.abs(before.y - after.y)).toBeLessThan(2);
+  // The sticky header keeps the Demo tag in view at the end of a long page.
+  await expect(page.getByRole("banner")).toBeInViewport();
+  await expect(page.getByRole("banner").getByRole("link", { name: /^Demo/ })).toBeInViewport();
+  await page.getByRole("banner").getByRole("link", { name: /^Demo/ }).click();
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByRole("heading", { level: 1, name: "Ready to send the crew?" })).toBeVisible();
 
   await gotoApp(page, "/sites/site-d");
   await expect(page.getByText("Nothing planned for this site")).toBeVisible();
