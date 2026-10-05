@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import { Announcer } from "@/ui/Announcer";
-import { DEMO_BANNER } from "@/ui/messages";
 import "./globals.css";
 
 export const metadata = {
@@ -14,9 +13,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body>
         <Announcer />
         {children}
-        <footer>
-          <p className="demo-banner">{DEMO_BANNER}</p>
-        </footer>
       </body>
     </html>
   );

@@ -276,6 +276,44 @@
   min-width: 0;
 }
 
+/* Full-width bar; the button fills it inside the side gutter, capped at the content width. */
+.stickyAction {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  display: flex;
+  flex: none;
+  justify-content: center;
+  padding: 0.75rem var(--space) calc(0.75rem + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.stickyAction > * {
+  width: min(100%, 45rem);
+}
+
+/* The link is a 44px target; the visible pill inside it is smaller. */
+.demoTag {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: var(--radius);
+  text-decoration: none;
+}
+
+.demoTag span {
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--radius);
+  background: var(--warning-bg);
+  color: var(--warning-text);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
 .backRow {
   align-self: center;
   width: min(100%, 45rem);

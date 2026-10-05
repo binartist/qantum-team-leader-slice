@@ -39,7 +39,7 @@ export default async function ActionsPage({ params }: RouteParams) {
   if (siteLoad.status === "unavailable") {
     return (
       <>
-        <AppBar title="This site" backHref="/" backName="Sites" />
+        <AppBar title="This site" backHref="/sites" backName="Sites" />
         <main>
           <UnavailablePanel status={readinessBanner("unavailable", 0, 0)} />
         </main>

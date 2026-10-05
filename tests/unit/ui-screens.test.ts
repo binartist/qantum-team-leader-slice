@@ -30,7 +30,7 @@ function token(block: string, name: string): string {
 describe("fixed screen copy", () => {
   it("the sites list has its own unavailable sentence", () => {
     const messages = readFileSync("src/ui/messages.ts", "utf8");
-    const page = readFileSync("src/app/page.tsx", "utf8");
+    const page = readFileSync("src/app/sites/page.tsx", "utf8");
     expect(messages).toContain("Can't check the sites right now. Don't assume any site is clear. Try again.");
     expect(page).toContain("SITES_UNAVAILABLE");
     expect(page).not.toContain('readinessBanner("unavailable"');
@@ -54,12 +54,12 @@ describe("fixed screen copy", () => {
     expect(source).not.toMatch(/\{error\.digest\}/);
   });
 
-  it("global-error has fixed copy, the demo banner, and a retry, and no message or digest", () => {
+  it("global-error has fixed copy, the header with its Demo tag, and a retry, and no message or digest", () => {
     expect(existsSync("src/app/global-error.tsx")).toBe(true);
     const source = readFileSync("src/app/global-error.tsx", "utf8");
-    expect(source).toContain("Demo: sample data, no login");
-    expect(source).toContain("<footer");
+    expect(source).not.toContain("<footer");
     expect(source).toContain("<AppBar");
+    expect(source).not.toContain("demoTag={false}");
     expect(source).toContain("Something went wrong");
     expect(source).toContain("Try again.");
     expect(source).toContain("retry");
@@ -70,6 +70,7 @@ describe("fixed screen copy", () => {
 
 const SCREEN_SOURCES = [
   "src/app/page.tsx",
+  "src/app/sites/page.tsx",
   "src/app/loading.tsx",
   "src/app/not-found.tsx",
   "src/app/error.tsx",
@@ -93,10 +94,12 @@ describe("navigation shell", () => {
     }
   });
 
-  it("the root layout has a footer and no header", () => {
+  it("the root layout has no demo footer and no header; the Demo tag lives in AppBar", () => {
     const layout = readFileSync("src/app/layout.tsx", "utf8");
-    expect(layout).toContain("<footer");
-    expect(layout).toContain("DEMO_BANNER");
+    const bar = readFileSync("src/ui/AppBar.tsx", "utf8");
+    expect(layout).not.toContain("<footer");
+    expect(bar).toContain("DEMO_TAG_LABEL");
+    expect(bar).toContain('href="/"');
     expect(layout).not.toMatch(/<header\b/);
   });
 
@@ -125,5 +128,14 @@ describe("input contrast", () => {
       expect(contrast(border, token(block, "--surface"))).toBeGreaterThanOrEqual(3);
       expect(contrast(token(block, "--danger-text"), token(block, "--bg"))).toBeGreaterThanOrEqual(3);
     }
+  });
+
+  it("only the landing page hides the Demo tag, and back links to the list go to /sites", () => {
+    for (const file of SCREEN_SOURCES.filter((name) => name !== "src/app/page.tsx")) {
+      const source = readFileSync(file, "utf8");
+      expect(source, file).not.toContain("demoTag={false}");
+      expect(source, file).not.toContain('backHref="/"');
+    }
+    expect(readFileSync("src/app/page.tsx", "utf8")).toContain('href="/sites"');
   });
 });

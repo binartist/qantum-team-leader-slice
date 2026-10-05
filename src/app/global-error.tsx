@@ -20,9 +20,6 @@ export default function GlobalError({ retry }: { error: unknown; retry: () => vo
             {BUTTONS.tryAgain}
           </Button>
         </main>
-        <footer>
-          <p className="demo-banner">Demo: sample data, no login</p>
-        </footer>
       </body>
     </html>
   );

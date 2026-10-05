@@ -16,6 +16,8 @@ test("scenario: escalate sealant, propose 0451, then Kingsway still cannot go", 
   });
 
   await gotoApp(page, "/");
+  await page.getByRole("link", { name: "Open sites" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Sites" })).toBeVisible();
   await page.getByRole("link", { name: /Harbour Point/ }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Harbour Point, Levels 3 to 5" })).toBeVisible();
   await expect(page.getByText("On hand, shared, not reserved")).toBeVisible();
@@ -105,7 +107,7 @@ test("scenario: escalate sealant, propose 0451, then Kingsway still cannot go", 
   await expect(page.getByText("By demo-leader").first()).toBeVisible();
   await expect(page.getByText(/\d{1,2} [A-Z][a-z]{2} \d{4}, \d{2}:\d{2} UTC/).first()).toBeVisible();
 
-  await gotoApp(page, "/");
+  await gotoApp(page, "/sites");
   await page.getByRole("link", { name: /Kingsway Works/ }).click();
   await expect(page.getByRole("heading", { name: "Data problems" })).toBeVisible();
   await expect(page.getByText("Solution code 9999 isn't in the catalogue")).toBeVisible();

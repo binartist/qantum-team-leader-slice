@@ -3,7 +3,7 @@ import { gotoApp } from "./support";
 
 test("stock down shows can't check and never crew can go", async ({ page }) => {
   // Runs on the stock-down server (STUB_STOCK_MODE=down), not the main server.
-  await gotoApp(page, "/");
+  await gotoApp(page, "/sites");
   await expect(page.getByText("Can't check")).toHaveCount(4);
   await expect(page.getByText("Crew can go")).toHaveCount(0);
 

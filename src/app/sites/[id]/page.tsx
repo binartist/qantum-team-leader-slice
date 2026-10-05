@@ -43,7 +43,7 @@ export default async function SitePage({ params }: RouteParams) {
   if (siteLoad.status === "unavailable") {
     return (
       <>
-        <AppBar title="This site" backHref="/" backName="Sites" />
+        <AppBar title="This site" backHref="/sites" backName="Sites" />
         <main>
           <UnavailablePanel status={readinessBanner("unavailable", 0, 0)} />
         </main>
@@ -56,7 +56,7 @@ export default async function SitePage({ params }: RouteParams) {
   if (readinessLoad.status === "unavailable") {
     return (
       <>
-        <AppBar title={site.name} backHref="/" backName="Sites" />
+        <AppBar title={site.name} backHref="/sites" backName="Sites" />
         <main>
           <p className={styles.muted}>{formatReference(site.reference)}</p>
           <UnavailablePanel status={readinessBanner("unavailable", 0, 0)} />
@@ -68,7 +68,7 @@ export default async function SitePage({ params }: RouteParams) {
   const readiness = readinessLoad.value;
   return (
     <>
-      <AppBar title={site.name} backHref="/" backName="Sites" />
+      <AppBar title={site.name} backHref="/sites" backName="Sites" />
       <main>
         <p className={styles.muted}>{formatReference(site.reference)}</p>
         <Banner status={readinessBanner(readiness.crewStatus, readiness.shortages.length, readiness.blockers.length)} />
