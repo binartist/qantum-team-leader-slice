@@ -14,12 +14,14 @@
     "lint": "eslint .",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
+    "test:db": "VITEST_INCLUDE_DB=1 vitest run tests/db",
     "test:e2e": "playwright test",
-    "check:ac": "node scripts/check-ac-coverage.mjs"
+    "check:ac": "node scripts/check-ac-coverage.mjs",
+    "db:migrate": "node scripts/migrate.mjs"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.117.2",
     "next": "^16.3.8",
+    "pg": "^8.23.1",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "zod": "^4.6.5"
@@ -28,6 +30,7 @@
     "@axe-core/playwright": "^4.13.0",
     "@playwright/test": "^1.63.0",
     "@types/node": "^26.6.4",
+    "@types/pg": "^8.23.1",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitest/coverage-v8": "^5.0.3",

@@ -1,4 +1,3 @@
-import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import type { ShortageAction, SubstitutionProposal } from "@/domain";
 import { UpstreamError, type ActionsRepository, type NewShortageAction, type NewSubstitutionProposal } from "@/ports";
@@ -208,47 +207,4 @@ export function createActionsRepository(store: ActionsStore): ActionsRepository 
         .sort(byNewest);
     },
   };
-}
-
-function codeOnly(error: { code?: string } | null): { code?: string } | null {
-  if (!error) return null;
-  return { code: error.code };
-}
-
-export function createSupabaseActionsRepository(options: { url: string; serviceKey: string }): ActionsRepository {
-  const client = createClient(options.url, options.serviceKey, { auth: { persistSession: false } });
-
-  const store: ActionsStore = {
-    async insertShortageAction(row) {
-      const result = await client.from("shortage_action").insert(row).select("*").single();
-      return { data: result.data, error: codeOnly(result.error) };
-    },
-    async selectShortageActionByKey(createdBy, idempotencyKey) {
-      const result = await client.from("shortage_action").select("*").eq("created_by", createdBy).eq("idempotency_key", idempotencyKey).maybeSingle();
-      return { data: result.data, error: codeOnly(result.error) };
-    },
-    async listShortageActions(siteId) {
-      const result = await client.from("shortage_action").select("*").eq("site_id", siteId).order("created_at", { ascending: false });
-      return { data: result.data, error: codeOnly(result.error) };
-    },
-    async insertSubstitutionProposal(row) {
-      const result = await client.from("substitution_proposal").insert(row).select("*").single();
-      return { data: result.data, error: codeOnly(result.error) };
-    },
-    async selectSubstitutionProposalByKey(createdBy, idempotencyKey) {
-      const result = await client
-        .from("substitution_proposal")
-        .select("*")
-        .eq("created_by", createdBy)
-        .eq("idempotency_key", idempotencyKey)
-        .maybeSingle();
-      return { data: result.data, error: codeOnly(result.error) };
-    },
-    async listSubstitutionProposals(siteId) {
-      const result = await client.from("substitution_proposal").select("*").eq("site_id", siteId).order("created_at", { ascending: false });
-      return { data: result.data, error: codeOnly(result.error) };
-    },
-  };
-
-  return createActionsRepository(store);
 }

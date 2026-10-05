@@ -9,7 +9,7 @@ const clientBoundaryMessage = "UI and client modules must not import the server,
 export const clientBoundaryFiles = ["src/ui/**/*.{ts,tsx}", "src/app/error.tsx", "src/app/global-error.tsx"];
 
 export const clientBoundaryImports = {
-  paths: [{ name: "@supabase/supabase-js", message: clientBoundaryMessage }],
+  paths: [{ name: "pg", message: clientBoundaryMessage }],
   patterns: [
     {
       group: [
@@ -70,7 +70,7 @@ export default defineConfig([
         "error",
         {
           patterns: [
-            { group: ["next", "next/*", "react", "react-dom", "@supabase/*"], message: "Domain core must not import frameworks or the database client." },
+            { group: ["next", "next/*", "react", "react-dom", "pg", "pg/*"], message: "Domain core must not import frameworks or the database client." },
             { group: ["node:*", "fs", "fs/*", "path", "@/adapters/*", "@/app/*"], message: "Domain core must not do I/O or import adapters or the app layer." },
           ],
         },

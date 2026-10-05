@@ -1,7 +1,5 @@
--- Leader actions. Append-only. See docs/technical-design.md section 4.
--- Deny by default: row-level security is on and no policies exist, so the
--- Data API (anon/authenticated roles) can read and write nothing. The server
--- connects with a server-side key that is never sent to the browser.
+-- Leader actions. Append-only. The connecting role may select and insert only.
+-- See docs/technical-design.md section 4.
 
 create table public.shortage_action (
   id                    uuid primary key default gen_random_uuid(),
@@ -36,8 +34,7 @@ create table public.substitution_proposal (
 create index shortage_action_site_idx on public.shortage_action (site_id, shortage_id, created_at desc);
 create index substitution_proposal_site_idx on public.substitution_proposal (site_id, created_at desc);
 
-alter table public.shortage_action enable row level security;
-alter table public.substitution_proposal enable row level security;
-
-revoke all on public.shortage_action from anon, authenticated;
-revoke all on public.substitution_proposal from anon, authenticated;
+revoke all on table public.shortage_action from public;
+revoke all on table public.substitution_proposal from public;
+grant select, insert on table public.shortage_action to qantum_slice;
+grant select, insert on table public.substitution_proposal to qantum_slice;

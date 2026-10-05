@@ -1,5 +1,5 @@
 const EVENT = /^[a-z0-9_]{1,40}$/;
-const FIELD = /^(siteId|shortageId|penetrationId|code|system|kind|status|created|reason)$/;
+const FIELD = /^(siteId|shortageId|penetrationId|code|system|kind|status|created|reason|host|port|user|database|ssl|passwordPresent)$/;
 const TOKEN = /^[A-Za-z0-9._:-]{1,80}$/;
 
 /** One JSON line. Drops notes, reasons, bodies, keys, and upstream messages. */

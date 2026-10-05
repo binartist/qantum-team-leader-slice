@@ -57,7 +57,7 @@ describe("server boundary", () => {
         } catch {
           continue;
         }
-        if (text.includes("SUPABASE_SERVICE_KEY") || text.includes("service_role")) hits.push(file);
+        if (text.includes("SUPABASE_SERVICE_KEY") || text.includes("service_role") || text.includes("DB_PASSWORD")) hits.push(file);
       }
       expect(hits).toEqual([]);
     },
@@ -71,13 +71,20 @@ describe("server boundary", () => {
     expect((result.body.sites as { id: string }[]).map((site) => site.id)).toEqual(["site-a", "site-b", "site-c", "site-d"]);
   });
 
-  it("returns 500 internal_error in production when supabase is not configured", async () => {
+  it("returns 500 internal_error in production when postgres is not configured", async () => {
     vi.stubEnv("NODE_ENV", "production");
-    vi.stubEnv("SUPABASE_URL", "");
-    vi.stubEnv("SUPABASE_SERVICE_KEY", "");
     vi.stubEnv("ACTIONS_STORE", "");
+    vi.stubEnv("DB_HOST", "");
+    vi.stubEnv("DB_USER", "");
+    vi.stubEnv("DB_PASSWORD", "");
+    vi.stubEnv("DB_NAME", "");
     setDependenciesForTests(null);
+    const lines: string[] = [];
+    const spy = vi.spyOn(console, "log").mockImplementation((line: unknown) => {
+      lines.push(String(line));
+    });
     const response = await getSites();
+    spy.mockRestore();
     vi.unstubAllEnvs();
     const result = await readResponse(response);
     expect(result.status).toBe(500);
@@ -85,6 +92,7 @@ describe("server boundary", () => {
     expect(result.text).not.toContain("site-a");
     expect(result.text).not.toContain("memory");
     expect(result.cache).toBe("no-store");
+    expect(lines.join("\n")).toContain("db_unconfigured");
   });
 
   it("does not log notes, keeps a reason token, and drops a reason that is not token-shaped", () => {
@@ -93,15 +101,30 @@ describe("server boundary", () => {
       lines.push(String(line));
     });
     log("request_failed", { code: "validation_failed", note: "secret reason", status: 422, idempotencyKey: "key-1" });
-    log("request_failed", { code: "internal_error", status: 500, reason: "supabase_url_insecure" });
+    log("request_failed", { code: "internal_error", status: 500, reason: "db_tls_insecure" });
     log("request_failed", { code: "internal_error", status: 500, reason: "http://insecure.example" });
+    log("db_config", {
+      host: "db.example",
+      port: 6543,
+      user: "qantum_slice",
+      database: "qantum_slice",
+      ssl: "verify-full",
+      passwordPresent: false,
+      password: "db-password-marker",
+    });
     spy.mockRestore();
-    expect(lines).toHaveLength(3);
+    expect(lines).toHaveLength(4);
     expect(lines[0]).toContain("validation_failed");
     expect(lines[0]).not.toContain("secret");
     expect(lines[0]).not.toContain("key-1");
-    expect(lines[1]).toContain("supabase_url_insecure");
+    expect(lines[1]).toContain("db_tls_insecure");
     expect(lines[2]).not.toContain("insecure.example");
+    expect(lines[3]).toContain("db.example");
+    expect(lines[3]).toContain("6543");
+    expect(lines[3]).toContain("qantum_slice");
+    expect(lines[3]).toContain("verify-full");
+    expect(lines[3]).toContain("false");
+    expect(lines[3]).not.toContain("db-password-marker");
   });
 
   it("rejects an invalid DEMO_USER_ID with InternalError and config_invalid", () => {
@@ -115,9 +138,9 @@ describe("server boundary", () => {
     }
   });
 
-  it("AC 28: API response fixtures do not contain the service key", async () => {
-    const marker = "service-key-marker";
-    vi.stubEnv("SUPABASE_SERVICE_KEY", marker);
+  it("AC 28: API response fixtures do not contain the database password", async () => {
+    const marker = "db-password-marker";
+    vi.stubEnv("DB_PASSWORD", marker);
     setDependenciesForTests(testDependencies());
     const lines: string[] = [];
     const spy = vi.spyOn(console, "log").mockImplementation((line: unknown) => {
@@ -144,21 +167,32 @@ describe("server boundary", () => {
   it("returns 500 in production when ACTIONS_STORE=memory and the body has no site data", async () => {
     vi.stubEnv("NODE_ENV", "production");
     vi.stubEnv("ACTIONS_STORE", "memory");
-    vi.stubEnv("SUPABASE_URL", "");
-    vi.stubEnv("SUPABASE_SERVICE_KEY", "");
+    vi.stubEnv("DB_HOST", "db.example");
+    vi.stubEnv("DB_PASSWORD", "db-password-marker");
     setDependenciesForTests(null);
+    const lines: string[] = [];
+    const spy = vi.spyOn(console, "log").mockImplementation((line: unknown) => {
+      lines.push(String(line));
+    });
     const result = await readResponse(await getSites());
+    spy.mockRestore();
     expect(result.status).toBe(500);
     expect(result.body).toEqual({ code: "internal_error", message: "Something went wrong." });
     expect(result.text).not.toContain("site-a");
+    expect(result.text).not.toContain("db-password-marker");
     expect(result.cache).toBe("no-store");
+    expect(lines.join("\n")).toContain("store_forbidden");
+    expect(lines.join("\n")).not.toContain("db-password-marker");
   });
 
-  it("rejects an http Supabase URL in production, logs the token, and does not cache the failure", async () => {
+  it("returns 500 when the database password is missing and does not cache the failure", async () => {
     vi.stubEnv("NODE_ENV", "production");
-    vi.stubEnv("ACTIONS_STORE", "supabase");
-    vi.stubEnv("SUPABASE_URL", "http://insecure.example");
-    vi.stubEnv("SUPABASE_SERVICE_KEY", "service-key-marker");
+    vi.stubEnv("ACTIONS_STORE", "postgres");
+    vi.stubEnv("DB_HOST", "db.example");
+    vi.stubEnv("DB_USER", "qantum_slice");
+    vi.stubEnv("DB_PASSWORD", "");
+    vi.stubEnv("DB_NAME", "qantum_slice");
+    vi.stubEnv("DB_SSL", "require");
     setDependenciesForTests(null);
     const lines: string[] = [];
     const spy = vi.spyOn(console, "log").mockImplementation((line: unknown) => {
@@ -169,36 +203,78 @@ describe("server boundary", () => {
     expect(failed.status).toBe(500);
     expect(failed.body).toEqual({ code: "internal_error", message: "Something went wrong." });
     expect(failed.text).not.toContain("site-a");
-    expect(failed.text).not.toContain("insecure.example");
-    expect(failed.text).not.toContain("service-key-marker");
-    expect(lines.join("\n")).toContain("supabase_url_insecure");
-    expect(lines.join("\n")).not.toContain("insecure.example");
-    expect(lines.join("\n")).not.toContain("service-key-marker");
+    expect(lines.join("\n")).toContain("db_unconfigured");
 
-    vi.stubEnv("SUPABASE_URL", "https://example.supabase.co");
+    vi.stubEnv("DB_PASSWORD", "db-password-marker");
     const built = getDependencies();
     expect(built.catalogue.solutions.length).toBeGreaterThan(0);
     expect(typeof built.actions.listShortageActions).toBe("function");
   });
 
-  it("builds with an https Supabase URL in production and an http URL outside production", () => {
+  it("returns 500 in production when DB_SSL=disable, logs the token, and does not cache the failure", async () => {
+    const marker = "db-password-marker";
     vi.stubEnv("NODE_ENV", "production");
-    vi.stubEnv("ACTIONS_STORE", "supabase");
-    vi.stubEnv("SUPABASE_URL", "https://example.supabase.co");
-    vi.stubEnv("SUPABASE_SERVICE_KEY", "service-key-marker");
+    vi.stubEnv("ACTIONS_STORE", "postgres");
+    vi.stubEnv("DB_HOST", "db.example");
+    vi.stubEnv("DB_PORT", "6543");
+    vi.stubEnv("DB_USER", "qantum_slice");
+    vi.stubEnv("DB_PASSWORD", marker);
+    vi.stubEnv("DB_NAME", "qantum_slice");
+    vi.stubEnv("DB_SSL", "disable");
+    setDependenciesForTests(null);
+    const lines: string[] = [];
+    const spy = vi.spyOn(console, "log").mockImplementation((line: unknown) => {
+      lines.push(String(line));
+    });
+    const failed = await readResponse(await getSites());
+    spy.mockRestore();
+    expect(failed.status).toBe(500);
+    expect(failed.body).toEqual({ code: "internal_error", message: "Something went wrong." });
+    expect(failed.text).not.toContain("site-a");
+    expect(failed.text).not.toContain(marker);
+    expect(lines.join("\n")).toContain("db_tls_insecure");
+    expect(lines.join("\n")).not.toContain(marker);
+
+    vi.stubEnv("DB_SSL", "require");
+    const logged: string[] = [];
+    const again = vi.spyOn(console, "log").mockImplementation((line: unknown) => {
+      logged.push(String(line));
+    });
+    const built = getDependencies();
+    again.mockRestore();
+    expect(built.catalogue.solutions.length).toBeGreaterThan(0);
+    expect(logged.join("\n")).toContain("db_config");
+    expect(logged.join("\n")).toContain("passwordPresent");
+    expect(logged.join("\n")).not.toContain(marker);
+  });
+
+  it("builds a postgres store in production with TLS and allows disable outside production", () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("ACTIONS_STORE", "postgres");
+    vi.stubEnv("DB_HOST", "db.example");
+    vi.stubEnv("DB_USER", "qantum_slice");
+    vi.stubEnv("DB_PASSWORD", "db-password-marker");
+    vi.stubEnv("DB_NAME", "qantum_slice");
+    vi.stubEnv("DB_SSL", "require");
     setDependenciesForTests(null);
     expect(buildDependencies().catalogue.solutions.length).toBeGreaterThan(0);
 
     vi.stubEnv("NODE_ENV", "development");
-    vi.stubEnv("SUPABASE_URL", "http://127.0.0.1:54321");
-    vi.stubEnv("SUPABASE_SERVICE_KEY", "local-service-key");
+    vi.stubEnv("DB_SSL", "disable");
+    vi.stubEnv("DB_HOST", "127.0.0.1");
     setDependenciesForTests(null);
     expect(buildDependencies().catalogue.solutions.length).toBeGreaterThan(0);
   });
 
-  it("documents ACTIONS_STORE for production", () => {
+  it("documents ACTIONS_STORE and the database settings", () => {
     const text = readFileSync(".env.example", "utf8");
     expect(text).toContain("ACTIONS_STORE=");
-    expect(text).toMatch(/production must use supabase or leave it unset/i);
+    expect(text).toMatch(/memory or postgres/i);
+    expect(text).toMatch(/production must use postgres or leave it unset/i);
+    expect(text).toContain("DB_HOST=");
+    expect(text).toContain("DB_PASSWORD=");
+    expect(text).toContain("6543");
+    expect(text).toContain("5432");
+    expect(text).not.toContain("SUPABASE_");
   });
 });
