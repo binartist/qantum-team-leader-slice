@@ -1,7 +1,7 @@
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"] as const;
 
 export function formatReference(reference: string): string {
-  return `Ref ${reference}`;
+  return `Job ref ${reference}`;
 }
 
 function snappedQuantity(value: number): number | null {

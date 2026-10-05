@@ -100,10 +100,10 @@ describe("navigation shell", () => {
     expect(layout).not.toMatch(/<header\b/);
   });
 
-  it("labels the site reference where it is shown", () => {
+  it("shows the job reference on the site screen only, labelled", () => {
     const card = readFileSync("src/ui/SiteCard.tsx", "utf8");
     const site = readFileSync("src/app/sites/[id]/page.tsx", "utf8");
-    expect(card).toContain("formatReference(reference)");
+    expect(card).not.toMatch(/reference/i);
     expect(site).toContain("formatReference(site.reference)");
     expect(site).not.toMatch(/\{site\.reference\}/);
   });

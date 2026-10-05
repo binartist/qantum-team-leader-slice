@@ -28,7 +28,6 @@ export default async function HomePage() {
                 <SiteCard
                   id={site.id}
                   name={site.name}
-                  reference={site.reference}
                   status={siteChip(site.crewStatus, site.shortageCount, site.dataProblemCount)}
                 />
               </li>
