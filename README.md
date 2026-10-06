@@ -82,7 +82,7 @@ Next.js 16 server components and route handlers on Vercel, a pure TypeScript dom
 | Document | What it covers |
 | --- | --- |
 | `docs/iteration-plan.md` | Why this slice, and the iterations after it |
-| `docs/slice-specification.md` | Requirements, 46 acceptance criteria, assumptions, exclusions |
+| `docs/slice-specification.md` | Requirements, 47 acceptance criteria, assumptions, exclusions |
 | `docs/technical-design.md` | Architecture, domain rules, data model, trade-offs |
 | `docs/ui-design.md` | Screens, copy, states and accessibility |
 | `docs/api.md` | HTTP API, errors, idempotency, configuration |

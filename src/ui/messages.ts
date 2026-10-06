@@ -22,6 +22,8 @@ export const PENETRATION_FILTER = {
 export const NAV = {
   open: "Open menu",
   close: "Close menu",
+  collapse: "Collapse menu",
+  expand: "Expand menu",
   title: "Team leader",
   label: "Main",
   sites: "Sites",

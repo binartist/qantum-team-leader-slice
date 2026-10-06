@@ -2,7 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page } from "@playwright/test";
 
 export const screens = [
-  "/",
+  "/about-this-demo",
   "/sites",
   "/sites/site-a",
   "/sites/site-b",

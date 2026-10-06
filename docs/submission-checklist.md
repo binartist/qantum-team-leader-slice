@@ -19,12 +19,12 @@ Legend: `[x]` done, `[~]` partial, `[ ]` not started.
 | 7 | README: demo scenario | [x] | README "Try it", following spec section 9. |
 | 8 | README: sample data and known limitations | [x] | README "Sample data" and "Known limitations"; `data/sample/README.md` labels the data invented. |
 | 9 | Iteration plan (md) | [x] | `docs/iteration-plan.md`: slice rationale, 6 iterations, uncertainties. Awaiting your review. |
-| 10 | First-slice specification (md) | [x] | `docs/slice-specification.md`: 17 FRs, 46 acceptance criteria, NFRs, assumptions, exclusions. Awaiting your review. |
+| 10 | First-slice specification (md) | [x] | `docs/slice-specification.md`: 17 FRs, 47 acceptance criteria, NFRs, assumptions, exclusions. Awaiting your review. |
 | 11 | Technical design (md) | [x] | `docs/technical-design.md`. Section 11 additions awaiting confirmation. |
-| 12 | Test strategy (md) | [x] | `docs/test-strategy.md`: layers, all 46 ACs mapped, risks, CI gates. Awaiting your review. |
+| 12 | Test strategy (md) | [x] | `docs/test-strategy.md`: layers, all 47 ACs mapped, risks, CI gates. Awaiting your review. |
 | 13 | Agent instructions and context files | [x] | `AGENTS.md` (tool-neutral; `CLAUDE.md` imports it), 11 Skill Forge skills in `.agents/skills` (`skill-forge.json`, lock file), and every brief, review brief, review report and worker note in `docs/agent-work/`. |
 | 14 | Working application code | [x] | Domain core, stubs, Postgres and memory stores, use cases, seven-route API, seven screens (landing, sites, materials, material, actions log, site, penetration). Live and proven against the real database. |
-| 15 | Automated tests | [x] | 426 unit and API tests, 5 database contract tests on Postgres 17, 34 Playwright tests with axe at 375px; all 46 ACs referenced; all run in CI. |
+| 15 | Automated tests | [x] | 434 unit and API tests, 5 database contract tests on Postgres 17, 40 Playwright tests with axe at 375px (and at 1024 and 1280px for the side menu); all 47 ACs referenced; all run in CI. |
 | 16 | CI/CD config | [x] | `.github/workflows/ci.yml`: checks (typecheck, lint, coverage, build, bundle credential scan, audit, gitleaks), db (contract suite on Postgres 17), e2e (Playwright, axe, AC check), and on `main` a Vercel prebuilt deploy plus smoke test. |
 | 17 | Pipeline inspectable, with successful deploy evidence | [x] | Green run with deploy and smoke: https://github.com/binartist/qantum-team-leader-slice/actions/runs/37309054947. Live check 2026-10-06: `x-vercel-id` syd1, smoke ok, an escalation recorded through the live API survived a production redeploy. |
 | 18 | Agentic coding account | [x] | `docs/agentic-approach.md`: tools, planning, verification ladder, corrections, cost. |
@@ -190,3 +190,4 @@ From `technical-design.md` section 11 and 12.
 | 2026-10-06 | Post-delivery walkthrough: substitute availability now accounts for site shortages (AC 33) and the blocked banner names data problems in its next step (AC 34). Spec, design, api.md, ui-design.md, test strategy and README updated. |
 | 2026-10-06 | Site reference removed from the sites list (names already tell sites apart) and kept on the site screen as "Job ref", where an escalation would quote it. API unchanged. |
 | 2026-10-06 | Landing page at `/` explains the demo; sites list moved to `/sites`; bottom demo bar replaced by a Demo tag in every header (user decision). Smoke test now checks both pages. |
+| 2026-10-07 | Responsive side menu (AC 47) built by Grok (44 turns, $1.26): drawer below 1024px, collapsible side menu from 1024px, remembered before paint. About page moved to `/about-this-demo` with `/` redirecting (307); smoke checks the redirect. Orchestrator e2e found two worker defects (the worker could not run a browser): both Theme groups shared one radio name, so a choice in one unchecked the other (fixed with a per-instance `useId` name); the sticky-heading spec could not scroll the empty log (now pads `main` and scrolls 8px past the heading). Spec, ui-design, test strategy and counts updated. |
