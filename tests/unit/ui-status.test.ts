@@ -24,7 +24,7 @@ function expectView(actual: StatusView, expected: StatusView): void {
 describe("crew status", () => {
   it("maps each crew status to text, a tone, and an icon", () => {
     expectView(crewStatus("clear"), { label: "Crew can go", tone: "success", icon: "check" });
-    expectView(crewStatus("blocked"), { label: "Blocked", tone: "danger", icon: "cross" });
+    expectView(crewStatus("blocked"), { label: "Blocked", tone: "danger", icon: "stop" });
     expectView(crewStatus("nothing_planned"), { label: "Nothing planned", tone: "neutral", icon: "dashed-circle" });
     expectView(crewStatus("unavailable"), { label: "Can't check", tone: "warning", icon: "warning" });
   });
@@ -92,7 +92,7 @@ describe("candidate status and availability", () => {
 
   it("maps each availability", () => {
     expectView(availabilityStatus("in_stock"), { label: "Materials in stock", tone: "success", icon: "check" });
-    expectView(availabilityStatus("short"), { label: "Uses a material this site is short of.", tone: "danger", icon: "cross" });
+    expectView(availabilityStatus("short"), { label: "Uses a material this site is short of.", tone: "danger", icon: "stop" });
     expectView(availabilityStatus("unknown"), { label: "No stock record for one of its materials.", tone: "warning", icon: "warning" });
     expectView(availabilityStatus("no_material_mapping"), {
       label: "We can't tell if its materials are in stock.",
@@ -109,13 +109,13 @@ describe("candidate status and availability", () => {
 
 describe("home chip", () => {
   it("names shortages and data problems on a blocked site, and leaves other statuses alone", () => {
-    expectView(siteChip("blocked", 2, 0), { label: "Blocked · 2 shortages", tone: "danger", icon: "cross" });
-    expectView(siteChip("blocked", 1, 0), { label: "Blocked · 1 shortage", tone: "danger", icon: "cross" });
-    expectView(siteChip("blocked", 1, 2), { label: "Blocked · 1 shortage, 2 data problems", tone: "danger", icon: "cross" });
-    expectView(siteChip("blocked", 2, 1), { label: "Blocked · 2 shortages, 1 data problem", tone: "danger", icon: "cross" });
-    expectView(siteChip("blocked", 0, 2), { label: "Blocked · 2 data problems", tone: "danger", icon: "cross" });
-    expectView(siteChip("blocked", 0, 1), { label: "Blocked · 1 data problem", tone: "danger", icon: "cross" });
-    expectView(siteChip("blocked", 0, 0), { label: "Blocked", tone: "danger", icon: "cross" });
+    expectView(siteChip("blocked", 2, 0), { label: "Blocked · 2 shortages", tone: "danger", icon: "stop" });
+    expectView(siteChip("blocked", 1, 0), { label: "Blocked · 1 shortage", tone: "danger", icon: "stop" });
+    expectView(siteChip("blocked", 1, 2), { label: "Blocked · 1 shortage, 2 data problems", tone: "danger", icon: "stop" });
+    expectView(siteChip("blocked", 2, 1), { label: "Blocked · 2 shortages, 1 data problem", tone: "danger", icon: "stop" });
+    expectView(siteChip("blocked", 0, 2), { label: "Blocked · 2 data problems", tone: "danger", icon: "stop" });
+    expectView(siteChip("blocked", 0, 1), { label: "Blocked · 1 data problem", tone: "danger", icon: "stop" });
+    expectView(siteChip("blocked", 0, 0), { label: "Blocked", tone: "danger", icon: "stop" });
     expect(siteChip("clear", 2, 2)).toEqual(crewStatus("clear"));
     expect(siteChip("nothing_planned", 1, 1)).toEqual(crewStatus("nothing_planned"));
     expect(siteChip("unavailable", 1, 1)).toEqual(crewStatus("unavailable"));
@@ -211,3 +211,13 @@ function filesUnder(dir: string): string[] {
     return statSync(full).isDirectory() ? filesUnder(full) : [full];
   });
 }
+
+describe("status icons", () => {
+  it("blocked and short use a stop sign, never a cross, which reads as dismiss", async () => {
+    const { readFileSync } = await import("node:fs");
+    const icon = readFileSync("src/ui/Icon.tsx", "utf8");
+    expect(icon).toContain('name === "stop"');
+    expect(icon).not.toContain('"cross"');
+    expect(readFileSync("src/ui/status.ts", "utf8")).not.toContain('"cross"');
+  });
+});

@@ -18,7 +18,7 @@ export function ActionRow({
   status: ActionChip;
 }) {
   return (
-    <Card title={sentence} heading="h3">
+    <Card title={sentence} heading="h3" kind="decision">
       <p>{formatRecordedAt(recordedAt)}</p>
       <p className={styles.muted}>{`By ${createdBy}`}</p>
       {note ? <p>{note}</p> : null}
@@ -41,7 +41,7 @@ export function ProposalRow({
   createdBy: string;
 }) {
   return (
-    <Card title={proposalSentence(fromCode, toCode)} heading="h3">
+    <Card title={proposalSentence(fromCode, toCode)} heading="h3" kind="decision">
       <p>{reason.trim()}</p>
       <p>{formatRecordedAt(recordedAt)}</p>
       <p className={styles.muted}>{`By ${createdBy}`}</p>

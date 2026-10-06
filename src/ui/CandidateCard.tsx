@@ -31,7 +31,7 @@ export function CandidateCard({
 }) {
   const supplier = supplierRefLine(supplierRefCode);
   return (
-    <Card title={toCode}>
+    <Card title={toCode} kind="solution">
       <p>{formatRating(integrityMinutes, insulationMinutes)}</p>
       {supplier ? <p>{supplier}</p> : null}
       <StatusChip

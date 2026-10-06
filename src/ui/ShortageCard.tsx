@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { KindIcon } from "./KindIcon";
 import { EscalateDialog } from "./decisions/EscalateDialog";
 import { WaitDialog } from "./decisions/WaitDialog";
 import { affectedCount, formatNeed, penetrationDisclosureLabel, penetrationGroups, penetrationLine, penetrationPath, type PenetrationRow } from "./format";
@@ -33,7 +34,7 @@ export function ShortageCard({
   places: readonly (PenetrationRow & { readonly id: string })[];
 }) {
   return (
-    <Card title={materialName}>
+    <Card title={materialName} kind="material">
       <p>{formatNeed(requiredQty, onHandQty, shortfallQty, unit)}</p>
       <p>{affectedCount(places.length)}</p>
       <div className={styles.row}>
@@ -52,7 +53,10 @@ export function ShortageCard({
             <p>{OPEN_PENETRATION}</p>
             {penetrationGroups(places).map((group) => (
               <div key={group.heading}>
-                <h3 className={styles.groupHeading}>{group.heading}</h3>
+                <h3 className={`${styles.groupHeading} ${styles.kindTitle}`}>
+                  <KindIcon kind="solution" />
+                  {group.heading}
+                </h3>
                 <ul className={styles.list}>
                   {group.places.map((place) => {
                     return (

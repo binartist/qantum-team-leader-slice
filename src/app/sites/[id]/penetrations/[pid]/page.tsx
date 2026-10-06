@@ -4,6 +4,7 @@ import { connection } from "next/server";
 import type { SiteReadinessView } from "@/application";
 import { SiteNotFoundError } from "@/ports";
 import { getCachedCandidates, getCachedReadiness, getCachedSite } from "../../../../_lib/cached";
+import { KindIcon } from "@/ui/KindIcon";
 import { AppBar } from "@/ui/AppBar";
 import { CandidateCard } from "@/ui/CandidateCard";
 import { UnavailablePanel } from "@/ui/UnavailablePanel";
@@ -68,7 +69,10 @@ export default async function SubstitutesPage({ params }: RouteParams) {
         <h1>Substitutes</h1>
         <p>{`${penetration.floor}, ${penetration.location}`}</p>
         <p>{serviceLine(penetration)}</p>
-        <p>{`Nominated solution ${penetration.nominatedCode}`}</p>
+        <p className={styles.kindTitle}>
+          <KindIcon kind="solution" />
+          {`Nominated solution ${penetration.nominatedCode}`}
+        </p>
         <p>{formatRating(penetration.requiredIntegrityMinutes, penetration.requiredInsulationMinutes)}</p>
         {listed.candidates.length > 0 ? <Notice>{listed.notice}</Notice> : null}
         {message ? <p>{message}</p> : null}

@@ -26,7 +26,7 @@ export function BlockerCard({
 }) {
   const detail = blockerReason(reason, code);
   return (
-    <Card title={place} heading="h3" titleHref={penetrationPath(siteId, penetrationId)}>
+    <Card title={place} heading="h3" titleHref={penetrationPath(siteId, penetrationId)} kind="data-problem">
       <p>{detail.label}</p>
       <div className={styles.row}>
         <StatusChip status={shortageState(state)} appearance="label" />
