@@ -2,6 +2,7 @@ export type {
   ActionKind,
   Blocker,
   BlockerReason,
+  FitField,
   CandidateResult,
   CandidateStatus,
   Catalogue,
@@ -32,6 +33,7 @@ export {
   type ShortageLookup,
 } from "./lifecycle";
 export { findCandidates } from "./candidates";
+export { solutionMismatches } from "./fit";
 export {
   describeCandidateAvailability,
   type AvailabilityStatus,

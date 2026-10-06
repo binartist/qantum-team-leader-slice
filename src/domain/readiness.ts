@@ -1,3 +1,4 @@
+import { solutionMismatches } from "./fit";
 import { deriveShortageState, viewActions } from "./lifecycle";
 import { isNonNegativeFinite, onHandFromQuantities, roundUpQuantity, snapQuantity } from "./quantities";
 import type {
@@ -10,6 +11,7 @@ import type {
   SiteReadiness,
   SolutionMaterial,
   StockBalance,
+  FitField,
 } from "./types";
 
 export interface ReadinessInput {
@@ -110,6 +112,7 @@ function makeBlocker(
   penetration: Penetration,
   reason: BlockerReason,
   siteActions: ReadonlyMap<string, readonly ShortageAction[]>,
+  mismatches?: readonly FitField[],
 ): Blocker {
   const id = `${siteId}:blocker.${penetration.id}`;
   const actions = viewActions(siteActions.get(id) ?? [], null);
@@ -118,6 +121,7 @@ function makeBlocker(
     reason,
     penetrationId: penetration.id,
     internalCode: penetration.nominatedCode,
+    ...(mismatches ? { mismatches } : {}),
     state: deriveShortageState(actions),
     actions,
   };
@@ -134,8 +138,15 @@ function blockersAndRequirements(
   const requirements = new Map<string, Requirement>();
 
   for (const penetration of penetrations) {
-    if (!catalogue.byCode.has(penetration.nominatedCode)) {
+    const solution = catalogue.byCode.get(penetration.nominatedCode);
+    if (!solution) {
       blockers.push(makeBlocker(siteId, penetration, "unknown_solution_code", siteActions));
+      continue;
+    }
+    // A solution that does not fit would have the crew install the wrong seal, so its materials do not count.
+    const mismatches = solutionMismatches(penetration, solution);
+    if (mismatches.length > 0) {
+      blockers.push(makeBlocker(siteId, penetration, "solution_mismatch", siteActions, mismatches));
       continue;
     }
     const mapped = materials.get(penetration.nominatedCode);

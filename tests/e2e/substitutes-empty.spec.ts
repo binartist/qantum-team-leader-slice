@@ -17,4 +17,6 @@ test("empty substitutes name the reason, and only a related decision offers esca
   await gotoApp(page, "/sites/site-c/penetrations/pen-c-01");
   await expect(page.getByText("The catalogue entry for this substrate is incomplete, so we can't suggest substitutes.")).toBeVisible();
   await expect(page.getByText("Catalogue match, not verified")).toHaveCount(0);
+  // AC 35: pen-c-01 is now a data problem, so it has a related decision to escalate.
+  await expect(page.getByRole("button", { name: /Escalate/ })).toBeVisible();
 });

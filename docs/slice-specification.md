@@ -24,7 +24,7 @@ Before a crew leaves for a site, the team leader needs to know whether the mater
 | FR2 | For a site, the app computes materials required as the sum of quantity per install across its planned penetrations, grouped by material. Fractions round up to whole units. |
 | FR3 | The app compares required quantity with stock on hand. On hand is the sum across all the leader's locations, is shared between sites, and is labelled as not reserved. |
 | FR4 | A material where required exceeds on hand is shown as a shortage with required, on hand, shortfall and the affected penetrations. |
-| FR5 | Missing data is never treated as zero. A material with no stock record is an actionable shortage of kind unknown. A nominated code with no catalogue entry, no material mapping, or an invalid mapped quantity (negative or not a finite number) is a blocker with a stated reason. Stock that is negative or not a finite number makes the material unknown. |
+| FR5 | Missing data is never treated as zero. A material with no stock record is an actionable shortage of kind unknown. A nominated code with no catalogue entry, a nominated solution that does not fit its penetration (orientation, substrate, service, size, or a rating below the requirement), no material mapping, or an invalid mapped quantity (negative or not a finite number) is a blocker with a stated reason. Stock that is negative or not a finite number makes the material unknown. |
 | FR6 | Crew status is blocked while any shortage or blocker exists, whatever decisions have been recorded. A site with no planned penetrations is "nothing planned", never clear. |
 | FR7 | A leader can record **wait** on a current shortage, with an optional note. |
 | FR8 | A leader can record **escalate** on a current shortage to purchasing or the warehouse, with a note. |
@@ -84,6 +84,8 @@ Numbered for use as test names. Sample data is defined in section 7.
 32. On a 375px wide screen, nothing needs horizontal scrolling.
 33. A candidate that uses a material the site is already short of has availability `short`, even when one install fits in the stock on hand. A material whose site stock is unknown makes the candidate `unknown`. Shortages of other materials leave a candidate that fits on hand `in_stock`.
 34. On the site screen, a blocked site's banner reads "Blocked: hold the crew." on every tab, above the tabs. The tab labels carry the number of shortages and data problems, so the banner never needs to and no tab can hide them. The sites list chip still names the counts.
+35. A penetration whose nominated solution differs on orientation, normalised substrate, normalised service type or normalised size, or falls short of a stated integrity or insulation requirement, gets a `solution_mismatch` blocker listing the failing fields. The crew is blocked, wait is rejected with 422, escalate is accepted, and the penetration adds no material need. Text that differs only by spacing or capitals is not a mismatch. A substrate cut off after the family name, on either side, never fits, even against identical cut-off text. Blank text, or a requirement or rating that is not a usable number, never fits.
+36. The penetration page shows each field side by side for the penetration and its nominated solution, and marks every field that does not fit with an icon and text, never colour alone.
 
 ## 5. Non-functional requirements
 
@@ -120,7 +122,7 @@ Lives in `data/sample/` with a README that says so. The CSV is the only real dat
 - **Materials and mappings:** a small set (for example sealant, collar, wrap), mapped to the demo codes `0438`, `0789`, `0434`, `0344`, `0334` and their candidates `0451`, `0464`, `0790`, `0791`, `0435`, `0347`.
 - **Stock:** one material comfortably in stock, one short, one held in two locations, and one with no record.
 - **Penetrations:** include one nominating a code missing from the catalogue, and one nominating `0943` (incomplete substrate).
-- **Requirements:** integrity and insulation on each penetration, set equal to the nominated solution's own rating.
+- **Requirements:** integrity and insulation on each penetration, set equal to the nominated solution's own rating, except pen-c-02, which needs 90 min insulation against 0435's 60 to show AC 35.
 
 ## 8. Exclusions
 
@@ -131,10 +133,10 @@ Real authentication, a real inventory or nomination service, approval of substit
 1. Open the app. The landing page says it is a demo with invented data. Open sites: site B is blocked.
 2. Open site B. The banner says blocked, the tabs show N shortages, and the stock figures are labelled shared and not reserved.
 3. Escalate the sealant shortage to purchasing with a note. State shows escalated. Crew is still blocked, and the screen says why.
-4. Open the penetration nominating `0438`. See candidates `0451` and `0464` labelled not verified. `0451` uses sealant, which this site is short of, and says so. Propose `0451` with a reason. It is listed as proposed and nothing else changes.
+4. From the sealant shortage, open the penetrations that use it and pick one nominating `0438`. See candidates `0451` and `0464` labelled not verified. `0451` uses sealant, which this site is short of, and says so. Propose `0451` with a reason. It is listed as proposed and nothing else changes.
 5. Open the penetration nominating `0344`. See "no catalogue match, escalate instead".
-6. Open site C. See the missing-data blockers with reasons, not a clear status.
-7. Open the actions list. See the three recorded actions with date and author.
+6. Open site C. See four data problems with reasons, including two nominated solutions that do not fit (L1, Stair core: 0943's substrate is cut off in the catalogue; L1, Riser 1: needs 90 min insulation, 0435 claims 60), and one stock-unknown shortage, never a clear status.
+7. Open the actions log. See your recorded decisions with date and author.
 
 ## 10. Production gaps (carried to README)
 

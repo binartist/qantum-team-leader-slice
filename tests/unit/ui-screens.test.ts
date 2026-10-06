@@ -75,6 +75,7 @@ const SCREEN_SOURCES = [
   "src/app/global-error.tsx",
   "src/app/sites/[id]/site-frame.tsx",
   "src/app/sites/[id]/penetrations/[pid]/page.tsx",
+  "src/app/sites/[id]/penetrations/page.tsx",
 ];
 
 const SITE_TABS = ["src/app/sites/[id]/page.tsx", "src/app/sites/[id]/data-problems/page.tsx", "src/app/sites/[id]/actions/page.tsx"];
@@ -131,6 +132,12 @@ describe("input contrast", () => {
       expect(contrast(border, token(block, "--bg"))).toBeGreaterThanOrEqual(3);
       expect(contrast(border, token(block, "--surface"))).toBeGreaterThanOrEqual(3);
       expect(contrast(token(block, "--danger-text"), token(block, "--bg"))).toBeGreaterThanOrEqual(3);
+      // Decision colours: readable as a chip and as a bare label on the page.
+      for (const tone of ["info", "escalation"]) {
+        expect(contrast(token(block, `--${tone}-text`), token(block, `--${tone}-bg`)), tone).toBeGreaterThanOrEqual(4.5);
+        expect(contrast(token(block, `--${tone}-text`), token(block, "--bg")), tone).toBeGreaterThanOrEqual(4.5);
+        expect(contrast(token(block, `--${tone}-text`), token(block, "--surface")), tone).toBeGreaterThanOrEqual(4.5);
+      }
     }
   });
 

@@ -1,14 +1,16 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
 import type { SiteReadinessView } from "@/application";
 import type { Site } from "@/ports";
 import { SiteNotFoundError } from "@/ports";
-import { getCachedActions, getCachedReadiness, getCachedSite } from "../../_lib/cached";
+import { getCachedActions, getCachedSite, getCachedSiteData } from "../../_lib/cached";
 import { loadPage } from "../../_lib/load";
 import { AppBar } from "@/ui/AppBar";
 import { Banner } from "@/ui/Banner";
+import { Icon } from "@/ui/Icon";
 import { SiteTabs, type SiteTab } from "@/ui/SiteTabs";
 import { UnavailablePanel } from "@/ui/UnavailablePanel";
-import { formatReference } from "@/ui/format";
+import { formatReference, penetrationsPath, plannedWorkLine } from "@/ui/format";
 import { readinessBanner } from "@/ui/messages";
 import styles from "@/ui/primitives.module.css";
 
@@ -19,6 +21,8 @@ export type SiteFrameData =
       readonly site: Site;
       /** Null when readiness could not be checked: the banner then says so, never clear. */
       readonly readiness: SiteReadinessView | null;
+      /** "12 penetrations, 5 solutions": what the check covered. Null when unknown or nothing is planned. */
+      readonly plannedWork: string | null;
       /** Null when the actions could not be read: the tab then shows no number. */
       readonly actionCount: number | null;
     };
@@ -31,12 +35,16 @@ export async function loadSiteFrame(id: string): Promise<SiteFrameData> {
     return site;
   });
   if (siteLoad.status === "unavailable") return { status: "unavailable" };
-  const readinessLoad = await loadPage(() => getCachedReadiness(id));
+  const siteDataLoad = await loadPage(() => getCachedSiteData(id));
   const actionsLoad = await loadPage(() => getCachedActions(id));
   return {
     status: "ready",
     site: siteLoad.value,
-    readiness: readinessLoad.status === "ready" ? readinessLoad.value : null,
+    readiness: siteDataLoad.status === "ready" ? siteDataLoad.value.readiness : null,
+    plannedWork:
+      siteDataLoad.status === "ready"
+        ? plannedWorkLine(Object.values(siteDataLoad.value.sitePenetrations).map((place) => place.nominatedCode))
+        : null,
     actionCount:
       actionsLoad.status === "ready" ? actionsLoad.value.actions.length + actionsLoad.value.proposals.length : null,
   };
@@ -55,13 +63,23 @@ export function SiteFrame({ frame, current, children }: { frame: SiteFrameData; 
       </>
     );
   }
-  const { site, readiness, actionCount } = frame;
+  const { site, readiness, plannedWork, actionCount } = frame;
   return (
     <>
       <AppBar backHref="/sites" backName="Sites" />
       <main>
         <h1>{site.name}</h1>
-        <p className={styles.muted}>{formatReference(site.reference)}</p>
+        <p className={`${styles.muted} ${styles.plannedWork}`}>
+          <span>{formatReference(site.reference)}</span>
+          {plannedWork ? (
+            <>
+              <Link className={styles.plannedWorkLink} href={penetrationsPath(site.id)}>
+                <span>{plannedWork}</span>
+                <Icon name="chevron-right" />
+              </Link>
+            </>
+          ) : null}
+        </p>
         {readiness ? (
           <Banner status={readinessBanner(readiness.crewStatus)} />
         ) : (

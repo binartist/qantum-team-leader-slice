@@ -2,6 +2,7 @@
 
 import { useId, useState, type FormEvent } from "react";
 import { Button } from "../Button";
+import { Icon } from "../Icon";
 import { ANNOUNCE, BUTTONS, CREW_STAYS, RECORDS_ONLY } from "../messages";
 import styles from "../primitives.module.css";
 import { shortageActionUrl } from "./api-client";
@@ -11,7 +12,18 @@ import dialogStyles from "./decisions.module.css";
 
 type Destination = "purchasing" | "warehouse";
 
-export function EscalateDialog({ siteId, shortageId, target }: { siteId: string; shortageId: string; target: string }) {
+/** `prominent` makes the trigger a full-width primary button, for a screen where escalating is the main action. */
+export function EscalateDialog({
+  siteId,
+  shortageId,
+  target,
+  prominent = false,
+}: {
+  siteId: string;
+  shortageId: string;
+  target: string;
+  prominent?: boolean;
+}) {
   const titleId = useId();
   const noteId = useId();
   const sendToId = useId();
@@ -47,7 +59,13 @@ export function EscalateDialog({ siteId, shortageId, target }: { siteId: string;
 
   return (
     <>
-      <Button type="button" aria-label={`${BUTTONS.escalate} ${target}`} onClick={open}>
+      <Button
+        type="button"
+        className={prominent ? `${styles.primary} ${styles.fullWidth}` : undefined}
+        aria-label={`${BUTTONS.escalate} ${target}`}
+        onClick={open}
+      >
+        <Icon name="arrow-up" />
         {BUTTONS.escalate}
       </Button>
       <Dialog

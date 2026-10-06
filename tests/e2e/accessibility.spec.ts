@@ -45,7 +45,9 @@ async function openPropose(page: Page): Promise<void> {
 }
 
 async function openDisclosure(page: Page): Promise<void> {
+  // The shortage card's penetrations now open as a filtered list page.
   await gotoApp(page, "/sites/site-b");
   const collar = page.getByRole("article").filter({ has: page.getByRole("heading", { name: "Pipe collar for 25 mm pipe" }) });
-  await collar.getByText("Penetrations and substitutes (4)").click();
+  await collar.getByRole("link", { name: "Affects 4 penetrations" }).click();
+  await expect(page).toHaveURL(/\/penetrations\?material=MAT-COLLAR-25$/);
 }

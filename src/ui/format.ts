@@ -4,6 +4,14 @@ export function formatReference(reference: string): string {
   return `Job ref ${reference}`;
 }
 
+/** How much work the site check covered, from each planned penetration's nominated code. Null when nothing is planned. */
+export function plannedWorkLine(nominatedCodes: readonly string[]): string | null {
+  if (nominatedCodes.length === 0) return null;
+  const penetrations = nominatedCodes.length;
+  const solutions = new Set(nominatedCodes).size;
+  return `${penetrations} ${penetrations === 1 ? "penetration" : "penetrations"}, ${solutions} ${solutions === 1 ? "solution" : "solutions"}`;
+}
+
 function snappedQuantity(value: number): number | null {
   if (!Number.isFinite(value)) return null;
   const rounded = Math.round(value * 1e6) / 1e6;
@@ -112,8 +120,13 @@ function ratingPart(minutes: number | null, kind: "integrity" | "insulation"): s
   return `${formatQuantity(minutes)} min ${kind}`;
 }
 
+/** "90 min integrity, 60 min insulation", for a labelled field. */
+export function ratingValue(integrity: number | null, insulation: number | null): string {
+  return `${ratingPart(integrity, "integrity")}, ${ratingPart(insulation, "insulation")}`;
+}
+
 export function formatRating(integrity: number | null, insulation: number | null): string {
-  return `Fire rating: ${ratingPart(integrity, "integrity")}, ${ratingPart(insulation, "insulation")}`;
+  return `Fire rating: ${ratingValue(integrity, insulation)}`;
 }
 
 export function supplierRefLine(code: string): string | null {
@@ -131,7 +144,7 @@ export interface PenetrationRow {
 }
 
 // Display only: catalogue text keeps its raw spacing for matching, the screen collapses runs of spaces.
-function tidy(text: string): string {
+export function tidy(text: string): string {
   return text.replace(/\s+/g, " ").trim();
 }
 
@@ -142,10 +155,6 @@ export function serviceLine(place: Pick<PenetrationRow, "serviceType" | "service
 // The solution code is the group heading, so a row names only the place and the service.
 export function penetrationLine(place: PenetrationRow): string {
   return `${place.floor}, ${place.location} · ${tidy(place.serviceType)} ${tidy(place.serviceSize)}`;
-}
-
-export function penetrationDisclosureLabel(count: number): string {
-  return `Penetrations and substitutes (${count})`;
 }
 
 export function penetrationGroups<T extends { readonly nominatedCode: string }>(
@@ -175,6 +184,11 @@ export function affectedCount(count: number): string {
 
 export function sitePath(siteId: string): string {
   return `/sites/${encodeURIComponent(siteId)}`;
+}
+
+export function penetrationsPath(siteId: string, materialId?: string): string {
+  const base = `/sites/${encodeURIComponent(siteId)}/penetrations`;
+  return materialId === undefined ? base : `${base}?material=${encodeURIComponent(materialId)}`;
 }
 
 export function dataProblemsPath(siteId: string): string {
@@ -218,6 +232,20 @@ export function actionSentence(
   return `Escalated: ${target}`;
 }
 
-export function proposalSentence(fromCode: string, toCode: string): string {
-  return `Proposed substitute: ${fromCode} to ${toCode}`;
+export function proposalSentence(fromCode: string, toCode: string, place?: string): string {
+  return place ? `Proposed substitute for ${place}: ${fromCode} to ${toCode}` : `Proposed substitute: ${fromCode} to ${toCode}`;
+}
+
+/**
+ * Where a logged decision leads: a data problem to its penetration, a material shortage to the Penetrations
+ * list filtered to that material. A resolved shortage has nothing to filter, so it has no link.
+ */
+export function actionLink(siteId: string, shortageId: string, status: "current" | "earlier" | "resolved"): string | null {
+  const prefix = `${siteId}:`;
+  const rest = shortageId.startsWith(prefix) ? shortageId.slice(prefix.length) : shortageId;
+  if (rest.startsWith("blocker.")) {
+    const penetrationId = rest.slice("blocker.".length);
+    return penetrationId.length === 0 ? null : penetrationPath(siteId, penetrationId);
+  }
+  return status === "resolved" ? null : penetrationsPath(siteId, rest);
 }

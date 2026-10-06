@@ -4,20 +4,22 @@ import {
   actionTarget,
   actionsPath,
   dataProblemsPath,
+  plannedWorkLine,
   affectedCount,
   formatMaterialSummary,
   formatNeed,
   formatQuantity,
   formatRating,
+  ratingValue,
   formatRecordedAt,
   formatReference,
   formatUnit,
-  penetrationDisclosureLabel,
   penetrationGroups,
   penetrationLine,
   serviceLine,
   penetrationPath,
   proposalSentence,
+  actionLink,
   sitePath,
   stockFiguresLine,
   stockIsStale,
@@ -158,6 +160,11 @@ describe("candidate material lines", () => {
 });
 
 describe("ratings, counts, and paths", () => {
+  it("prints a rating value without the label, for a labelled field", () => {
+    expect(ratingValue(90, 60)).toBe("90 min integrity, 60 min insulation");
+    expect(ratingValue(60, null)).toBe("60 min integrity, no insulation rating");
+  });
+
   it("prints a fire rating in minutes and names a missing part", () => {
     expect(formatRating(60, 30)).toBe("Fire rating: 60 min integrity, 30 min insulation");
     expect(formatRating(60, null)).toBe("Fire rating: 60 min integrity, no insulation rating");
@@ -188,8 +195,6 @@ describe("ratings, counts, and paths", () => {
     // Raw catalogue text keeps its double spaces for matching; the screen shows single spaces.
     expect(penetrationLine(kelox)).toBe("L4, Corridor south · KELOX Pipe - 13mm PE Ø32mm");
     expect(serviceLine(kelox)).toBe("KELOX Pipe - 13mm PE, Ø32mm");
-    expect(penetrationDisclosureLabel(1)).toBe("Penetrations and substitutes (1)");
-    expect(penetrationDisclosureLabel(12)).toBe("Penetrations and substitutes (12)");
     expect(penetrationGroups([pex, again])).toEqual([{ heading: "Solution 0438 · 2", places: [pex, again] }]);
     expect(penetrationGroups([pex, kelox, again])).toEqual([
       { heading: "Solution 0438 · 2", places: [pex, again] },
@@ -235,6 +240,31 @@ describe("action wording", () => {
     expect(actionSentence("escalate", "warehouse", "L1, Basement link")).toBe("Escalated to warehouse: L1, Basement link");
     expect(actionSentence("escalate", null, "Intumescent sealant")).toBe("Escalated: Intumescent sealant");
     expect(proposalSentence("0438", "0451")).toBe("Proposed substitute: 0438 to 0451");
+    // Four penetrations can look alike, so a proposal names its place when it is known.
+    expect(proposalSentence("0438", "0451", "L3, Riser 2")).toBe("Proposed substitute for L3, Riser 2: 0438 to 0451");
+  });
+
+  it("links a decision to the work it is about", () => {
+    expect(actionLink("site-b", "site-b:MAT-SEALANT", "current")).toBe("/sites/site-b/penetrations?material=MAT-SEALANT");
+    expect(actionLink("site-b", "site-b:MAT-SEALANT", "earlier")).toBe("/sites/site-b/penetrations?material=MAT-SEALANT");
+    // A resolved shortage has no filtered list to show; the entry already says so.
+    expect(actionLink("site-b", "site-b:MAT-SEALANT", "resolved")).toBeNull();
+    expect(actionLink("site-c", "site-c:blocker.pen-c-03", "current")).toBe("/sites/site-c/penetrations/pen-c-03");
+    expect(actionLink("site-c", "site-c:blocker.pen-c-03", "resolved")).toBe("/sites/site-c/penetrations/pen-c-03");
+    expect(actionLink("site-c", "site-c:blocker.", "current")).toBeNull();
+    expect(actionLink("site-c", "other:MAT-X", "current")).toBe("/sites/site-c/penetrations?material=other%3AMAT-X");
+  });
+});
+
+describe("planned work", () => {
+  it("counts the penetrations and distinct nominated solutions, with singulars", () => {
+    expect(plannedWorkLine(["0438", "0438", "0434"])).toBe("3 penetrations, 2 solutions");
+    expect(plannedWorkLine(["0438"])).toBe("1 penetration, 1 solution");
+    expect(plannedWorkLine(["0344", "0344", "0375", "0375", "0452", "0452"])).toBe("6 penetrations, 3 solutions");
+  });
+
+  it("returns nothing when no work is planned, so the line is not shown", () => {
+    expect(plannedWorkLine([])).toBeNull();
   });
 });
 
@@ -255,7 +285,6 @@ describe("forbidden words", () => {
       supplierRefLine("ABC") ?? "",
       stockFiguresLine("2026-10-03T08:00:00Z", "2026-10-05T08:00:00Z"),
       penetrationLine({ floor: "L3", location: "Riser 2", serviceType: "PEX Pipe", serviceSize: "Ø25mm", nominatedCode: "0438" }),
-      penetrationDisclosureLabel(4),
       penetrationGroups([
         { id: "a", nominatedCode: "0438" },
         { id: "b", nominatedCode: "0434" },

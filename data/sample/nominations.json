@@ -263,7 +263,7 @@
         "serviceType": "KELOX Pipe  - 13mm PE",
         "serviceSize": "Ø32mm",
         "requiredIntegrityMinutes": 60,
-        "requiredInsulationMinutes": 60,
+        "requiredInsulationMinutes": 90,
         "nominatedCode": "0435"
       },
       {
@@ -291,6 +291,19 @@
         "requiredIntegrityMinutes": 90,
         "requiredInsulationMinutes": 60,
         "nominatedCode": "0393"
+      },
+      {
+        "id": "pen-c-05",
+        "siteId": "site-c",
+        "floor": "L2",
+        "location": "Plant room",
+        "orientation": "Wall",
+        "substrateDetail": "FR plasterboard, FR plasterboard wall (1 layer 13mm)",
+        "serviceType": "Copper Pipe",
+        "serviceSize": "Ø40mm",
+        "requiredIntegrityMinutes": 60,
+        "requiredInsulationMinutes": 60,
+        "nominatedCode": "0348"
       }
     ],
     "site-d": []

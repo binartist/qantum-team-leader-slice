@@ -56,6 +56,7 @@ function DataProblems({ siteId, readiness }: { siteId: string; readiness: SiteRe
                 place={placeLabel(readiness, blocker.penetrationId)}
                 reason={blocker.reason}
                 code={blocker.internalCode}
+                mismatches={blocker.mismatches}
                 state={blocker.state}
                 earlier={hasEarlierDecision(blocker.actions)}
               />
