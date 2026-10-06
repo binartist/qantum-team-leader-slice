@@ -22,7 +22,7 @@ Legend: `[x]` done, `[~]` partial, `[ ]` not started.
 | 10 | First-slice specification (md) | [x] | `docs/slice-specification.md`: 17 FRs, 47 acceptance criteria, NFRs, assumptions, exclusions. Awaiting your review. |
 | 11 | Technical design (md) | [x] | `docs/technical-design.md`. Section 11 additions awaiting confirmation. |
 | 12 | Test strategy (md) | [x] | `docs/test-strategy.md`: layers, all 47 ACs mapped, risks, CI gates. Awaiting your review. |
-| 13 | Agent instructions and context files | [x] | `AGENTS.md` (tool-neutral; `CLAUDE.md` imports it), 11 Skill Forge skills in `.agents/skills` (`skill-forge.json`, lock file), and every brief, review brief, review report and worker note in `docs/agent-work/`. |
+| 13 | Agent instructions and context files | [x] | `AGENTS.md` (tool-neutral; `CLAUDE.md` imports it), 11 [Skill Forge](https://github.com/more-than-code/skill-forge) skills in `.agents/skills` (`skill-forge.json`, lock file), and every brief, review brief, review report and worker note in `docs/agent-work/`. |
 | 14 | Working application code | [x] | Domain core, stubs, Postgres and memory stores, use cases, seven-route API, seven screens (landing, sites, materials, material, actions log, site, penetration). Live and proven against the real database. |
 | 15 | Automated tests | [x] | 434 unit and API tests, 5 database contract tests on Postgres 17, 40 Playwright tests with axe at 375px (and at 1024 and 1280px for the side menu); all 47 ACs referenced; all run in CI. |
 | 16 | CI/CD config | [x] | `.github/workflows/ci.yml`: checks (typecheck, lint, coverage, build, bundle credential scan, audit, gitleaks), db (contract suite on Postgres 17), e2e (Playwright, axe, AC check), and on `main` a Vercel prebuilt deploy plus smoke test. |

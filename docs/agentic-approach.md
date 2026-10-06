@@ -10,7 +10,7 @@ How coding agents were used on this slice, how they were directed and checked, a
 | Worker | Grok Build CLI (`grok-4.7-build`; the fast variant for three runs, on request) | Implementation, and independent review sessions |
 | Design reviewer | A Claude Opus subagent | One review of the technical design before any code |
 | Helpers (from 2026-10-06) | Claude Code subagents: `validator` and `reviewer` on Sonnet, `Explore`, `bulk-worker` on Haiku | Gate runs, one review lens each, code search and mechanical edits, so the orchestrator's context went on decisions; the submission readiness check ran this way |
-| Guidance | `AGENTS.md` (tool-neutral repo rules), 11 Skill Forge skills in `.agents/skills/` (coding discipline, security, testing, frontend, delegation, Vercel, Supabase Postgres, data migration) | Loaded by both agents |
+| Guidance | `AGENTS.md` (tool-neutral repo rules), 11 [Skill Forge](https://github.com/more-than-code/skill-forge) skills in `.agents/skills/` (coding discipline, security, testing, frontend, delegation, Vercel, Supabase Postgres, data migration) | Loaded by both agents |
 
 I made the product and scope decisions: which slice, shared versus reserved stock, how substitutes are worded, UI defaults, which database and Vercel project, and every approval to commit, push or merge.
 

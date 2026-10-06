@@ -11,7 +11,7 @@ If code and spec disagree, stop and fix the spec first, then the code.
 
 ## Skills
 
-Project skills are declared in `skill-forge.json` and vendored by `skf sync` into `.agents/skills` (`.claude/skills` is a shim). Never hand-edit them. Change the profile and re-sync. Check drift with `skf sync --check`.
+Project skills come from [Skill Forge](https://github.com/more-than-code/skill-forge). They are declared in `skill-forge.json` and vendored by `skf sync` into `.agents/skills` (`.claude/skills` is a shim). Never hand-edit them. Change the profile and re-sync. Check drift with `skf sync --check`.
 
 ## Architecture rules
 
