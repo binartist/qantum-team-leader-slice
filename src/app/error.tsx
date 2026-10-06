@@ -9,9 +9,10 @@ export default function ErrorScreen({ error, retry }: { error: unknown; retry: (
   const marked = hasDigest(error);
   return (
     <>
-      <AppBar title="Something went wrong" />
+      <AppBar />
       <main data-digest={marked ? "present" : "absent"}>
         <title>Something went wrong</title>
+        <h1>Something went wrong</h1>
         <p>Try again.</p>
         <Button type="button" className={styles.primary} onClick={() => retry()}>
           {BUTTONS.tryAgain}

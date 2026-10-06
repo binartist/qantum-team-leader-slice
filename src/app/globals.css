@@ -1,4 +1,6 @@
 :root {
+  /* The sticky header's fixed height, so the site tabs can stick directly below it. */
+  --app-bar-height: 3.375rem;
   --text: #1a1a1a;
   --text-secondary: #55595e;
   --bg: #ffffff;
@@ -61,7 +63,7 @@ body {
 }
 
 html {
-  scroll-padding-top: 6.5rem;
+  scroll-padding-top: 7.5rem;
 }
 
 body {

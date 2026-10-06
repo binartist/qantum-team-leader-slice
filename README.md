@@ -10,12 +10,12 @@ Before sending a crew to site, a team leader checks whether the materials for th
 The live demo uses invented sample data and has no login. Decisions are stored in Postgres and shared by everyone who visits, so some may already be recorded. The first page explains this; the **Demo** tag at the top of every screen leads back to it.
 
 1. **Sites** ("Open sites" on the first page, or `/sites`). Harbour Point and Kingsway Works are blocked, and the chip says why. Riverside Plaza can go. Old Mill Annex has nothing planned.
-2. **Harbour Point.** "Blocked: 2 shortages". Stock figures are labelled "on hand, shared, not reserved", with their age and a warning when they are more than a day old.
+2. **Harbour Point.** "Blocked: hold the crew", with the tabs showing 2 shortages. Stock figures are labelled "on hand, shared, not reserved", with their age and a warning when they are more than a day old.
 3. **Escalate the sealant shortage** to Purchasing with a note. The card shows Escalated and the crew is still blocked: a decision records intent, it does not create stock.
 4. **Open "Penetrations and substitutes"** on the sealant card and pick an `L3, Riser 2` row (solution `0438`). Candidates `0451` and `0464` are shown with their fire rating, whether they meet the required rating, and stock. Every candidate is "Catalogue match, not verified", and `0451` warns that it uses sealant, which this site is already short of. **Propose `0451`** with a reason anyway: a manager decides.
 5. **Back on Harbour Point**, open the `L5, Plant room` row (solution `0344`): no catalogue match, escalate instead.
-6. **Kingsway Works.** One material has no stock record ("stock unknown") and two data problems block the crew: a solution code missing from the catalogue and a solution with no materials recorded.
-7. **Actions log** on Harbour Point: your decisions with time and author, and whether each still applies.
+6. **Kingsway Works.** One material has no stock record ("stock unknown") and, on the Data problems tab, two data problems block the crew: a solution code missing from the catalogue and a solution with no materials recorded.
+7. **Actions log** tab on Harbour Point: your decisions with time and author, and whether each still applies.
 
 ## Run locally
 

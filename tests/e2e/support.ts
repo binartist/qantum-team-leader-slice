@@ -8,6 +8,8 @@ export const screens = [
   "/sites/site-b",
   "/sites/site-c",
   "/sites/site-d",
+  "/sites/site-a/data-problems",
+  "/sites/site-c/data-problems",
   "/sites/site-a/penetrations/pen-a-01",
   "/sites/site-b/penetrations/pen-b-01",
   "/sites/site-b/penetrations/pen-b-10",

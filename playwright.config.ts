@@ -12,6 +12,7 @@ const readSpecs = [
   "**/not-found.spec.ts",
   "**/home-status.spec.ts",
   "**/substitutes-empty.spec.ts",
+  "**/site-tabs.spec.ts",
 ];
 
 const writeSpecs = ["**/ac31-keyboard.spec.ts", "**/idempotency-key.spec.ts", "**/scenario.spec.ts"];

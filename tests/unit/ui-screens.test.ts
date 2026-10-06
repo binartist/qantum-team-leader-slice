@@ -41,9 +41,9 @@ describe("fixed screen copy", () => {
     expect(page).toContain("emptyCatalogueLabel");
   });
 
-  it("an actions page whose site did not resolve still links back to sites", () => {
-    const page = readFileSync("src/app/sites/[id]/actions/page.tsx", "utf8");
-    expect(page).toContain('backName="Sites"');
+  it("a site tab whose site did not resolve still links back to sites", () => {
+    const frame = readFileSync("src/app/sites/[id]/site-frame.tsx", "utf8");
+    expect(frame).toContain('backName="Sites"');
   });
 
   it("error.tsx copy does not include error.message or the digest value", () => {
@@ -75,20 +75,24 @@ const SCREEN_SOURCES = [
   "src/app/not-found.tsx",
   "src/app/error.tsx",
   "src/app/global-error.tsx",
-  "src/app/sites/[id]/page.tsx",
-  "src/app/sites/[id]/actions/page.tsx",
+  "src/app/sites/[id]/site-frame.tsx",
   "src/app/sites/[id]/penetrations/[pid]/page.tsx",
 ];
+
+const SITE_TABS = ["src/app/sites/[id]/page.tsx", "src/app/sites/[id]/data-problems/page.tsx", "src/app/sites/[id]/actions/page.tsx"];
 
 function linkButtonBlocks(source: string): string[] {
   return source.match(/<LinkButton\b[\s\S]*?<\/LinkButton>/g) ?? [];
 }
 
 describe("navigation shell", () => {
-  it("every screen renders AppBar and none uses LinkButton to go back", () => {
+  it("every screen but the landing page renders AppBar, every screen has its h1 in main, and none uses LinkButton to go back", () => {
     for (const file of SCREEN_SOURCES) {
       const source = readFileSync(file, "utf8");
-      expect(source, file).toContain("<AppBar");
+      if (file !== "src/app/page.tsx") expect(source, file).toContain("<AppBar");
+      // The title is the page's own h1 inside main, not part of the header.
+      expect(source, file).toMatch(/<main[^>]*>\s*(<title>[^<]*<\/title>\s*)?<h1>/);
+      expect(source, file).not.toMatch(/<AppBar[^>]*title=/);
       const backBlocks = linkButtonBlocks(source).filter((block) => /backHref|backName/.test(block));
       expect(backBlocks, file).toEqual([]);
     }
@@ -105,7 +109,7 @@ describe("navigation shell", () => {
 
   it("shows the job reference on the site screen only, labelled", () => {
     const card = readFileSync("src/ui/SiteCard.tsx", "utf8");
-    const site = readFileSync("src/app/sites/[id]/page.tsx", "utf8");
+    const site = readFileSync("src/app/sites/[id]/site-frame.tsx", "utf8");
     expect(card).not.toMatch(/reference/i);
     expect(site).toContain("formatReference(site.reference)");
     expect(site).not.toMatch(/\{site\.reference\}/);
@@ -130,12 +134,21 @@ describe("input contrast", () => {
     }
   });
 
-  it("only the landing page hides the Demo tag, and back links to the list go to /sites", () => {
+  it("only the landing page has no header (so no Demo tag), and back links to the list go to /sites", () => {
     for (const file of SCREEN_SOURCES.filter((name) => name !== "src/app/page.tsx")) {
       const source = readFileSync(file, "utf8");
       expect(source, file).not.toContain("demoTag={false}");
       expect(source, file).not.toContain('backHref="/"');
     }
-    expect(readFileSync("src/app/page.tsx", "utf8")).toContain('href="/sites"');
+    const landing = readFileSync("src/app/page.tsx", "utf8");
+    expect(landing).toContain('href="/sites"');
+    expect(landing).not.toContain("<AppBar");
+  });
+
+  it("every site tab renders inside SiteFrame, which puts the readiness banner above the tabs", () => {
+    for (const file of SITE_TABS) expect(readFileSync(file, "utf8"), file).toContain("<SiteFrame");
+    const frame = readFileSync("src/app/sites/[id]/site-frame.tsx", "utf8");
+    expect(frame.indexOf("<Banner")).toBeGreaterThan(-1);
+    expect(frame.indexOf("<Banner")).toBeLessThan(frame.indexOf("<SiteTabs"));
   });
 });

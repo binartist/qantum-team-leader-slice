@@ -18,7 +18,7 @@ A team leader checks a site before the crew leaves, usually on a phone in a van 
 | Targets | At least 44px high and wide for anything tappable | AC 31 |
 | Motion | None needed. Respect `prefers-reduced-motion` | |
 | Demo honesty | A landing page at `/` ("Ready to send the crew?") explains the demo once, in a few short lines: sample data, no login, shared decisions, nothing sent, and a five-step walkthrough. Every other screen carries a small **Demo** tag in the sticky header (a 44px link, accessible name "Demo: sample data, no login. About this demo") that returns to it | The app is a demonstration and must not look like production, including on a deep-linked screen. One explanation in one place, instead of a bar taking space on every screen |
-| Navigation | A sticky top header holds only the page title (the one `h1`). Inner screens show a back row directly below it: a chevron and the name of the screen it returns to ("‹ Sites", "‹ Harbour Point, Levels 3 to 5"), at least 44 high, with the accessible name "Back to <name>". It scrolls with the page. No transition animation | Familiar on a phone, one place to see where you are and how to go back |
+| Navigation | A slim sticky nav header, one row: the back control on the left (a chevron and the name of the screen it returns to, "‹ Sites", "‹ Harbour Point, Levels 3 to 5", cut with an ellipsis when long, at least 44 high, accessible name "Back to <name>") and the Demo tag on the right. The page title is the page's one `h1`, first in `main`, shown in full and wrapping. The landing page has no header. No transition animation | A slim bar leaves room for the work while scrolling, and a site name is never cut, so two similar sites cannot look alike |
 | Styling tech | CSS Modules and CSS custom properties. **No new dependencies** (no Tailwind, no component library) | Small app, nothing to justify a dependency. Tokens give one place for colours |
 | Rendering | Next.js server components for pages, small client islands only for dialogs and forms | Less client code, no loading flicker, nothing secret in the browser |
 | Data in pages | Server components call the application use cases through the composition root directly, not over HTTP | No self-request, faster, one fewer failure mode. Writes from the browser go through the real `/api` routes, so the API is still exercised end to end |
@@ -29,9 +29,10 @@ A team leader checks a site before the crew leaves, usually on a phone in a van 
 | --- | --- | --- |
 | `/` | About this demo | What the app is for, what is invented, the two-minute walkthrough, and a primary "Open sites" button in a full-width bar stuck to the bottom of the screen (the button fills it inside the side gutters, capped at the content width). No Demo tag (this is the page it links to) |
 | `/sites` | Sites | One card per site with name and a crew status chip |
-| `/sites/[id]` | Site readiness | Back link, site name, status banner, stock notice and "as of" time, shortage cards, a separate "Data problems" section for blockers, link to the actions log |
+| `/sites/[id]` | Site: Shortages tab (default) | Header with back link, job ref, status banner, tab bar (Shortages, Data problems, Actions log, each with a count), then the stock notice, stock age and shortage cards |
+| `/sites/[id]/data-problems` | Site: Data problems tab | Same frame; one card per blocker with its reason and an escalate action |
 | `/sites/[id]/penetrations/[pid]` | Substitutes | Penetration summary, the "Catalogue match, not verified" notice, one card per candidate with an availability chip, "Propose this" |
-| `/sites/[id]/actions` | Actions log | Newest first: what was recorded, when, by whom, and whether it is current, earlier or resolved. Proposals listed separately |
+| `/sites/[id]/actions` | Site: Actions log tab | Same frame. Newest first: what was recorded, when, by whom, and whether it is current, earlier or resolved. Proposals listed separately |
 
 There is also a not-found page and one error page with a retry link. All data pages are dynamic (never cached). The landing page has no data and is static.
 
@@ -40,7 +41,7 @@ There is also a not-found page and one error page with a retry link. All data pa
 | Crew status | Banner text | Icon |
 | --- | --- | --- |
 | clear | Crew can go | check |
-| blocked | Blocked: N shortages. Hold the crew until stock arrives. With data problems too: Blocked: N shortages (and M data problems). Hold the crew until stock arrives and the data problems are sorted. | cross |
+| blocked | Blocked: hold the crew. (The tab labels carry the counts of shortages and data problems; the sites list chip names them too.) | cross |
 | nothing_planned | Nothing planned for this site | dashed circle |
 | API 502 | Can't check this site right now. Don't assume it's clear. Try again. | warning |
 
@@ -137,7 +138,7 @@ Three independent reviews of the built UI led to these changes to the design abo
 | --- | --- |
 | Empty substitutes | The "Escalate instead" sentence and button appear only when the penetration is on a shortage or a data problem (see the table in section 3) |
 | Sites list failure | Whole list fails: "Can't check the sites right now. Don't assume any site is clear. Try again." One site fails: chip "Can't check" |
-| Data-problem only site | "Blocked: N data problem(s). Hold the crew until they are sorted." With any shortage the original sentence is kept |
+| Data-problem only site | Same banner, "Blocked: hold the crew."; the Data problems tab count shows why. (Replaced the count-based sentences on 2026-10-06.) |
 | Unreachable server | "Couldn't reach the server. The decision may not have been recorded. Send again to retry; it won't be recorded twice." The retry reuses the dialog's idempotency key |
 | Dialog while sending | Escape and Cancel cannot close it while a request is in flight. The response always refreshes the page and announces |
 | Live region | In memory only. It starts empty on every full page load |
@@ -168,3 +169,9 @@ Usability round (2026-10-05, from a review against the exercise brief's UX quest
 Limits recorded rather than built: an open tab keeps the banner it loaded until the next navigation; the three dialogs repeat their form code; no end-to-end test shows the "Earlier decision" badge (the sample stock cannot change during a run), which is covered at the API. From the usability review, not built: a separate escalation target for data problems (they are not a purchasing matter), a "substitute proposed" marker on shortage cards, a "what was checked" summary on a clear site, and a planned work date per site. Penetrations at the same place with the same service read the same (four in the sample); real data would add the floor-plan pin reference.
 
 Landing page (2026-10-06, user decision): the bottom demo bar was replaced by a landing page at `/` and a Demo tag in every header. The sites list moved from `/` to `/sites`; every `/sites/...` URL is unchanged, and back links named "Sites" go to `/sites`.
+
+Nav header (2026-10-06, user decision): the back control moved from a row below the header back into the sticky header, as the first of two rows. Site tabs (same day, user idea): `/sites/[id]` (Shortages), `/sites/[id]/data-problems` and `/sites/[id]/actions` share a frame with the job ref, the readiness banner and a tab bar with counts; the banner sits above the tabs on every tab.
+
+Title and banner (2026-10-06, user decisions): the title moved from the header into the page body as the `h1`, shown in full, and the header became one slim row (back control and Demo tag). With tab counts in place, the site screen's banner became "Blocked: hold the crew."; AC 34 rewritten to match.
+
+Sticky tabs (2026-10-06, user decision): the site tab bar sticks directly below the nav header while scrolling, so the counts stay in view. The header has a fixed height (`--app-bar-height`) for that.

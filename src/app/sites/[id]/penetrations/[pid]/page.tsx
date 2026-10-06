@@ -63,8 +63,9 @@ export default async function SubstitutesPage({ params }: RouteParams) {
 
   return (
     <>
-      <AppBar title="Substitutes" backHref={sitePath(id)} backName={siteLoad.value.name} />
+      <AppBar backHref={sitePath(id)} backName={siteLoad.value.name} />
       <main>
+        <h1>Substitutes</h1>
         <p>{`${penetration.floor}, ${penetration.location}`}</p>
         <p>{serviceLine(penetration)}</p>
         <p>{`Nominated solution ${penetration.nominatedCode}`}</p>
@@ -110,9 +111,10 @@ export default async function SubstitutesPage({ params }: RouteParams) {
 function unavailable(title: string, backHref: string, backName: string) {
   return (
     <>
-      <AppBar title={title} backHref={backHref} backName={backName} />
+      <AppBar backHref={backHref} backName={backName} />
       <main>
-        <UnavailablePanel status={readinessBanner("unavailable", 0, 0)} />
+        <h1>{title}</h1>
+        <UnavailablePanel status={readinessBanner("unavailable")} />
       </main>
     </>
   );

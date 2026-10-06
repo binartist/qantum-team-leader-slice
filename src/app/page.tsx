@@ -1,4 +1,3 @@
-import { AppBar } from "@/ui/AppBar";
 import { LinkButton } from "@/ui/LinkButton";
 import styles from "@/ui/primitives.module.css";
 
@@ -8,8 +7,8 @@ export const metadata = { title: "About this demo" };
 export default function LandingPage() {
   return (
     <>
-      <AppBar title="Ready to send the crew?" demoTag={false} />
       <main>
+        <h1>Ready to send the crew?</h1>
         <p>
           Check a site&apos;s materials before the crew goes. If something is short, decide what to do: wait, escalate, or
           suggest a substitute.
