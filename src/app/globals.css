@@ -1,4 +1,6 @@
 :root {
+  /* The sticky header's fixed height, so the site tabs can stick directly below it. */
+  --app-bar-height: 3.375rem;
   --text: #1a1a1a;
   --text-secondary: #55595e;
   --bg: #ffffff;
@@ -17,14 +19,22 @@
   --warning-text: #6b4500;
   --neutral-bg: #f1f2f4;
   --neutral-text: #4a4f55;
+  /* Decisions: neither "can go" nor an alarm. */
+  --info-bg: #e8f0fe;
+  --info-text: #0b4f9e;
+  --escalation-bg: #f3ecfb;
+  --escalation-text: #6b2fa3;
   --backdrop: rgb(18 19 22 / 55%);
+  --shadow: 0 8px 24px rgb(18 19 22 / 18%);
   --space: 1rem;
   --radius: 8px;
   color-scheme: light;
 }
 
+/* Dark follows the device unless Light is chosen in the menu, and always applies when Dark is chosen.
+   The two blocks must stay identical. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --text: #ececec;
     --text-secondary: #c4c8ce;
     --bg: #121316;
@@ -43,9 +53,42 @@
     --warning-text: #ffd98a;
     --neutral-bg: #24272c;
     --neutral-text: #c4c8ce;
+    --info-bg: #102a4c;
+    --info-text: #9ec5ff;
+    --escalation-bg: #2e1a45;
+    --escalation-text: #d3b4f5;
     --backdrop: rgb(0 0 0 / 65%);
+    --shadow: 0 8px 24px rgb(0 0 0 / 45%);
     color-scheme: dark;
   }
+}
+
+:root[data-theme="dark"] {
+  --text: #ececec;
+  --text-secondary: #c4c8ce;
+  --bg: #121316;
+  --surface: #1b1d21;
+  --border: #34383e;
+  --input-border: #8b939e;
+  --focus: #8ab4f8;
+  --link: #8ab4f8;
+  --button-bg: #8ab4f8;
+  --button-text: #121316;
+  --success-bg: #12351e;
+  --success-text: #8fe0a5;
+  --danger-bg: #3b1512;
+  --danger-text: #ffb3ab;
+  --warning-bg: #3d2e08;
+  --warning-text: #ffd98a;
+  --neutral-bg: #24272c;
+  --neutral-text: #c4c8ce;
+  --info-bg: #102a4c;
+  --info-text: #9ec5ff;
+  --escalation-bg: #2e1a45;
+  --escalation-text: #d3b4f5;
+  --backdrop: rgb(0 0 0 / 65%);
+  --shadow: 0 8px 24px rgb(0 0 0 / 45%);
+  color-scheme: dark;
 }
 
 *,
@@ -61,7 +104,7 @@ body {
 }
 
 html {
-  scroll-padding-top: 6.5rem;
+  scroll-padding-top: 7.5rem;
 }
 
 body {
@@ -78,6 +121,7 @@ body {
 h1,
 h2,
 h3,
+h4,
 p,
 li {
   overflow-wrap: anywhere;
@@ -86,6 +130,7 @@ li {
 h1,
 h2,
 h3,
+h4,
 p {
   margin: 0;
 }
@@ -105,6 +150,11 @@ h3 {
   line-height: 1.35;
 }
 
+h4 {
+  font-size: 1rem;
+  line-height: 1.35;
+}
+
 main {
   width: 100%;
   max-width: 45rem;
@@ -116,24 +166,9 @@ main {
   gap: var(--space);
 }
 
-footer {
-  position: sticky;
-  bottom: 0;
-  z-index: 1;
-  flex: none;
-}
-
 main > * {
   min-width: 0;
   max-width: 100%;
-}
-
-.demo-banner {
-  margin: 0;
-  padding: 0.75rem var(--space);
-  background: var(--warning-bg);
-  color: var(--warning-text);
-  font-size: 0.875rem;
 }
 
 :focus-visible {

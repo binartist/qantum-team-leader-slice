@@ -2,6 +2,7 @@
 
 import { useId, useState, type FormEvent } from "react";
 import { Button } from "../Button";
+import { Icon } from "../Icon";
 import { ANNOUNCE, BUTTONS, CREW_STAYS, RECORDS_ONLY } from "../messages";
 import styles from "../primitives.module.css";
 import { shortageActionUrl } from "./api-client";
@@ -42,6 +43,7 @@ export function WaitDialog({ siteId, shortageId, target }: { siteId: string; sho
   return (
     <>
       <Button type="button" aria-label={`${BUTTONS.wait} ${target}`} onClick={open}>
+        <Icon name="clock" />
         {BUTTONS.wait}
       </Button>
       <Dialog

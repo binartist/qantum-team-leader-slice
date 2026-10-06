@@ -57,7 +57,7 @@ describe("site readiness over HTTP", () => {
     expect(sites.map((site) => [site.id, site.crewStatus, site.shortageCount, site.dataProblemCount])).toEqual([
       ["site-a", "clear", 0, 0],
       ["site-b", "blocked", 2, 0],
-      ["site-c", "blocked", 1, 2],
+      ["site-c", "blocked", 1, 4],
       ["site-d", "nothing_planned", 0, 0],
     ]);
     for (const site of sites) {
@@ -122,8 +122,15 @@ describe("site readiness over HTTP", () => {
     expect(siteCShortages).toEqual([
       expect.objectContaining({ id: "site-c:MAT-MASTIC", materialId: "MAT-MASTIC", kind: "unknown", requiredQty: 1, onHandQty: null }),
     ]);
-    const blockers = siteC.body.blockers as { id: string; reason: string; internalCode: string; penetrationId: string }[];
+    const blockers = siteC.body.blockers as { id: string; reason: string; internalCode: string; penetrationId: string; mismatches?: string[] }[];
+    // Only a solution_mismatch blocker carries mismatches.
+    expect(blockers.find((blocker) => blocker.penetrationId === "pen-c-02")?.mismatches).toEqual(["insulation"]);
+    expect(blockers.filter((blocker) => blocker.reason !== "solution_mismatch").every((blocker) => !("mismatches" in blocker))).toBe(true);
     expect(blockers.map((blocker) => [blocker.id, blocker.reason, blocker.internalCode, blocker.penetrationId])).toEqual([
+      // AC 35: 0943's substrate is cut off in the catalogue, so it cannot be shown to fit.
+      ["site-c:blocker.pen-c-01", "solution_mismatch", "0943", "pen-c-01"],
+      // AC 35: pen-c-02 needs 90 min insulation; its nominated 0435 claims 60.
+      ["site-c:blocker.pen-c-02", "solution_mismatch", "0435", "pen-c-02"],
       ["site-c:blocker.pen-c-03", "unknown_solution_code", "9999", "pen-c-03"],
       ["site-c:blocker.pen-c-04", "no_material_mapping", "0393", "pen-c-04"],
     ]);
@@ -139,7 +146,8 @@ describe("site readiness over HTTP", () => {
     expect(candidates.body.status).toBe("ok");
     const rows = candidates.body.candidates as { internalCode: string; availability: { overall: string } }[];
     expect(rows.map((row) => [row.internalCode, row.availability.overall])).toEqual([
-      ["0451", "in_stock"],
+      // AC 33 (API): 0451 uses sealant, which Harbour Point is already short of, so one install fitting on hand is not enough.
+      ["0451", "short"],
       ["0464", "no_material_mapping"],
     ]);
     const detailed = candidates.body.candidates as {
@@ -229,7 +237,7 @@ describe("site readiness over HTTP", () => {
     ).toEqual([
       ["site-a", "clear", 0, 0],
       ["site-b", "unavailable", 0, 0],
-      ["site-c", "blocked", 1, 2],
+      ["site-c", "blocked", 1, 4],
       ["site-d", "nothing_planned", 0, 0],
     ]);
   });
@@ -298,6 +306,21 @@ describe("shortage actions over HTTP", () => {
     const blocker = (blocked.body.blockers as { id: string; state: string }[]).find((item) => item.id === "site-c:blocker.pen-c-03");
     expect(blocker?.state).toBe("escalated");
     expect(blocked.body.crewStatus).toBe("blocked");
+
+    // AC 35: a nominated solution that does not fit is a data problem: no wait, escalate accepted, mismatches named.
+    const mismatchWait = await expectCache(await wait("site-c", "site-c:blocker.pen-c-02", JSON.stringify({}), "wait-mismatch"));
+    expect(mismatchWait.status).toBe(422);
+    expect(mismatchWait.body).toEqual({ code: "wait_not_allowed_for_blocker", message: "Wait is not allowed for a blocker." });
+    const mismatchEscalate = await expectCache(
+      await escalate("site-c", "site-c%3Ablocker.pen-c-02", JSON.stringify({ escalateTo: "purchasing" }), "escalate-mismatch"),
+    );
+    expect(mismatchEscalate.status).toBe(201);
+    const afterMismatch = await expectCache(await readiness("site-c"));
+    const mismatch = (afterMismatch.body.blockers as { id: string; state: string; mismatches?: string[] }[]).find(
+      (item) => item.id === "site-c:blocker.pen-c-02",
+    );
+    expect(mismatch).toMatchObject({ state: "escalated", mismatches: ["insulation"] });
+    expect(afterMismatch.body.crewStatus).toBe("blocked");
   });
 
   it("AC 11, 12, 13: wait returns 201 and stays blocked, a bad escalateTo is 422, and a missing shortage is 404", async () => {

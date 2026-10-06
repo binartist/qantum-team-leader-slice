@@ -5,8 +5,9 @@ export const metadata = { title: "Page not found" };
 export default function NotFound() {
   return (
     <>
-      <AppBar title="Page not found" backHref="/" backName="Sites" />
+      <AppBar backHref="/sites" backName="Sites" />
       <main>
+        <h1>Page not found</h1>
         <p>That page does not exist.</p>
       </main>
     </>

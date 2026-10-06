@@ -28,6 +28,13 @@ export class SiteNotFoundError extends AppError {
   }
 }
 
+/** A material no site plans to use. Pages only; there is no materials API route. */
+export class MaterialNotFoundError extends AppError {
+  constructor() {
+    super(404, "material_not_found", "Material not found.");
+  }
+}
+
 export class ShortageNotFoundError extends AppError {
   constructor() {
     super(404, "shortage_not_found", "Shortage not found.");

@@ -95,7 +95,7 @@ Distinct raw substrates: 42. After whitespace and case normalisation: 41.
 
 The catalogue is owned upstream, so this slice does not correct it. These are findings to hand back, and they are listed again as known limitations in the README.
 
-1. **Incomplete substrate on 6 solutions** (`0853`, `0943`, `0944`, `0946`, `0952`, `0955`). The build-up after the family name is missing, so the solution cannot be matched to a construction. This slice offers no substitutes for them.
+1. **Incomplete substrate on 6 solutions** (`0853`, `0943`, `0944`, `0946`, `0952`, `0955`). The build-up after the family name is missing, so the solution cannot be matched to a construction. This slice offers no substitutes for them, and a penetration nominating one never fits: it is a data problem that blocks the crew (AC 35).
 2. **Same construction worded two ways** (`0534`, `0535`). One includes "concrete" and one does not. Please confirm whether they are the same build-up.
 3. **Inconsistent formatting** in service type (15 rows with a double space), substrate (3 rows with stray spaces) and service size (five shapes). The slice normalises spacing only for comparison.
 4. **No products or quantities.** The brief says the catalogue includes required products, but this excerpt does not. Shortage maths in this slice uses invented mappings.

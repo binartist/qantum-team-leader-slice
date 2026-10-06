@@ -1,25 +1,28 @@
 import type { Metadata } from "next";
 import { unstable_rethrow } from "next/navigation";
 import { connection } from "next/server";
+import Link from "next/link";
 import type { SiteReadinessView } from "@/application";
-import { SiteNotFoundError } from "@/ports";
-import { getCachedReadiness, getCachedSite } from "../../_lib/cached";
-import { AppBar } from "@/ui/AppBar";
-import { Banner } from "@/ui/Banner";
-import { BlockerCard } from "@/ui/BlockerCard";
-import { LinkButton } from "@/ui/LinkButton";
+import { IdSchema } from "@/ports";
+import { getCachedMaterialDetail, getCachedSite } from "../../_lib/cached";
 import { Notice } from "@/ui/Notice";
-import { ShortageCard } from "@/ui/ShortageCard";
-import { UnavailablePanel } from "@/ui/UnavailablePanel";
-import { actionsPath, formatReference, stockFiguresLine, stockIsStale } from "@/ui/format";
-import { BUTTONS, readinessBanner, STOCK_STALE } from "@/ui/messages";
-import { hasEarlierDecision } from "@/ui/status";
+import { PenetrationFilters } from "@/ui/PenetrationFilters";
+import { PenetrationGroups, type PenetrationPlace } from "@/ui/PenetrationGroups";
+import { fromLogPath, materialPagePath, siteFromMaterialPath, sitePath } from "@/ui/format";
+import { logBack, logOrigin } from "@/ui/actions-log";
+import { StockFigures } from "@/ui/StockFigures";
+import { EMPTY, filterLine, NO_FILTER_MATCH, PENETRATION_FILTER } from "@/ui/messages";
+import { filterCounts, matchingPenetrations, materialValues, parseShow, type ShowFilter } from "@/ui/penetration-filters";
+import { filterByMaterial, rowMarks } from "@/ui/penetrations";
 import styles from "@/ui/primitives.module.css";
-import { loadPage } from "../../_lib/load";
+import { loadSiteFrame, SiteFrame } from "./site-frame";
 
 export const dynamic = "force-dynamic";
 
 type RouteParams = { params: Promise<{ id: string }> };
+type PageProps = RouteParams & {
+  searchParams: Promise<{ show?: string | string[]; material?: string | string[]; fromMaterial?: string | string[]; fromLog?: string | string[] }>;
+};
 
 export async function generateMetadata({ params }: RouteParams): Promise<Metadata> {
   await connection();
@@ -33,116 +36,98 @@ export async function generateMetadata({ params }: RouteParams): Promise<Metadat
   }
 }
 
-export default async function SitePage({ params }: RouteParams) {
+export default async function SitePage({ params, searchParams }: PageProps) {
   const { id } = await params;
-  const siteLoad = await loadPage(async () => {
-    const site = await getCachedSite(id);
-    if (!site) throw new SiteNotFoundError();
-    return site;
-  });
-  if (siteLoad.status === "unavailable") {
-    return (
-      <>
-        <AppBar title="This site" backHref="/" backName="Sites" />
-        <main>
-          <UnavailablePanel status={readinessBanner("unavailable", 0, 0)} />
-        </main>
-      </>
-    );
-  }
-
-  const readinessLoad = await loadPage(() => getCachedReadiness(id));
-  const site = siteLoad.value;
-  if (readinessLoad.status === "unavailable") {
-    return (
-      <>
-        <AppBar title={site.name} backHref="/" backName="Sites" />
-        <main>
-          <p className={styles.muted}>{formatReference(site.reference)}</p>
-          <UnavailablePanel status={readinessBanner("unavailable", 0, 0)} />
-        </main>
-      </>
-    );
-  }
-
-  const readiness = readinessLoad.value;
+  const query = await searchParams;
+  const frame = await loadSiteFrame(id);
+  const fromMaterial = await materialOrigin(id, query.fromMaterial);
+  // A material page that opened this site wins; else the actions log; else back goes to the sites list.
+  const fromLog = fromMaterial ? undefined : logOrigin(query.fromLog, [id]);
   return (
-    <>
-      <AppBar title={site.name} backHref="/" backName="Sites" />
-      <main>
-        <p className={styles.muted}>{formatReference(site.reference)}</p>
-        <Banner status={readinessBanner(readiness.crewStatus, readiness.shortages.length, readiness.blockers.length)} />
-        {readiness.crewStatus === "nothing_planned" ? null : (
-          <>
-            <Notice>{readiness.stockNotice}</Notice>
-            <p>{stockFiguresLine(readiness.stockAsOf, readiness.asOf)}</p>
-            {stockIsStale(readiness.stockAsOf, readiness.asOf) ? (
-              <Banner status={{ label: STOCK_STALE, tone: "warning", icon: "warning" }} />
-            ) : null}
-          </>
-        )}
-        {readiness.shortages.length > 0 ? (
-          <ul className={styles.list}>
-            {readiness.shortages.map((shortage) => {
-              const material = readiness.materials[shortage.materialId];
-              return (
-                <li key={shortage.id}>
-                  <ShortageCard
-                    siteId={site.id}
-                    shortageId={shortage.id}
-                    materialName={material?.name ?? shortage.materialId}
-                    requiredQty={shortage.requiredQty}
-                    onHandQty={shortage.onHandQty}
-                    shortfallQty={shortage.shortfallQty}
-                    unit={material?.unit ?? ""}
-                    state={shortage.state}
-                    earlier={hasEarlierDecision(shortage.actions)}
-                    places={shortage.penetrationIds.map((penetrationId) => {
-                      const place = readiness.penetrations[penetrationId];
-                      return {
-                        id: penetrationId,
-                        floor: place?.floor ?? penetrationId,
-                        location: place?.location ?? "",
-                        serviceType: place?.serviceType ?? "",
-                        serviceSize: place?.serviceSize ?? "",
-                        nominatedCode: place?.nominatedCode ?? "",
-                      };
-                    })}
-                  />
-                </li>
-              );
-            })}
-          </ul>
-        ) : null}
-        {readiness.blockers.length > 0 ? (
-          <section>
-            <h2>Data problems</h2>
-            <ul className={styles.list}>
-              {readiness.blockers.map((blocker) => (
-                <li key={blocker.id}>
-                  <BlockerCard
-                    siteId={site.id}
-                    blockerId={blocker.id}
-                    penetrationId={blocker.penetrationId}
-                    place={placeLabel(readiness, blocker.penetrationId)}
-                    reason={blocker.reason}
-                    code={blocker.internalCode}
-                    state={blocker.state}
-                    earlier={hasEarlierDecision(blocker.actions)}
-                  />
-                </li>
-              ))}
-            </ul>
-          </section>
-        ) : null}
-        <LinkButton href={actionsPath(site.id)}>{BUTTONS.actionsLog}</LinkButton>
-      </main>
-    </>
+    <SiteFrame frame={frame} back={fromMaterial?.back ?? (fromLog ? logBack(fromLog) : undefined)}>
+      {frame.status === "ready" && frame.readiness && frame.places ? (
+        <SitePenetrations
+          siteId={frame.site.id}
+          readiness={frame.readiness}
+          places={frame.places}
+          selected={parseShow(query.show)}
+          material={materialValues(query.material)}
+          fromMaterial={fromMaterial?.id}
+          fromLog={fromLog}
+        />
+      ) : null}
+    </SiteFrame>
   );
 }
 
-function placeLabel(readiness: SiteReadinessView, penetrationId: string): string {
-  const place = readiness.penetrations[penetrationId];
-  if (!place) return penetrationId;
-  return `${place.floor}, ${place.location}`;
+/** A single well-formed material id this site was opened from. Anything else leaves back on the sites list. */
+async function materialOrigin(
+  siteId: string,
+  value: string | string[] | undefined,
+): Promise<{ readonly id: string; readonly back: { readonly href: string; readonly name: string } } | undefined> {
+  if (typeof value !== "string" || !IdSchema.safeParse(value).success) return undefined;
+  try {
+    const detail = await getCachedMaterialDetail(value);
+    return { id: value, back: { href: materialPagePath(value, { siteId }), name: detail.material.name } };
+  } catch (error) {
+    unstable_rethrow(error);
+    return undefined;
+  }
+}
+
+function SitePenetrations({
+  siteId,
+  readiness,
+  places,
+  selected,
+  material,
+  fromMaterial,
+  fromLog,
+}: {
+  siteId: string;
+  readiness: SiteReadinessView;
+  places: readonly PenetrationPlace[];
+  selected: readonly ShowFilter[];
+  material: readonly string[];
+  fromMaterial?: string;
+  fromLog?: string;
+}) {
+  // A repeated ?material= is not one material. Joining it keeps the unknown-material note and the full list.
+  const materialId = material.length === 0 ? undefined : material.length === 1 ? material[0] : material.join(",");
+  const filtered = filterByMaterial(places, readiness.shortages, readiness.materials, materialId);
+  const shown = matchingPenetrations(filtered.places, selected, readiness.shortages, readiness.blockers);
+  const counts = filterCounts(places, readiness.shortages, readiness.blockers);
+  return (
+    <>
+      {places.length === 0 ? null : (
+        <StockFigures notice={readiness.stockNotice} stockAsOf={readiness.stockAsOf} asOf={readiness.asOf} />
+      )}
+      <section className={styles.penetrationSection} aria-labelledby="penetrations-heading">
+        {/* The heading counts every planned penetration. The chips below count subsets of that list. */}
+        <h2 id="penetrations-heading" className={styles.listTitle}>
+          <span>Penetrations</span>
+          <span className={styles.tabCount}>{places.length}</span>
+        </h2>
+        <PenetrationFilters siteId={siteId} selected={selected} counts={counts} material={material} fromMaterial={fromMaterial} fromLog={fromLog} />
+        {filtered.filter ? (
+          <p className={styles.filterRow}>
+            <span>{filterLine(filtered.filter.materialName, shown.length, filtered.filter.total)}</span>
+            <Link className={styles.plannedWorkLink} href={fromMaterial ? siteFromMaterialPath(siteId, fromMaterial) : fromLog ? fromLogPath(sitePath(siteId), fromLog) : sitePath(siteId)}>
+              {PENETRATION_FILTER.showAll}
+            </Link>
+          </p>
+        ) : null}
+        {filtered.unknownMaterial ? <Notice>{PENETRATION_FILTER.unknown}</Notice> : null}
+        {selected.length > 0 && shown.length === 0 ? <p>{NO_FILTER_MATCH}</p> : null}
+        {selected.length === 0 && shown.length === 0 ? <p>{EMPTY.penetrations}</p> : null}
+        {shown.length > 0 ? (
+          <PenetrationGroups
+            siteId={siteId}
+            places={shown}
+            marks={(penetrationId) => rowMarks(penetrationId, readiness.shortages, readiness.blockers)}
+          />
+        ) : null}
+      </section>
+    </>
+  );
 }

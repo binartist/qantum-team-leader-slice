@@ -3,9 +3,9 @@ import { assertTargets, gotoApp, screens, tabTo } from "./support";
 
 test("AC 31: escalate with the keyboard only, and targets are at least 44 by 44", async ({ page }) => {
   // Writes the collar shortage (site-b:MAT-COLLAR-25) only. Sealant stays for the scenario spec.
-  await gotoApp(page, "/sites/site-b");
-  await expect(page.getByRole("button", { name: /Escalate/ }).first()).toBeVisible();
-  await tabTo(page, /Escalate Pipe collar for 25 mm pipe/);
+  await gotoApp(page, "/materials/MAT-COLLAR-25");
+  await expect(page.getByRole("button", { name: "Escalate Pipe collar for 25 mm pipe at Harbour Point, Levels 3 to 5" })).toBeVisible();
+  await tabTo(page, /Escalate Pipe collar for 25 mm pipe at Harbour Point/);
   await page.keyboard.press("Enter");
   const dialog = page.getByRole("dialog");
   await expect(dialog.getByText("This does not release the crew.")).toBeVisible();
@@ -24,10 +24,41 @@ test("AC 31: escalate with the keyboard only, and targets are at least 44 by 44"
   await page.keyboard.press("Enter");
 
   await expect(page.locator("[data-announcer]")).toHaveText("Escalation recorded");
-  const collar = page.getByRole("article").filter({ has: page.getByRole("heading", { name: "Pipe collar for 25 mm pipe" }) });
-  await expect(collar.getByText("Escalated")).toBeVisible();
-  await expect(page.getByText(/Blocked:/)).toBeVisible();
+  await expect(page.getByText("Escalated", { exact: true })).toBeVisible();
+  await gotoApp(page, "/sites/site-b");
+  await expect(page.getByRole("link", { name: "Acted 4" })).toBeVisible();
+  await page.getByRole("link", { name: "Acted 4" }).click();
+  await expect(page).toHaveURL(/show=acted/);
+  await expect(page.locator("main a[href*='/penetrations/pen-b-']")).toHaveCount(4);
+  // The decision is an icon inside the row link (AC 44). The full wording is a hidden label.
+  const row = page.locator("a[href$='/penetrations/pen-b-01']");
+  await expect(row).toContainText("Escalated");
+  await expect(row.locator("svg").first()).toBeVisible();
+  await expect(row.locator("button")).toHaveCount(0);
+  await expect(page.getByText("Blocked: hold the crew.")).toHaveCount(0);
   await expect(page.getByText("Crew can go")).toHaveCount(0);
+  await gotoApp(page, "/sites/site-b/penetrations/pen-b-01?tab=log");
+  const tabs = page.getByRole("navigation", { name: "Penetration" });
+  const logTab = tabs.getByRole("link", { name: /Actions log/ });
+  await expect(logTab).toHaveAttribute("aria-current", "page");
+  await expect(logTab).toContainText(/\d+/);
+  await expect(page.getByText("Escalated to purchasing: Pipe collar for 25 mm pipe")).toBeVisible();
+  await expect(page.getByText("Noted from the keyboard")).toBeVisible();
+  await expect(page.getByText("Applies to all 4 penetrations at this site")).toBeVisible();
+  await page.getByRole("link", { name: "Escalated to purchasing: Pipe collar for 25 mm pipe" }).click();
+  await expect(page).toHaveURL(/\/materials\/MAT-COLLAR-25\?from=pen-b-01#site-site-b$/);
+  await page.getByRole("link", { name: "Back to L3, Riser 2" }).click();
+  await expect(page).toHaveURL(/\/sites\/site-b\/penetrations\/pen-b-01\?tab=log$/);
+  await assertTargets(page);
+  await gotoApp(page, "/sites");
+  await expect(page.getByRole("listitem").filter({ hasText: "Harbour Point, Levels 3 to 5" }).getByText("Blocked · 2 shortages")).toBeVisible();
+
+  // AC 43: the logged decision opens the material page at its site, and back returns to the log.
+  await gotoApp(page, "/actions");
+  await page.locator("#site-site-b").getByRole("link", { name: "Escalated to purchasing: Pipe collar for 25 mm pipe" }).click();
+  await expect(page).toHaveURL(/\/materials\/MAT-COLLAR-25\?fromLog=site-b#site-site-b$/);
+  await page.getByRole("link", { name: "Back to Actions log" }).click();
+  await expect(page).toHaveURL(/\/actions(#site-site-b)?$/);
 
   for (const path of screens) {
     await gotoApp(page, path);
@@ -35,21 +66,19 @@ test("AC 31: escalate with the keyboard only, and targets are at least 44 by 44"
   }
 
   // Opens the Wait dialog for measurement and does not send.
-  await gotoApp(page, "/sites/site-c");
-  const mastic = page.getByRole("article").filter({ has: page.getByRole("heading", { name: "Fire mastic tube" }) });
-  await mastic.getByRole("button", { name: /Wait/ }).click();
+  await gotoApp(page, "/materials/MAT-MASTIC");
+  await page.getByRole("button", { name: "Wait Fire mastic tube at Kingsway Works, Phase 2" }).click();
   await expect(page.getByRole("dialog")).toBeVisible();
   await assertTargets(page);
   await page.keyboard.press("Escape");
 
   // Opens the Propose dialog for measurement and does not send.
   await gotoApp(page, "/sites/site-b/penetrations/pen-b-01");
-  await page.getByRole("article").filter({ has: page.getByRole("heading", { name: "0451" }) }).getByRole("button", { name: /Propose this/ }).click();
+  await page.getByRole("region", { name: "Substitutes" }).getByRole("button", { name: /Propose this/ }).click();
   await expect(page.getByRole("dialog")).toBeVisible();
   await assertTargets(page);
   await page.keyboard.press("Escape");
 
-  await gotoApp(page, "/sites/site-b");
-  await collar.getByText("Penetrations and substitutes (4)").click();
+  await gotoApp(page, "/sites/site-b/penetrations?material=MAT-COLLAR-25");
   await assertTargets(page);
 });

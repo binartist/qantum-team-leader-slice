@@ -30,10 +30,11 @@ Application layer (use cases)
    |  recordWait / recordEscalation / proposeSubstitution
    |  listActions(siteId)
    |  listSubstitutionCandidates(siteId, penetrationId)
+   |  listMaterialStock() / describeMaterialStock(materialId)   (pages only)
    |
 Domain core (pure functions, no I/O)
    |  computeRequirements, computeShortages, applyActions,
-   |  siteReadiness, findCandidates
+   |  siteReadiness, findCandidates, siteMaterialNeeds
    |
 Ports (interfaces)
    |  SitesPort · NominationsPort · StockPort · SolutionMaterialsPort
@@ -88,7 +89,8 @@ SiteReadiness{ siteId, crewStatus: clear | blocked | nothing_planned,
 - **Crew status is blocked while any shortage or blocker exists**, whatever its action state. Wait and escalate record intent. They do not unblock the crew. Only stock, or an approved substitution that changes the nomination upstream, does. This matches "crew stays blocked until stock changes".
 - **Missing data is a first-class state, not zero.** It is never treated as zero stock or zero requirement.
   - A material with no stock record becomes a shortage of `kind: unknown` with null quantities. It is **actionable**: the leader can wait or escalate it, which is the natural way to ask the warehouse "do we have this?".
-  - A nominated code with no solution-material mapping, one that is not in the catalogue, or one whose mapped quantity is negative or not finite, becomes a **blocker** with a stated reason (`no_material_mapping`, `unknown_solution_code`, `invalid_quantity`). Precedence in that order of checking: unknown code, then no mapping, then invalid quantity. A blocked penetration adds no requirement, so a bad value can never cancel another penetration's need. It cannot be waited on, because there is nothing to wait for. The leader can only escalate it as a data problem.
+  - A nominated code with no solution-material mapping, one that is not in the catalogue, or one whose mapped quantity is negative or not finite, becomes a **blocker** with a stated reason (`no_material_mapping`, `unknown_solution_code`, `invalid_quantity`). Order of checking: unknown code, then a solution that does not fit (next bullet), then no mapping, then invalid quantity. A blocked penetration adds no requirement, so a bad value can never cancel another penetration's need. It cannot be waited on, because there is nothing to wait for. The leader can only escalate it as a data problem.
+  - A nominated solution that does not fit its penetration is a blocker `solution_mismatch` (`fit.ts`). It does not fit when orientation differs, the normalised substrate, service type or size differs (same normalisation as substitute matching; a substrate cut off after the family name, on either side, never fits, because it cannot identify a build-up; blank text never matches), or a stated integrity or insulation requirement is not met (a missing insulation claim never meets one; a requirement that is not a non-negative finite number fails closed). The blocker lists the failing fields in `mismatches`. Order of checking: unknown code, then mismatch, then no mapping, then invalid quantity. Like every blocker it adds no requirement and can only be escalated.
   - A site with no nominations is `nothing_planned`, never "clear".
 
 Stored (Postgres), append-only:
@@ -171,9 +173,9 @@ Service size formats also vary (`Ø50mm`, `80mm`, `1100x10mm`, `900mm x 50mm`). 
 
 **Validate on write.** Saving a proposal re-runs matching on the server. The `to` code must be among the current candidates and the `from` code must be the penetration's current nomination. The client's view is never trusted. Repeat proposals for the same penetration are allowed and listed, newest first.
 
-**Empty state.** When there are no candidates the UI says "No catalogue match for this penetration. Escalate instead." and offers the escalate action. A nominated code that is not in the catalogue says so and gives the same option. Against the supplied CSV only 20 of 148 solutions have any candidate (section 9), so this is the common case, not an edge.
+**Empty state.** When there are no candidates the UI says "No catalogue match for this penetration." and, when the penetration has a data problem, adds "Escalate instead." with the escalate action (a material shortage is decided on its material page). A nominated code that is not in the catalogue says so and gives the same option. Against the supplied CSV only 20 of 148 solutions have any candidate (section 9), so this is the common case, not an edge.
 
-Each candidate also shows whether its materials are in stock, since a substitute that needs a different missing material does not help. Material mappings for candidates are seeded in the sample data for the demo codes only. Others show "No material mapping".
+Each candidate also shows whether its materials are in stock, since a substitute that needs a different missing material does not help. A material the site is already short of counts as `short` for every candidate that uses it, and one with unknown site stock counts as `unknown`, whatever one install needs. The check does not net off what the swap would free from the nominated solution: that would be a reservation model, which this slice excludes, and erring towards "short" never implies a crew can go. Material mappings for candidates are seeded in the sample data for the demo codes only. Others show "No material mapping".
 
 How suitability and approval work:
 
@@ -184,11 +186,12 @@ How suitability and approval work:
 
 ## 7. User experience
 
-Mobile-first, because leaders are on site, but a plain responsive web page. Three screens:
+Mobile-first, because leaders are on site, but a plain responsive web page. The screens (detail in `ui-design.md`):
 
-1. **Sites.** List with a ready/blocked badge for each.
-2. **Site readiness.** A banner states "Crew can go" or "Blocked: N shortages" with reasons. Below it, a shortage list. Each row shows material, needed, on hand, short by, which penetrations are affected, and current state. Missing data is shown as "No stock record" or "No material mapping", not as zero.
-3. **Decide.** From a shortage row: Wait, Escalate (choose purchasing or warehouse, add a note), or Substitute (pick a penetration, review candidates, give a reason, confirm). A confirmation names the effect in plain words ("This does not release the crew").
+1. **Sites**, **Materials** and the **Actions log**, the three top-level pages, reached from a drawer menu. The landing page uses the same menu, with About this demo marked. Sites shows a status chip for each site; Materials shows each material's shared stock against every site's need; the Actions log lists every site's decisions and proposals.
+2. **Site.** The planned penetrations, with filter chips for shortages, data problems and recorded decisions; rows mark problems and decisions with icons. A clear site says "Crew can go"; missing data is never shown as zero or clear.
+3. **Penetration.** Two tabs. Solution: the nominated solution beside the penetration, field by field; each shortage as a line with this site's figures that opens its material page; substitutes, labelled not verified, with Propose; Escalate for a data problem. Actions log: this penetration's decisions and proposals, read from the site's log and filtered by the nominated solution's materials and the penetration's own data problem.
+4. **Material.** The shared stock once, then one section per site that plans it, where that site's shortage is waited on or escalated (choose purchasing or warehouse, add a note). A confirmation names the effect in plain words ("This does not release the crew").
 
 Requirements: keyboard and screen-reader usable, status never conveyed by colour alone, tap targets at least 44px, and a clear error state for every call.
 
@@ -234,10 +237,12 @@ These go beyond `slice-decisions.md` and `business-path-data.md`. Confirm them b
 6. Shared, unreserved stock (decision), summed across locations. Stock is not allocated to sites.
 7. Crew status is site-wide and all-or-nothing: one shortage blocks the whole site. Partial dispatch for unaffected penetrations is a later iteration.
 8. `blocked` and `ready` moved from each penetration (`business-path-data.md`) to a site-level crew status. The stored crew schedule is dropped. This slice only reports blocked or clear.
-9. New blocker reasons (`no_material_mapping`, `unknown_solution_code`), the `nothing_planned` status, and `unknown`-stock shortages that can be actioned.
+9. New blocker reasons (`unknown_solution_code`, `solution_mismatch`, `no_material_mapping`, `invalid_quantity`), the `nothing_planned` status, and `unknown`-stock shortages that can be actioned.
 10. Action lifecycle: an action is current only while the shortfall has not grown beyond what it was when recorded.
 11. Idempotency-Key header required on every POST, unique per user.
 12. Nominations stub carries required integrity and insulation per penetration, and substitution matches on the penetration's attributes.
+13. Materials across sites (pages only, no API route). `listMaterialStock` and `describeMaterialStock` read every site's inputs, then the stock once for all of them, and compute each site's readiness from that one read, so the page's on-hand figure and every site's shortage agree. A listed site whose data is missing or unavailable is unchecked, never a 404. Each view makes about four upstream calls per site plus one stock read; that suits the sample's four sites, and real data at scale would want a batched or aggregate port (a known limit, like the sites list). `siteMaterialNeeds` gives each site's need for every material, short or not, by the readiness rules: a penetration that is a data problem adds no need, and the total is rounded up once per site. The across-sites total is that sum, shown as information only; each site's crew status is unchanged, because stock is shared and not reserved. A site that cannot be read is kept as unchecked: it never counts as not short, and the total is then left out. With every site unreadable the page is unavailable; a material no checked site plans is not found (`material_not_found`, 404), but with a site unchecked it is unavailable instead, since that site may plan it.
+14. Actions log across sites (page only, no API route). `listAllActions` reads each site's log with `listActions`, so each site's statuses (still applies, grown, resolved) come from that site's own readiness. A site whose log cannot be read is unavailable in its section, never empty; with every site unreadable the page is unavailable. It makes one site read per listed site on each request, the same known limit as item 13. List-row decision chips need no extra read: each shortage and data problem already carries its actions, newest first, with `current` set.
 
 ## 12. Open questions
 

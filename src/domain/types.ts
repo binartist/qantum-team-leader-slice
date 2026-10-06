@@ -66,7 +66,10 @@ export interface ShortageActionView extends ShortageAction {
   readonly current: boolean;
 }
 
-export type BlockerReason = "unknown_solution_code" | "no_material_mapping" | "invalid_quantity";
+/** A field on which a nominated solution can fail to fit its penetration, in reporting order. */
+export type FitField = "orientation" | "substrate" | "serviceType" | "serviceSize" | "integrity" | "insulation";
+
+export type BlockerReason = "unknown_solution_code" | "solution_mismatch" | "no_material_mapping" | "invalid_quantity";
 
 export type ShortageState = "open" | "waiting" | "escalated";
 
@@ -75,6 +78,8 @@ export interface Blocker {
   readonly reason: BlockerReason;
   readonly penetrationId: string;
   readonly internalCode: string;
+  /** For `solution_mismatch` only: the fields on which the nominated solution does not fit. */
+  readonly mismatches?: readonly FitField[];
   readonly state: ShortageState;
   readonly actions: readonly ShortageActionView[];
 }

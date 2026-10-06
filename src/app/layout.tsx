@@ -1,6 +1,7 @@
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import { Announcer } from "@/ui/Announcer";
-import { DEMO_BANNER } from "@/ui/messages";
+import { NavHistory } from "@/ui/NavHistory";
+import { THEME_SCRIPT } from "@/ui/theme";
 import "./globals.css";
 
 export const metadata = {
@@ -10,13 +11,19 @@ export const metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    // The head script stamps a remembered theme on <html> before React hydrates, hence the warning opt-out. It is a
+    // plain inline script on purpose: next/script's beforeInteractive queues inline code until Next's runtime
+    // loads, which would flash light first. React's dev build logs "Encountered a script tag"; production does not.
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+      </head>
       <body>
         <Announcer />
+        <Suspense fallback={null}>
+          <NavHistory />
+        </Suspense>
         {children}
-        <footer>
-          <p className="demo-banner">{DEMO_BANNER}</p>
-        </footer>
       </body>
     </html>
   );
