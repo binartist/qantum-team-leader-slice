@@ -40,7 +40,9 @@ Boundary rule enforced by lint: the domain core may not import Next.js, React, t
 | 14, 15 | Unit | Escalate then wait keeps escalated. Grown shortfall marks action earlier |
 | 16 | API, Database | Repeat returns original with one row. Missing key is 400. Per-user unique constraint |
 | 17 | API | Over-long note is 422 |
-| 18, 19, 20, 21, 22 | Unit, E2E | Demo codes give the stated candidates. Empty and incomplete states. Null insulation never offered |
+| 18 | Unit, E2E | `0438` gives `0451` and `0464`, in the domain and on the penetration screen |
+| 19, 22 | Unit | `0789` and `0434` give the stated candidates. Null insulation never offered |
+| 20, 21 | Unit, API | Empty and incomplete-substrate states, and an unknown code |
 | 23 | API | 422 for non-candidate target, 409 for stale source |
 | 24 | API, Database | Proposed status only. Nomination and shortage unchanged |
 | 25 | Unit | Exactly 20 of 148 have a candidate |
@@ -146,7 +148,7 @@ On every push and pull request, in order:
 6. Secret scan and dependency audit.
 7. Playwright end-to-end and axe on a dev server (four projects: reads, writes, and two stock-failure servers started with `STUB_STOCK_MODE=down` and `malformed`, each with its own build directory).
 8. AC coverage script.
-9. On `main` only, after all of the above: deploy to Vercel (`vercel pull`, `build --prod`, `deploy --prebuilt --prod`), then `scripts/smoke.mjs` against the production URL (`/api/sites` is 200, `no-store`, four sites; `/` renders "Sites").
+9. On `main` only, after all of the above: deploy to Vercel (`vercel pull`, `build --prod`, `deploy --prebuilt --prod`), then `scripts/smoke.mjs` against the production URL (`/api/sites` is 200, `no-store`, four sites; `/` shows the landing heading "Ready to send the crew?" and `/sites` renders "Sites").
 
 Merge to the default branch is blocked on any failure. Deployment to Vercel runs only from a green default branch. After deploy, a smoke run of the end-to-end scenario against the public URL is the evidence of a working deployment.
 

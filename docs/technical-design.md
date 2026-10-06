@@ -38,18 +38,19 @@ Domain core (pure functions, no I/O)
    |
 Ports (interfaces)
    |  SitesPort · NominationsPort · StockPort · SolutionMaterialsPort
-   |  CataloguePort · ActionsRepository
+   |  ActionsRepository
    |
 Adapters
       Stub JSON (sample)      CSV catalogue      Postgres actions repo (pg)
-      (swap for real HTTP      (build-time load)  (the only real DB)
-       clients later)
+      (swap for real HTTP      (loaded once per   (the only real DB)
+       clients later)          server process,
+                               no port)
 ```
 
 Rules:
 
-- The domain core imports nothing from Next.js, Supabase or the file system. This is what the unit tests target.
-- Each upstream system sits behind one port, so replacing a stub with the real API changes one adapter and no use case.
+- The domain core imports nothing from Next.js, the database driver (`pg`) or the file system. This is what the unit tests target.
+- Each upstream system sits behind one port, so replacing a stub with the real API changes one adapter and no use case. The catalogue is the exception: it is the supplied CSV, loaded by `loadCatalogueFromCsv` into a typed map that use cases receive directly. A live catalogue source would add a `CataloguePort`.
 - Route handlers contain no business logic.
 
 ## 3. Data ownership
@@ -100,7 +101,8 @@ shortage_action
   id uuid pk, site_id text, shortage_id text,
   kind  'wait' | 'escalate',
   escalate_to 'purchasing' | 'warehouse' null,
-  note text null, shortfall_qty_at_time numeric null,   -- null for unknown-stock
+  note text null check (length <= 500),
+  shortfall_qty_at_time numeric null check (>= 0),      -- null for unknown-stock
   created_by text, created_at timestamptz,
   idempotency_key text,
   check ((kind = 'escalate') = (escalate_to is not null)),
@@ -109,12 +111,15 @@ shortage_action
 substitution_proposal
   id uuid pk, site_id text, penetration_id text,
   from_internal_code text, to_internal_code text,
-  reason text not null,
+  reason text not null check (length between 1 and 500),
   status 'proposed' check (status = 'proposed'),
   created_by text, created_at timestamptz,
   idempotency_key text,
+  check (from_internal_code <> to_internal_code),
   unique (created_by, idempotency_key)
 ```
+
+`db/migrations/0001_actions.sql` is the full definition: it also adds an index per table on `site_id` and revokes everything from `public`, granting only `select, insert` to the app role.
 
 Design choices:
 
@@ -160,6 +165,8 @@ A candidate must satisfy all of:
 - `integrity_minutes` at least the required integrity
 - `insulation_minutes` at least the required insulation. A null (not claimed) never satisfies a stated requirement.
 - not the currently nominated code itself
+
+Unlike the fit check, matching has no blank-text guard: a blank penetration field would equal a blank catalogue field. None of the 148 catalogue rows has a blank orientation, substrate, service type or size, so this cannot happen with the supplied data, but matching should gain the guard before a real nominations source is connected.
 
 **Normalisation rule (exact).** Applied to substrate, service type and service size before comparing:
 

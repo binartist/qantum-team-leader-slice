@@ -16,7 +16,7 @@ Project skills are declared in `skill-forge.json` and vendored by `skf sync` int
 ## Architecture rules
 
 - `src/domain/` is pure: no Next.js, React, database driver, file system or adapter imports (lint enforces it).
-- Upstream systems (sites, nominations, stock, solution materials, catalogue) sit behind ports in `src/ports/`; adapters in `src/adapters/`.
+- Upstream systems (sites, nominations, stock, solution materials) sit behind ports in `src/ports/`; adapters in `src/adapters/`. The supplied catalogue CSV is loaded by an adapter into a typed map (no port).
 - Route handlers in `src/app/` stay thin: validate with Zod, call a use case, map errors to `{ code, message }`.
 - This app stores only wait, escalate and proposed-substitute actions. It never writes sites, nominations, stock or the catalogue.
 

@@ -1,6 +1,6 @@
 # UI design
 
-Proposed defaults for the screens and the actions log. Status: **approved 2026-10-04**. Requirements are in `slice-specification.md` (FR1 to FR17, AC 30 to 44), the API in `api.md`, terms in `glossary.md`. The screens were drawn for review in the conversation that produced this file.
+Proposed defaults for the screens and the actions log. Status: **approved 2026-10-04**. Requirements are in `slice-specification.md` (FR1 to FR17, AC 30 to 46), the API in `api.md`, terms in `glossary.md`. The screens were drawn for review in the conversation that produced this file.
 
 ## 1. Who and where
 
@@ -52,11 +52,11 @@ There is also a not-found page and one error page with a retry link. All data pa
 
 ### Shortage (a site's section on the material page)
 
-The site name, `Needs X, short Z unit` (or `Needs X, stock unknown`), the places that use it with identical ones grouped, "For all N penetrations at this site", a state label (No decision yet, Waiting, Escalated, with "Earlier decision, shortfall has grown" when an action is not current), and two buttons: Wait and Escalate. On the penetration page the same shortage is one line, "Short material: <name> · this site short Z of X", linking here.
+The site name, `Needs X, short Z unit` (or `Needs X, stock unknown`), the places that use it with identical ones grouped, "For all N penetrations at this site", the warning "Earlier decision, shortfall has grown" when an action is not current (no Waiting or Escalated label: the decisions are on the Actions log tab), and two buttons: Wait and Escalate. On the penetration page the same shortage is one line, "Short material: <name> · this site short Z of X", linking here.
 
 ### Data problem (on the penetration page)
 
-Plain reason: "Solution code 9999 isn't in the catalogue", "No materials recorded for solution 0393", "A material quantity is invalid for solution NNNN", "Solution NNNN doesn't fit this penetration: <fields>". Only an Escalate button (a wait makes no sense here), with the same state label.
+Plain reason: "Solution code 9999 isn't in the catalogue", "No materials recorded for solution 0393", "A material quantity is invalid for solution NNNN", "Solution NNNN doesn't fit this penetration: <fields>". Only an Escalate button (a wait makes no sense here). Its decisions are on the penetration's Actions log tab.
 
 ### Decisions
 
@@ -162,7 +162,7 @@ Usability round (2026-10-05, from a review against the exercise brief's UX quest
 | --- | --- |
 | Sites list | A blocked chip says why: "Blocked · 2 shortages", "Blocked · 1 shortage, 4 data problems" |
 | Stock age | "Stock figures from 3 Oct 2026, 08:00 UTC (2 days old)". Older than a day adds "These stock figures are more than a day old. Check with the warehouse before relying on them." Warning only; crew status is unchanged. Hidden on a nothing-planned site |
-| Shortage state | Flat labels, not chips: "No decision yet", "Waiting", "Escalated" |
+| Shortage state | Only "Earlier decision, shortfall has grown" is shown as a label. Waiting and Escalated appear as row marks and Actions log entries (see "Material tabs and decision counts") |
 | Units | `each` is omitted ("short 2"); other units pluralise ("2 cartridges", "2.5 metres") |
 | Penetrations | The site page lists them, grouped under "Solution 0438 · 4". Each row is "{floor}, {location} · {service} {size}" with "Substitutes ›". `?material=` shows "Using {material} · n of total" and a Show all link |
 | Ratings | "Fire rating: 60 min integrity, 30 min insulation" (a missing part says "no insulation rating"). Candidates add "Supplier ref …" and "Meets the required rating" or "Below the required rating" against the penetration |
@@ -206,7 +206,7 @@ Penetration page (2026-10-06, user decisions): titled by the place, with three s
 
 Material stock page (2026-10-06, user decision): the red short-material line opens one material's stock at this site. It shows the amount (`Need X, have Y, short Z`, or `Need X, stock unknown`), the shared-stock notice and the stock age, then how many planned penetrations use it and those places, written as text so the page does not link back to the penetration that opened it. A material that is not a shortage here shows "That material is not a shortage on this site." and no amounts, so a resolved shortage never reads as zero. Wait, Escalate and the decision state live on this page (added when the shortage cards left the site screen). Scoped (2026-10-06, user decisions): a shortage is per site and material, so one wait or escalate covers every penetration that needs it, and the page says so ("For all 4 penetrations at this site"). The need line and the places heading name the site, because the stock on hand is shared with other sites. The places stay text (row links would be circular) with identical ones grouped, and one link goes up to the site list filtered to the material. (Superseded: the page is now across sites; see "Drawer and materials" below.)
 
-Site list and actions panel (2026-10-06, user decision): the site screen is the penetration list. Shortages, data problems and acted are filter chips (toggle links, union, counts are penetrations, including zero; no number when readiness is unknown). The chip row sticks under the header. Acted matches a penetration when a shortage that lists it, or its data problem, is waiting or escalated, and it counts once. A blocked site has no summary banner, because each row already shows its shortage or data problem. Row chips name only the kind of problem ("Unknown solution", "Doesn't fit", "No materials", "Invalid quantity", "Short material", "Stock unknown", with "× N" when a row has several); the penetration page carries the full reason and the links to stock pages. A clear site still says "Crew can go." Unknown stock is a row line, never a clear status. The planned-work line is text. `/penetrations` redirects here and keeps `?material=`; `/data-problems` redirects to `?show=data-problems`; `/actions` redirects to `?log=open`. The actions log is a header button on the site and penetration pages. It opens a right-hand panel (full width at 375px) with the same recorded actions and proposals. A shortage's Wait and Escalate are on its stock page. A data problem's Escalate stays on the penetration page, including when substitutes are listed.
+Site list and actions panel (2026-10-06, user decision): the site screen is the penetration list. Shortages, data problems and acted are filter chips (toggle links, union, counts are penetrations, including zero; no number when readiness is unknown). The chip row sticks under the header. Acted matches a penetration when a shortage that lists it, or its data problem, is waiting or escalated (from current decisions only), or when a substitute has been proposed for it, and it counts once. An earlier decision (shortfall grown) or a resolved one still shows as a row mark and in the Actions log, so a row can carry a mark without counting as Acted. A blocked site has no summary banner, because each row already shows its shortage or data problem. Row chips name only the kind of problem ("Unknown solution", "Doesn't fit", "No materials", "Invalid quantity", "Short material", "Stock unknown", with "× N" when a row has several); the penetration page carries the full reason and the links to stock pages. A clear site still says "Crew can go." Unknown stock is a row line, never a clear status. The planned-work line is text. `/penetrations` redirects here and keeps `?material=`; `/data-problems` redirects to `?show=data-problems`; `/actions` redirects to `?log=open`. The actions log is a header button on the site and penetration pages. It opens a right-hand panel (full width at 375px) with the same recorded actions and proposals. A shortage's Wait and Escalate are on its stock page. A data problem's Escalate stays on the penetration page, including when substitutes are listed.
 
 Actions log links (2026-10-06, user decision): an entry's title links to the work it is about. A proposal and a data problem decision open their penetration's page; a material shortage decision opens the site screen filtered to that material (`?material=`), and has no link once the shortage is resolved. Proposals name their place: "Proposed substitute for L3, Riser 2: 0438 to 0451".
 
@@ -214,7 +214,7 @@ Decision colours (2026-10-06, user decision): Waiting and Escalated were both am
 
 | State | Colour | Icon |
 | --- | --- | --- |
-| No decision yet | grey | dashed circle |
+| No decision yet (no longer shown) | grey | dashed circle |
 | Waiting | blue (`--info-*`) | clock |
 | Escalated | purple (`--escalation-*`) | up arrow |
 | Earlier decision, shortfall has grown | amber | warning |
