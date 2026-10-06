@@ -82,13 +82,13 @@ Next.js 16 server components and route handlers on Vercel, a pure TypeScript dom
 
 | Document | What it covers |
 | --- | --- |
-| `docs/iteration-plan.md` | Why this slice, and the iterations after it |
-| `docs/slice-specification.md` | Requirements, 46 acceptance criteria, assumptions, exclusions |
-| `docs/technical-design.md` | Architecture, domain rules, data model, trade-offs |
-| `docs/ui-design.md` | Screens, copy, states and accessibility |
-| `docs/api.md` | HTTP API, errors, idempotency, configuration |
-| `docs/test-strategy.md` | Test layers, acceptance-criteria mapping, CI gates |
-| `docs/glossary.md` | Business terms (penetration, integrity, insulation, nominated solution) |
-| `docs/agentic-approach.md` | How coding agents were used, directed and checked |
-| `AGENTS.md`, `.agents/skills/`, `docs/agent-work/` | The instructions and skills given to the agents, every brief, review and worker note |
-| `docs/submission-checklist.md` | Submission items with evidence |
+| [`docs/iteration-plan.md`](docs/iteration-plan.md) | Why this slice, and the iterations after it |
+| [`docs/slice-specification.md`](docs/slice-specification.md) | Requirements, 46 acceptance criteria, assumptions, exclusions |
+| [`docs/technical-design.md`](docs/technical-design.md) | Architecture, domain rules, data model, trade-offs |
+| [`docs/ui-design.md`](docs/ui-design.md) | Screens, copy, states and accessibility |
+| [`docs/api.md`](docs/api.md) | HTTP API, errors, idempotency, configuration |
+| [`docs/test-strategy.md`](docs/test-strategy.md) | Test layers, acceptance-criteria mapping, CI gates |
+| [`docs/glossary.md`](docs/glossary.md) | Business terms (penetration, integrity, insulation, nominated solution) |
+| [`docs/agentic-approach.md`](docs/agentic-approach.md) | How coding agents were used, directed and checked |
+| [`AGENTS.md`](AGENTS.md), [`.agents/skills/`](.agents/skills/), [`docs/agent-work/`](docs/agent-work/) | The instructions and skills given to the agents, every brief, review and worker note |
+| [`docs/submission-checklist.md`](docs/submission-checklist.md) | Submission items with evidence |
