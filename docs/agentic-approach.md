@@ -10,7 +10,7 @@ How coding agents were used on this slice, how they were directed and checked, a
 | Worker | Grok Build CLI (`grok-4.7-build`; the fast variant for three runs, on request) | Implementation, and independent review sessions |
 | Design reviewer | A Claude Opus subagent | One review of the technical design before any code |
 | Helpers (from 2026-10-06) | Claude Code subagents: `validator` and `reviewer` on Sonnet, `Explore`, `bulk-worker` on Haiku | Gate runs, one review lens each, code search and mechanical edits, so the orchestrator's context went on decisions; the submission readiness check ran this way |
-| Guidance | `AGENTS.md` (tool-neutral repo rules), 11 Skill Forge skills in `.agents/skills/` (coding discipline, security, testing, frontend, delegation, Vercel, Supabase Postgres, data migration) | Loaded by both agents |
+| Guidance | `AGENTS.md` (tool-neutral repo rules), 11 [Skill Forge](https://github.com/more-than-code/skill-forge) skills in `.agents/skills/` (coding discipline, security, testing, frontend, delegation, Vercel, Supabase Postgres, data migration) | Loaded by both agents |
 
 I made the product and scope decisions: which slice, shared versus reserved stock, how substitutes are worded, UI defaults, which database and Vercel project, and every approval to commit, push or merge.
 
@@ -56,7 +56,7 @@ The agents proposed; I decided. Each case is logged with the reason in `docs/sub
 - **Shared stock on a material page.** I questioned why Wait and Escalate sit on the material page when work is done per penetration, and why its list named no site when stock is shared. The AI's point held for the buttons (a shortage is per site and material, so one escalation covers every penetration), so they stayed with their scope stated; the site is now named in the need line and the heading. When the AI proposed linking each place back to its penetration, I rejected it as circular: the places stay text, grouped, with one link up to the site list.
 
 - **Actions log.** I took the actions log out of the header, because it did not say which work it belonged to, moved it into the side menu and asked for the latest decision in a popover on each acted row. After the first build I asked for the entity icons, a sticky site title, and back controls that return to the log rather than to each page's parent. Then I cut the row chips to icons, dropped the popover, and moved a penetration's decisions onto its own page as an Actions log tab. Since decisions are made on materials and solutions, I asked for the same tabs on the material page, dropped the state labels for one design across pages, and asked rows to count decisions, proposals included, with Acted covering proposals too.
-- **Responsive menu.** The drawer was off-canvas at every width. I asked for the drawer on phones and a side menu shown by default on wider windows, collapsible. Then I moved the About page off the root to `/about-this-demo`, with `/` redirecting to it, and added a link from it to this repository.
+- **Responsive menu.** The drawer was off-canvas at every width. I asked for the drawer on phones and a side menu shown by default on wider windows, collapsible. Then I moved the About page off the root to `/about-this-demo`, with `/` redirecting to it, and added a link from it to this repository. The skills now link to [Skill Forge](https://github.com/more-than-code/skill-forge), my own skill registry.
 
 ## Cost
 

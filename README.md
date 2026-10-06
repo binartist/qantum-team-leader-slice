@@ -90,5 +90,5 @@ Next.js 16 server components and route handlers on Vercel, a pure TypeScript dom
 | [`docs/test-strategy.md`](docs/test-strategy.md) | Test layers, acceptance-criteria mapping, CI gates |
 | [`docs/glossary.md`](docs/glossary.md) | Business terms (penetration, integrity, insulation, nominated solution) |
 | [`docs/agentic-approach.md`](docs/agentic-approach.md) | How coding agents were used, directed and checked |
-| [`AGENTS.md`](AGENTS.md), [`.agents/skills/`](.agents/skills/), [`docs/agent-work/`](docs/agent-work/) | The instructions and skills given to the agents, every brief, review and worker note |
+| [`AGENTS.md`](AGENTS.md), [`.agents/skills/`](.agents/skills/), [`docs/agent-work/`](docs/agent-work/) | The instructions and skills given to the agents (skills from [Skill Forge](https://github.com/more-than-code/skill-forge)), every brief, review and worker note |
 | [`docs/submission-checklist.md`](docs/submission-checklist.md) | Submission items with evidence |
