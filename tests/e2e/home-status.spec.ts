@@ -14,7 +14,7 @@ test("the sites list shows crew can go for Riverside and nothing planned for Old
   await expect(mill.getByText("Nothing planned")).toBeVisible();
 });
 
-test("landing page explains the demo, every other screen carries a Demo tag, and there is no demo footer", async ({ page }) => {
+test("landing page explains the demo, no screen carries a Demo tag, and there is no demo footer", async ({ page }) => {
   // Read-only. Follows links only. Does not record an action.
   await gotoApp(page, "/");
   await expect(page.getByRole("heading", { level: 1, name: "Ready to send the crew?" })).toBeVisible();
@@ -34,7 +34,6 @@ test("landing page explains the demo, every other screen carries a Demo tag, and
   expect(openBox.width).toBeGreaterThanOrEqual(viewport.width - 32 - 1);
   await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
   await expect(open).toBeInViewport();
-  await expect(page.getByText("Tap Demo at the top of any screen to come back here.")).toBeInViewport();
   await open.click();
   await expect(page).toHaveURL(/\/sites$/);
 
@@ -49,12 +48,7 @@ test("landing page explains the demo, every other screen carries a Demo tag, and
   await expect(page.getByText("These stock figures are more than a day old. Check with the warehouse before relying on them.")).toBeVisible();
   await expect(page.getByText("Job ref HP-345", { exact: true })).toBeVisible();
   await expect(page.getByRole("contentinfo")).toHaveCount(0);
-  const tag = page.getByRole("banner").getByRole("link", { name: "Demo: sample data, no login. About this demo" });
-  await expect(tag).toHaveText("Demo");
-  const tagBox = await tag.boundingBox();
-  if (!tagBox) throw new Error("demo tag has no box");
-  expect(tagBox.width).toBeGreaterThanOrEqual(44);
-  expect(tagBox.height).toBeGreaterThanOrEqual(44);
+  await expect(page.getByRole("link", { name: /^Demo/ })).toHaveCount(0);
 
   const back = page.getByRole("link", { name: "Back to sites" });
   const box = await back.boundingBox();
@@ -83,12 +77,9 @@ test("landing page explains the demo, every other screen carries a Demo tag, and
     return window.scrollY > 0;
   });
   expect(moved).toBe(true);
-  // The sticky header keeps the Demo tag in view at the end of a long page.
+  // The sticky header keeps the back control in view at the end of a long page.
   await expect(page.getByRole("banner")).toBeInViewport();
-  await expect(page.getByRole("banner").getByRole("link", { name: /^Demo/ })).toBeInViewport();
-  await page.getByRole("banner").getByRole("link", { name: /^Demo/ }).click();
-  await expect(page).toHaveURL(/\/$/);
-  await expect(page.getByRole("heading", { level: 1, name: "Ready to send the crew?" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Back to sites" })).toBeInViewport();
 
   await gotoApp(page, "/sites/site-d");
   await expect(page.getByText("Nothing planned for this site")).toBeVisible();

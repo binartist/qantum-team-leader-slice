@@ -316,28 +316,6 @@
   width: min(100%, 45rem);
 }
 
-/* The link is a 44px target; the visible pill inside it is smaller. */
-.demoTag {
-  display: inline-flex;
-  flex: none;
-  margin-left: auto;
-  align-items: center;
-  justify-content: center;
-  min-width: 44px;
-  min-height: 44px;
-  border-radius: var(--radius);
-  text-decoration: none;
-}
-
-.demoTag span {
-  padding: 0.125rem 0.5rem;
-  border-radius: var(--radius);
-  background: var(--warning-bg);
-  color: var(--warning-text);
-  font-size: 0.875rem;
-  font-weight: 600;
-}
-
 /* Route-based tabs: links, the current one marked with aria-current. Sized by their content so all three
    fit one line at 375px; on a narrower screen a label wraps rather than pushing a tab off screen. */
 /* The tab bar sticks directly below the header, full width of the content column, so the counts stay in view. */
