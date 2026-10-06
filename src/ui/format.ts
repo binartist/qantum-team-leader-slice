@@ -207,6 +207,8 @@ export function siteFromMaterialPath(siteId: string, materialId: string): string
   return `${sitePath(siteId)}?fromMaterial=${encodeURIComponent(materialId)}`;
 }
 
+export const ABOUT_PATH = "/about-this-demo";
+
 export const MATERIALS_PATH = "/materials";
 
 export const ACTIONS_PATH = "/actions";

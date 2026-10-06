@@ -34,7 +34,7 @@ test("AC 37: the menu opens a left drawer with Sites and Materials, the current 
   const nav = drawer.getByRole("navigation", { name: "Main" });
   await expect(nav.getByRole("link", { name: "Sites" })).toHaveAttribute("aria-current", "page");
   await expect(nav.getByRole("link", { name: "Materials" })).not.toHaveAttribute("aria-current", "page");
-  await expect(drawer.getByRole("link", { name: "About this demo" })).toHaveAttribute("href", "/");
+  await expect(drawer.getByRole("link", { name: "About this demo" })).toHaveAttribute("href", "/about-this-demo");
   // Left side, once the slide-in has settled.
   await expect.poll(async () => (await drawer.boundingBox())?.x).toBe(0);
   await assertTargets(page);
