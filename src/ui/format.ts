@@ -202,6 +202,11 @@ export function sitePath(siteId: string): string {
   return `/sites/${encodeURIComponent(siteId)}`;
 }
 
+/** The site screen opened from a material page, so its back control can return there. */
+export function siteFromMaterialPath(siteId: string, materialId: string): string {
+  return `${sitePath(siteId)}?fromMaterial=${encodeURIComponent(materialId)}`;
+}
+
 /** The site screen filtered to the penetrations that use one material. */
 export function siteMaterialPath(siteId: string, materialId: string): string {
   return `${sitePath(siteId)}?material=${encodeURIComponent(materialId)}`;

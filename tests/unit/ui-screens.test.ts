@@ -43,7 +43,8 @@ describe("fixed screen copy", () => {
 
   it("a site tab whose site did not resolve still links back to sites", () => {
     const frame = readFileSync("src/app/sites/[id]/site-frame.tsx", "utf8");
-    expect(frame).toContain('backName="Sites"');
+    expect(frame).toContain('href: "/sites"');
+    expect(frame).toContain('name: "Sites"');
   });
 
   it("error.tsx copy does not include error.message or the digest value", () => {
@@ -69,7 +70,6 @@ describe("fixed screen copy", () => {
 const SCREEN_SOURCES = [
   "src/app/page.tsx",
   "src/app/sites/page.tsx",
-  "src/app/loading.tsx",
   "src/app/not-found.tsx",
   "src/app/error.tsx",
   "src/app/global-error.tsx",
@@ -84,15 +84,19 @@ function linkButtonBlocks(source: string): string[] {
 }
 
 describe("navigation shell", () => {
+  it("has no root Loading screen, so the current page stays until the next one is ready", () => {
+    expect(existsSync("src/app/loading.tsx")).toBe(false);
+  });
+
   it("each screen has one leading control (back or menu), its h1 in main, and no LinkButton to go back", () => {
     for (const file of SCREEN_SOURCES) {
       const source = readFileSync(file, "utf8");
-      // AC 37: the leading control is the back control or the menu, never both. Sites and Materials carry the
-      // menu; inner screens a back control; the landing page, loading and errors no header.
-      const menu = ["src/app/sites/page.tsx", "src/app/materials/page.tsx"];
-      const noHeader = ["src/app/page.tsx", "src/app/loading.tsx", "src/app/error.tsx", "src/app/global-error.tsx"];
+      // AC 37: the leading control is the back control or the menu, never both. The landing page, Sites and
+      // Materials carry the menu; inner screens a back control; the error screens have no header.
+      const menu = ["src/app/page.tsx", "src/app/sites/page.tsx", "src/app/materials/page.tsx"];
+      const noHeader = ["src/app/error.tsx", "src/app/global-error.tsx"];
       if (menu.includes(file)) {
-        expect(source, file).toMatch(/<MenuBar current="(sites|materials)" \/>/);
+        expect(source, file).toMatch(/<MenuBar current="(sites|materials|about)" \/>/);
         expect(source, file).not.toContain("<AppBar");
       } else if (noHeader.includes(file)) {
         expect(source, file).not.toContain("<AppBar");
@@ -150,14 +154,15 @@ describe("input contrast", () => {
     }
   });
 
-  it("back links to the list go to /sites, and the landing page has no header", () => {
+  it("back links to the list go to /sites, and the landing page leads with the menu", () => {
     for (const file of SCREEN_SOURCES.filter((name) => name !== "src/app/page.tsx")) {
       const source = readFileSync(file, "utf8");
       expect(source, file).not.toContain('backHref="/"');
     }
     const landing = readFileSync("src/app/page.tsx", "utf8");
-    expect(landing).toContain('href="/sites"');
+    expect(landing).toContain('<MenuBar current="about" />');
     expect(landing).not.toContain("<AppBar");
+    expect(landing).not.toContain("Open sites");
   });
 
   it("the site screen lists penetrations under filter chips, with no blocked banner", () => {

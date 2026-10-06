@@ -188,7 +188,7 @@ How suitability and approval work:
 
 Mobile-first, because leaders are on site, but a plain responsive web page. The screens (detail in `ui-design.md`):
 
-1. **Sites** and **Materials**, the two top-level lists, reached from a drawer menu. Sites shows a status chip for each site; Materials shows each material's shared stock against every site's need.
+1. **Sites** and **Materials**, the two top-level lists, reached from a drawer menu. The landing page uses the same menu, with About this demo marked. Sites shows a status chip for each site; Materials shows each material's shared stock against every site's need.
 2. **Site.** The planned penetrations, with filter chips for shortages, data problems and recorded decisions. A clear site says "Crew can go"; missing data is never shown as zero or clear.
 3. **Penetration.** The nominated solution beside the penetration, field by field; each shortage as a line with this site's figures that opens its material page; substitutes, labelled not verified, with Propose; Escalate for a data problem.
 4. **Material.** The shared stock once, then one section per site that plans it, where that site's shortage is waited on or escalated (choose purchasing or warehouse, add a note). A confirmation names the effect in plain words ("This does not release the crew").

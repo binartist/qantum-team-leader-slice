@@ -15,11 +15,14 @@ export function PenetrationFilters({
   selected,
   counts,
   material = [],
+  fromMaterial,
 }: {
   siteId: string;
   selected: readonly ShowFilter[];
   counts: Readonly<Record<ShowFilter, number>>;
   material?: readonly string[];
+  /** Set when this site was opened from a material page, so chip links keep the way back. */
+  fromMaterial?: string;
 }) {
   return (
     <nav className={styles.filterDock} aria-label={FILTERS.label}>
@@ -30,7 +33,7 @@ export function PenetrationFilters({
             <li key={filter}>
               <Link
                 className={styles.filterChip}
-                href={showFilterHref(siteId, selected, filter, material)}
+                href={showFilterHref(siteId, selected, filter, material, fromMaterial)}
                 aria-current={on ? "true" : undefined}
               >
                 <span>{LABELS[filter]}</span>

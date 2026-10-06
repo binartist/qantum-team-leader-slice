@@ -5,6 +5,7 @@ import {
   plannedWorkLine,
   decisionScope,
   groupPlaces,
+  siteFromMaterialPath,
   siteMaterialPath,
   materialPagePath,
   siteMaterialLine,
@@ -195,6 +196,8 @@ describe("ratings, counts, and paths", () => {
     expect(materialPagePath("MAT-COLLAR-25", { siteId: "site-b", penetrationId: "pen-b-01" })).toBe(
       "/materials/MAT-COLLAR-25?from=pen-b-01#site-site-b",
     );
+    expect(siteFromMaterialPath("site-b", "MAT-COLLAR-25")).toBe("/sites/site-b?fromMaterial=MAT-COLLAR-25");
+    expect(siteFromMaterialPath("a/b", "c d")).toBe("/sites/a%2Fb?fromMaterial=c%20d");
     expect(siteMaterialPath("site-b", "MAT-COLLAR-25")).toBe("/sites/site-b?material=MAT-COLLAR-25");
     expect(siteMaterialPath("a/b", "c d")).toBe("/sites/a%2Fb?material=c%20d");
   });

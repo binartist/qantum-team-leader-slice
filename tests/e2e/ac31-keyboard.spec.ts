@@ -51,7 +51,7 @@ test("AC 31: escalate with the keyboard only, and targets are at least 44 by 44"
 
   // Opens the Propose dialog for measurement and does not send.
   await gotoApp(page, "/sites/site-b/penetrations/pen-b-01");
-  await page.getByRole("article").filter({ has: page.getByRole("heading", { name: "Solution 0451" }) }).getByRole("button", { name: /Propose this/ }).click();
+  await page.getByRole("region", { name: "Substitutes" }).getByRole("button", { name: /Propose this/ }).click();
   await expect(page.getByRole("dialog")).toBeVisible();
   await assertTargets(page);
   await page.keyboard.press("Escape");

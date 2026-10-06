@@ -16,7 +16,11 @@ export interface SubstituteChoice {
   readonly rows: readonly FitRow[];
 }
 
-/** One substitute at a time. The menu switches which solution is open, so the list does not stack. */
+/**
+ * One substitute at a time. The menu switches which solution is open, so the list does not stack.
+ * When the menu is shown it is the title: the solution shield sits on the closed control, and the
+ * heading underneath is omitted. A single candidate has no menu, so it keeps the heading.
+ */
 export function SubstituteSwitcher({
   siteId,
   penetrationId,
@@ -38,9 +42,12 @@ export function SubstituteSwitcher({
       {choices.length > 1 ? (
         <div className={styles.switchField}>
           <label className={styles.switchLabel} htmlFor={selectId}>
-            Select solution
+            Select candidate
           </label>
           <span className={styles.switchSelect}>
+            <span className={styles.switchMark}>
+              <KindIcon kind="solution" />
+            </span>
             <select id={selectId} className={styles.switchControl} value={selected.code} onChange={(event) => setCode(event.target.value)}>
               {choices.map((choice) => (
                 <option key={choice.code} value={choice.code}>
@@ -55,10 +62,12 @@ export function SubstituteSwitcher({
         </div>
       ) : null}
       <article>
-        <h3 className={styles.kindTitle}>
-          <KindIcon kind="solution" />
-          {`Solution ${selected.code}`}
-        </h3>
+        {choices.length > 1 ? null : (
+          <h3 className={styles.kindTitle}>
+            <KindIcon kind="solution" />
+            {`Solution ${selected.code}`}
+          </h3>
+        )}
         {selected.facts.length === 0 ? null : (
           <ul className={styles.list}>
             {selected.facts.map((fact) => (

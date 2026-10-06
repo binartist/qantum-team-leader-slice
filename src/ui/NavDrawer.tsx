@@ -3,15 +3,16 @@
 import Link from "next/link";
 import { Drawer } from "./Drawer";
 import { Icon } from "./Icon";
+import { KindIcon, type EntityKind } from "./KindIcon";
 import { MATERIALS_PATH } from "./format";
 import { NAV } from "./messages";
 import styles from "./primitives.module.css";
 
-export type NavSection = "sites" | "materials";
+export type NavSection = "sites" | "materials" | "about";
 
-const ITEMS: readonly { section: NavSection; href: string; label: string }[] = [
-  { section: "sites", href: "/sites", label: NAV.sites },
-  { section: "materials", href: MATERIALS_PATH, label: NAV.materials },
+const ITEMS: readonly { section: NavSection; href: string; label: string; kind: EntityKind }[] = [
+  { section: "sites", href: "/sites", label: NAV.sites, kind: "site" },
+  { section: "materials", href: MATERIALS_PATH, label: NAV.materials, kind: "material" },
 ];
 
 /** The menu control for a top-level screen and the left drawer it opens (AC 37). */
@@ -37,15 +38,17 @@ export function NavDrawer({ current }: { current: NavSection }) {
                 href={item.href}
                 aria-current={item.section === current ? "page" : undefined}
               >
-                {item.label}
+                <KindIcon kind={item.kind} />
+                <span>{item.label}</span>
               </Link>
             </li>
           ))}
         </ul>
       </nav>
       <div className={styles.navFooter}>
-        <Link className={styles.navItem} href="/">
-          {NAV.about}
+        <Link className={styles.navItem} href="/" aria-current={current === "about" ? "page" : undefined}>
+          <KindIcon kind="about" />
+          <span>{NAV.about}</span>
         </Link>
       </div>
     </Drawer>

@@ -30,7 +30,11 @@ test("a penetration page is titled by its place and split into Nominated solutio
   await expect(fitting.locator("svg")).toHaveCount(0);
   const subs = page.getByRole("region", { name: "Substitutes" });
   await expect(subs.getByText("Catalogue match, not verified")).toBeVisible();
-  await expect(subs.getByRole("heading", { name: "Solution 0451" })).toBeVisible();
+  // The menu is the title. The shield is on the closed control; the heading underneath is gone.
+  const menu = subs.getByRole("combobox", { name: "Select candidate" });
+  await expect(menu).toHaveValue("0451");
+  await expect(menu.locator("option:checked")).toHaveText("Solution 0451");
+  await expect(subs.getByRole("heading", { name: /^Solution / })).toHaveCount(0);
   await expect(subs.getByRole("columnheader", { name: "Solution 0451" })).toBeVisible();
   await expect(subs.getByRole("columnheader", { name: "Penetration" }).first()).toBeVisible();
 });

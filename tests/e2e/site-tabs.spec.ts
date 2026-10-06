@@ -7,6 +7,7 @@ test("AC 34: a blocked site has no summary banner; the chips filter the rows", a
   await gotoApp(page, "/sites/site-c");
   await expect(page.getByText("Blocked: hold the crew.")).toHaveCount(0);
   await expect(page.locator("main p").filter({ hasText: "Job ref KW-P2" })).toHaveText(/^Job ref KW-P2\s*5 penetrations, 5 solutions$/);
+  await expect(page.getByRole("heading", { level: 2, name: "Penetrations 5" })).toBeVisible();
   await expect(page.getByRole("link", { name: /5 penetrations, 5 solutions/ })).toHaveCount(0);
   const filters = page.getByRole("navigation", { name: "Filter penetrations" });
   await expect(filters.getByRole("link", { name: "Shortages 1" })).toBeVisible();
@@ -67,6 +68,7 @@ test("a clear site still reads Crew can go, and an empty filter says so", async 
   await gotoApp(page, "/sites/site-d");
   await expect(page.getByText("Nothing planned for this site")).toBeVisible();
   await expect(page.getByText("No penetrations planned for this site.")).toBeVisible();
+  await expect(page.getByRole("heading", { level: 2, name: "Penetrations 0" })).toBeVisible();
   await expect(page.getByText("On hand, shared, not reserved")).toHaveCount(0);
   await expect(page.getByText("Job ref OM-01", { exact: true })).toBeVisible();
   await expect(page.getByRole("link", { name: "Shortages 0" })).toBeVisible();

@@ -23,18 +23,10 @@ test("landing page explains the demo, no screen carries a Demo tag, and there is
   await expect(page.getByText("shares the same decisions", { exact: false })).toBeVisible();
   await expect(page.getByRole("link", { name: /^Demo/ })).toHaveCount(0);
   await expect(page.getByRole("contentinfo")).toHaveCount(0);
-  // Open sites sticks to the bottom: in view at the top of the page, and still in view at the end without covering text.
-  const open = page.getByRole("link", { name: "Open sites" });
-  await expect(open).toBeInViewport();
-  // It fills the screen width inside the 16px side gutters.
-  const openBox = await open.boundingBox();
-  if (!openBox) throw new Error("open sites has no box");
-  const viewport = page.viewportSize();
-  if (!viewport) throw new Error("no viewport");
-  expect(openBox.width).toBeGreaterThanOrEqual(viewport.width - 32 - 1);
-  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-  await expect(open).toBeInViewport();
-  await open.click();
+  await expect(page.getByRole("link", { name: "Open sites" })).toHaveCount(0);
+  await expect(page.getByRole("banner").getByRole("link", { name: /^Back to / })).toHaveCount(0);
+  await page.getByRole("button", { name: "Open menu" }).click();
+  await page.getByRole("dialog", { name: "Team leader" }).getByRole("link", { name: "Sites" }).click();
   await expect(page).toHaveURL(/\/sites$/);
 
   await expect(page.getByRole("heading", { level: 1, name: "Sites" })).toBeVisible();

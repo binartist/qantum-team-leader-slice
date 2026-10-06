@@ -29,7 +29,10 @@ test("AC 30: a material page shows need, short, who it is planned on, and its st
   await expect(page.getByRole("button", { name: "Escalate Pipe collar for 25 mm pipe at Harbour Point, Levels 3 to 5" })).toBeVisible();
   await expect(collar.getByText("L3, Riser 2 · PEX Pipe Ø25mm ×4", { exact: true })).toHaveCount(1);
   // Each site heading goes up to that site.
-  await expect(collar.getByRole("link", { name: "Harbour Point, Levels 3 to 5" })).toHaveAttribute("href", "/sites/site-b");
+  await expect(collar.getByRole("link", { name: "Harbour Point, Levels 3 to 5" })).toHaveAttribute(
+    "href",
+    "/sites/site-b?fromMaterial=MAT-COLLAR-25",
+  );
 
   await gotoApp(page, "/sites/site-b");
   await expect(page.getByText("Blocked: hold the crew.")).toHaveCount(0);

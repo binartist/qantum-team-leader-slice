@@ -7,6 +7,21 @@ function drawerOf(page: Page) {
   return page.getByRole("dialog", { name: "Team leader" });
 }
 
+test("AC 37: the landing page leads with the same menu, and About this demo is current", async ({ page }) => {
+  await gotoApp(page, "/");
+  await expect(page.getByRole("banner").getByRole("link", { name: /^Back to / })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Open sites" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Open menu" }).click();
+  const drawer = drawerOf(page);
+  await expect(drawer.getByRole("link", { name: "About this demo" })).toHaveAttribute("aria-current", "page");
+  const nav = drawer.getByRole("navigation", { name: "Main" });
+  await expect(nav.getByRole("link", { name: "Sites" })).not.toHaveAttribute("aria-current", "page");
+  await expect(nav.getByRole("link", { name: "Materials" })).not.toHaveAttribute("aria-current", "page");
+  await drawer.getByRole("link", { name: "Sites" }).click();
+  await expect(page).toHaveURL(/\/sites$/);
+  await expect(drawer).toBeHidden();
+});
+
 test("AC 37: the menu opens a left drawer with Sites and Materials, the current one marked", async ({ page }) => {
   await gotoApp(page, "/sites");
   // The leading control on a top-level list is the menu, never a back control.

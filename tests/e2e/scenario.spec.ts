@@ -16,7 +16,8 @@ test("scenario: escalate sealant, propose 0451, then Kingsway still cannot go", 
   });
 
   await gotoApp(page, "/");
-  await page.getByRole("link", { name: "Open sites" }).click();
+  await page.getByRole("button", { name: "Open menu" }).click();
+  await page.getByRole("link", { name: "Sites" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Sites" })).toBeVisible();
   await page.getByRole("link", { name: /Harbour Point/ }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Harbour Point, Levels 3 to 5" })).toBeVisible();
@@ -78,23 +79,22 @@ test("scenario: escalate sealant, propose 0451, then Kingsway still cannot go", 
   await gotoApp(page, "/sites/site-b?material=MAT-SEALANT");
   await expect(page.getByText("Using Intumescent sealant, 310 ml cartridge · 12 of 12")).toBeVisible();
   await page.locator("a[href$='/penetrations/pen-b-01']").click();
-  const usesShort = page.getByRole("article").filter({ has: page.getByRole("heading", { name: "Solution 0451" }) });
-  const unmapped = page.getByRole("article").filter({ has: page.getByRole("heading", { name: "Solution 0464" }) });
+  const substitute = page.getByRole("region", { name: "Substitutes" });
   await expect(page.getByText("Catalogue match, not verified")).toBeVisible();
-  await expect(usesShort.getByRole("link", { name: /^Short material: Intumescent sealant, 310 ml cartridge · this site short 2 of 10$/ })).toBeVisible();
+  await expect(substitute.getByRole("link", { name: /^Short material: Intumescent sealant, 310 ml cartridge · this site short 2 of 10$/ })).toBeVisible();
   await expect(page.getByText("Materials in stock")).toHaveCount(0);
   const fit = page.getByRole("region", { name: "Nominated solution 0438" }).getByRole("table");
   await expect(fit.getByRole("row", { name: /Integrity/ })).toContainText("60 min required");
   await expect(fit.getByRole("row", { name: /Insulation/ })).toContainText("30 min required");
-  const substituteTable = usesShort.getByRole("table");
+  const substituteTable = substitute.getByRole("table");
   await expect(substituteTable.getByRole("columnheader", { name: "Solution 0451" })).toBeVisible();
   await expect(substituteTable.getByRole("row", { name: /Supplier ref/ })).toContainText("V21.27-22SFR00053-158-E");
-  await expect(usesShort.getByText("on hand")).toHaveCount(0);
-  await page.getByLabel("Select solution").selectOption("0464");
-  await expect(unmapped.getByText("We can't tell if its materials are in stock.")).toBeVisible();
-  await page.getByLabel("Select solution").selectOption("0451");
+  await expect(substitute.getByText("on hand")).toHaveCount(0);
+  await page.getByLabel("Select candidate").selectOption("0464");
+  await expect(substitute.getByText("We can't tell if its materials are in stock.")).toBeVisible();
+  await page.getByLabel("Select candidate").selectOption("0451");
 
-  await usesShort.getByRole("button", { name: /Propose this/ }).click();
+  await substitute.getByRole("button", { name: /Propose this/ }).click();
   const propose = page.getByRole("dialog");
   await expect(propose.getByText("A manager has to verify this catalogue match.")).toBeVisible();
   const posts: string[] = [];

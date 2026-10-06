@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { penetrationLine, penetrationPath, penetrationsByPlace, type PenetrationRow } from "./format";
 import { Icon } from "./Icon";
+import { KindIcon } from "./KindIcon";
 import { SUBSTITUTES } from "./messages";
 import type { StatusView } from "./status";
 import { StatusChip } from "./StatusChip";
@@ -29,7 +30,10 @@ export function PenetrationGroups({
         <li key={place.id}>
           <Link className={styles.penetrationLink} href={penetrationPath(siteId, place.id)}>
             <span className={styles.penetrationLines}>
-              <span>{penetrationLine(place)}</span>
+              <span className={styles.kindTitle}>
+                <KindIcon kind="penetration" />
+                <span>{penetrationLine(place)}</span>
+              </span>
               <span className={styles.factChips}>
                 {(chips?.(place.id) ?? []).map((chip) => (
                   <StatusChip key={chip.label} status={chip} />

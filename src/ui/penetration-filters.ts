@@ -87,12 +87,13 @@ export function filterCounts(
   return counts;
 }
 
-/** Toggles one chip and keeps the others, plus any material filter, in a stable query. */
+/** Toggles one chip and keeps the others, plus any material filter and the material page this site was opened from. */
 export function showFilterHref(
   siteId: string,
   selected: readonly ShowFilter[],
   toggle: ShowFilter,
   material: readonly string[] = [],
+  fromMaterial?: string,
 ): string {
   const next = new Set(selected);
   if (next.has(toggle)) next.delete(toggle);
@@ -102,6 +103,7 @@ export function showFilterHref(
     if (next.has(filter)) parts.push(`show=${encodeURIComponent(filter)}`);
   }
   for (const value of material) parts.push(`material=${encodeURIComponent(value)}`);
+  if (fromMaterial !== undefined && fromMaterial.length > 0) parts.push(`fromMaterial=${encodeURIComponent(fromMaterial)}`);
   const query = parts.join("&");
   return query.length === 0 ? sitePath(siteId) : `${sitePath(siteId)}?${query}`;
 }

@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
-import Link from "next/link";
-import { Icon } from "./Icon";
+import { BackControl } from "./BackControl";
 import { NavDrawer, type NavSection } from "./NavDrawer";
 import styles from "./primitives.module.css";
 
@@ -13,20 +12,17 @@ import styles from "./primitives.module.css";
 export function AppBar({ backHref, backName, end }: { backHref: string; backName: string; end?: ReactNode }) {
   return (
     <header className={styles.appBar}>
-      <Link
+      <BackControl
         className={end ? `${styles.backControl} ${styles.backControlBeside}` : styles.backControl}
         href={backHref}
-        aria-label={`Back to ${backName}`}
-      >
-        <Icon name="chevron-left" />
-        <span className={styles.backLabel}>{backName}</span>
-      </Link>
+        name={backName}
+      />
       {end}
     </header>
   );
 }
 
-/** The sticky header for a top-level screen (Sites, Materials): the menu control that opens the drawer. */
+/** The sticky header for a top-level screen (the landing page, Sites, Materials): the menu control that opens the drawer. */
 export function MenuBar({ current }: { current: NavSection }) {
   return (
     <header className={styles.appBar}>
