@@ -37,7 +37,7 @@ describe("kind icons", () => {
       ["src/app/materials/[materialId]/page.tsx", 'kind="penetration"'],
       ["src/app/materials/page.tsx", 'kind="material"'],
       ["src/ui/SubstituteSwitcher.tsx", 'kind="solution"'],
-      ["src/ui/ActionRow.tsx", 'kind="decision"'],
+      ["src/ui/NavDrawer.tsx", 'kind: "decision"'],
       ["src/app/sites/[id]/penetrations/[pid]/page.tsx", 'kind="solution"'],
       ["src/ui/PenetrationGroups.tsx", 'kind="penetration"'],
       ["src/ui/NavDrawer.tsx", 'kind="about"'],

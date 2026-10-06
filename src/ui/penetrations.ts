@@ -1,5 +1,5 @@
 import { materialPagePath, shortageBrief } from "./format";
-import { availabilityStatus, blockerReason, type AvailabilityChip, type BlockerCode, type FitFieldCode, type StatusView } from "./status";
+import { availabilityStatus, blockerReason, proposalMark, type AvailabilityChip, type BlockerCode, type FitFieldCode, type StatusView } from "./status";
 
 /** A per-penetration fact. On the penetration page a shortage links to its material page. */
 export interface PenetrationFact extends StatusView {
@@ -151,7 +151,8 @@ export function rowMarks(
   if (decisions) {
     const escalated = decisionCountMark(decisions.escalations, "Escalated", "Escalated", "escalation", "arrow-up");
     const waiting = decisionCountMark(decisions.waits, "Waiting", "Waiting", "info", "clock");
-    const proposed = decisionCountMark(decisions.proposals, "Proposed substitute", "Proposed substitutes", "neutral", "swap");
+    const { tone, icon } = proposalMark();
+    const proposed = decisionCountMark(decisions.proposals, "Proposed substitute", "Proposed substitutes", tone, icon);
     if (escalated) marks.push(escalated);
     if (waiting) marks.push(waiting);
     if (proposed) marks.push(proposed);

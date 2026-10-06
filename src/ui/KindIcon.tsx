@@ -27,7 +27,13 @@ export function KindIcon({ kind }: { kind: EntityKind }) {
       {kind === "solution" ? <path d="M10 2.5 16 5v4.5c0 4-2.6 6.8-6 8-3.4-1.2-6-4-6-8V5z" /> : null}
       {kind === "decision" ? <path d="M6.5 4H4.5v13.5h11V4h-2 M7 2.5h6V5.5H7z M7.5 10h5 M7.5 13h5" /> : null}
       {kind === "penetration" ? <path d="M5 5.5h10v9H5z M2.5 10h15" /> : null}
-      {kind === "about" ? <path d="M6 3.5h6l3.5 3.5V16.5H6z M12 3.5V7h3.5 M8.5 10.5h4 M8.5 13.5h4" /> : null}
+      {/* An "i" in a rounded square: about the app, unlike the clipboard of a decision or the page of a log. */}
+      {kind === "about" ? (
+        <>
+          <path d="M6 3.5h8a2.5 2.5 0 0 1 2.5 2.5v8a2.5 2.5 0 0 1-2.5 2.5H6A2.5 2.5 0 0 1 3.5 14V6A2.5 2.5 0 0 1 6 3.5z M10 9.5v4.5" />
+          <circle cx="10" cy="6.75" fill="currentColor" stroke="none" r="0.95" />
+        </>
+      ) : null}
     </svg>
   );
 }
