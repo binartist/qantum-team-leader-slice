@@ -68,7 +68,7 @@ describe("fixed screen copy", () => {
 });
 
 const SCREEN_SOURCES = [
-  "src/app/page.tsx",
+  "src/app/about-this-demo/page.tsx",
   "src/app/sites/page.tsx",
   "src/app/not-found.tsx",
   "src/app/error.tsx",
@@ -89,12 +89,12 @@ describe("navigation shell", () => {
     expect(existsSync("src/app/loading.tsx")).toBe(false);
   });
 
-  it("each screen has one leading control (back or menu), its h1 in main, and no LinkButton to go back", () => {
+  it("AC 37: top-level pages use MenuBar and inner pages use AppBar, never both", () => {
     for (const file of SCREEN_SOURCES) {
       const source = readFileSync(file, "utf8");
       // AC 37: the leading control is the back control or the menu, never both. The landing page, Sites,
       // Materials and the Actions log carry the menu; inner screens a back control; the error screens have no header.
-      const menu = ["src/app/page.tsx", "src/app/sites/page.tsx", "src/app/materials/page.tsx", "src/app/actions/page.tsx"];
+      const menu = ["src/app/about-this-demo/page.tsx", "src/app/sites/page.tsx", "src/app/materials/page.tsx", "src/app/actions/page.tsx"];
       const noHeader = ["src/app/error.tsx", "src/app/global-error.tsx"];
       if (menu.includes(file)) {
         expect(source, file).toMatch(/<MenuBar current="(sites|materials|actions|about)" \/>/);
@@ -112,6 +112,20 @@ describe("navigation shell", () => {
       const backBlocks = linkButtonBlocks(source).filter((block) => /backHref|backName/.test(block));
       expect(backBlocks, file).toEqual([]);
     }
+  });
+
+  it("AC 47: the root layout renders the side menu beside every page", () => {
+    const layout = readFileSync("src/app/layout.tsx", "utf8");
+    expect(layout).toContain("<SideMenu");
+    expect(layout).not.toMatch(/<header\b/);
+    const menu = readFileSync("src/ui/SideMenu.tsx", "utf8");
+    expect(menu).toContain("<aside");
+    expect(menu).toContain("navSectionForPath");
+    const bar = readFileSync("src/ui/AppBar.tsx", "utf8");
+    expect(bar).toContain("data-menu-bar");
+    const primitives = readFileSync("src/ui/primitives.module.css", "utf8");
+    expect(primitives).toContain("grid-template-columns 150ms");
+    expect(primitives).toContain(':global(:root[data-sidebar="collapsed"])');
   });
 
   it("the root layout has no demo footer and no header, and no screen carries a Demo tag (user decision)", () => {
@@ -156,11 +170,11 @@ describe("input contrast", () => {
   });
 
   it("back links to the list go to /sites, and the landing page leads with the menu", () => {
-    for (const file of SCREEN_SOURCES.filter((name) => name !== "src/app/page.tsx")) {
+    for (const file of SCREEN_SOURCES.filter((name) => name !== "src/app/about-this-demo/page.tsx")) {
       const source = readFileSync(file, "utf8");
       expect(source, file).not.toContain('backHref="/"');
     }
-    const landing = readFileSync("src/app/page.tsx", "utf8");
+    const landing = readFileSync("src/app/about-this-demo/page.tsx", "utf8");
     expect(landing).toContain('<MenuBar current="about" />');
     expect(landing).not.toContain("<AppBar");
     expect(landing).not.toContain("Open sites");

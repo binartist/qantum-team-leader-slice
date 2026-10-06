@@ -28,7 +28,7 @@ export default function LandingPage() {
           <ul>
             <li>
               <p>
-                The menu, top left, opens <Link href="/sites">Sites</Link>, <Link href={MATERIALS_PATH}>Materials</Link>, the{" "}
+                The menu (beside the page on a wide screen, top left on a phone) opens <Link href="/sites">Sites</Link>, <Link href={MATERIALS_PATH}>Materials</Link>, the{" "}
                 <Link href={ACTIONS_PATH}>Actions log</Link> and this page.
               </p>
             </li>

@@ -752,7 +752,8 @@ section:has(> .stickyHeading) {
   margin-top: 0;
 }
 
-.srOnly {
+.srOnly,
+:global(:root[data-sidebar="collapsed"]) .sideMenu .navLabel {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -784,6 +785,14 @@ section:has(> .stickyHeading) {
   margin-top: 0;
 }
 
+/* Wide screens use the side menu. The trigger would otherwise sit alone in an empty header. */
+@media (min-width: 1024px) {
+  .menuBar,
+  .menuButton {
+    display: none;
+  }
+}
+
 @keyframes navSlideIn {
   from {
     transform: translateX(-100%);
@@ -810,6 +819,7 @@ section:has(> .stickyHeading) {
 }
 
 .navItem {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -927,4 +937,140 @@ section:has(> .stickyHeading) {
 .headingLink .kindIcon,
 .headingLink .icon {
   margin-top: 0;
+}
+
+/* Below 1024px the drawer is the menu. From 1024px the shell is a fixed column plus the page. */
+.appShell {
+  display: flex;
+  flex: 1 0 auto;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+}
+
+.appContent {
+  display: flex;
+  flex: 1 0 auto;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+}
+
+.sideMenu {
+  display: none;
+}
+
+.collapseButton {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.collapseButton .icon {
+  margin-top: 0;
+}
+
+.collapseIconCollapsed {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .appShell {
+    display: grid;
+    grid-template-columns: 15rem minmax(0, 1fr);
+    align-items: start;
+  }
+
+  :global(:root[data-sidebar="collapsed"]) .appShell {
+    grid-template-columns: 4rem minmax(0, 1fr);
+  }
+
+  .sideMenu {
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 0;
+    align-self: start;
+    box-sizing: border-box;
+    width: 15rem;
+    min-width: 0;
+    height: 100dvh;
+    overflow-x: hidden;
+    overflow-y: auto;
+    border-right: 1px solid var(--border);
+    background: var(--bg);
+  }
+
+  :global(:root[data-sidebar="collapsed"]) .sideMenu {
+    width: 4rem;
+  }
+
+  /* The theme row is one line in the drawer. The 15rem rail is tighter, so the pills give up a little padding. */
+  .sideMenu .navFooter {
+    padding-inline: 0.25rem;
+  }
+
+  .sideMenu .themeSwitch {
+    gap: 0.5rem;
+    padding-left: 0.5rem;
+    padding-right: 0;
+  }
+
+  .sideMenu .themeOption {
+    padding-inline: 0.625rem;
+  }
+
+  :global(:root[data-sidebar="collapsed"]) .sideMenu .drawerHeader {
+    justify-content: center;
+    padding-inline: 0;
+    border-bottom: 0;
+  }
+
+  :global(:root[data-sidebar="collapsed"]) .sideMenu .drawerTitle,
+  :global(:root[data-sidebar="collapsed"]) .sideMenu .navFooter {
+    display: none;
+  }
+
+  :global(:root[data-sidebar="collapsed"]) .sideMenu .navPanel {
+    padding-inline: 0;
+  }
+
+  :global(:root[data-sidebar="collapsed"]) .sideMenu .navItem {
+    justify-content: center;
+    gap: 0;
+    min-width: 44px;
+    min-height: 44px;
+    padding-inline: 0;
+  }
+
+  :global(:root[data-sidebar="collapsed"]) .sideMenu .navItem:focus-visible,
+  :global(:root[data-sidebar="collapsed"]) .sideMenu .collapseButton:focus-visible {
+    outline-offset: -2px;
+  }
+
+  :global(:root[data-sidebar="collapsed"]) .collapseIconExpanded {
+    display: none;
+  }
+
+  :global(:root[data-sidebar="collapsed"]) .collapseIconCollapsed {
+    display: inline-flex;
+  }
+}
+
+@media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+  .appShell {
+    transition: grid-template-columns 150ms ease;
+  }
+
+  .sideMenu {
+    transition: width 150ms ease;
+  }
 }

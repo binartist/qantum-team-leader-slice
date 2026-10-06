@@ -37,10 +37,10 @@ describe("kind icons", () => {
       ["src/app/materials/[materialId]/page.tsx", 'kind="penetration"'],
       ["src/app/materials/page.tsx", 'kind="material"'],
       ["src/ui/SubstituteSwitcher.tsx", 'kind="solution"'],
-      ["src/ui/NavDrawer.tsx", 'kind: "decision"'],
+      ["src/ui/NavContent.tsx", 'kind: "decision"'],
       ["src/app/sites/[id]/penetrations/[pid]/page.tsx", 'kind="solution"'],
       ["src/ui/PenetrationGroups.tsx", 'kind="penetration"'],
-      ["src/ui/NavDrawer.tsx", 'kind="about"'],
+      ["src/ui/NavContent.tsx", 'kind="about"'],
     ];
     for (const [file, use] of uses) expect(readFileSync(file, "utf8"), `${file} ${use}`).toContain(use);
   });

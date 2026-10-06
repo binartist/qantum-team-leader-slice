@@ -1,6 +1,6 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useId, useSyncExternalStore } from "react";
 import { THEME } from "./messages";
 import { THEME_CHOICES, applyTheme, readTheme, type ThemeChoice } from "./theme";
 import styles from "./primitives.module.css";
@@ -14,6 +14,8 @@ function subscribe(onChange: () => void): () => void {
 
 /** System, Light or Dark, as one radio group. The server renders System; the browser then shows the stamped choice. */
 export function ThemeSwitch() {
+  // The drawer and the side menu each render one; a shared name would make all six radios one group.
+  const name = useId();
   const current = useSyncExternalStore(
     subscribe,
     () => readTheme(document.documentElement),
@@ -31,7 +33,7 @@ export function ThemeSwitch() {
       <div className={styles.themeOptions}>
         {THEME_CHOICES.map((choice) => (
           <label key={choice} className={styles.themeOption}>
-            <input type="radio" name="theme" value={choice} checked={current === choice} onChange={() => choose(choice)} />
+            <input type="radio" name={name} value={choice} checked={current === choice} onChange={() => choose(choice)} />
             <span>{THEME[choice]}</span>
           </label>
         ))}
