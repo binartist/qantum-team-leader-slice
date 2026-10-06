@@ -15,8 +15,9 @@ export default async function SitesPage() {
   const loaded = await loadPage(() => listSites(getDependencies()));
   return (
     <>
-      <AppBar title="Sites" />
+      <AppBar />
       <main>
+        <h1>Sites</h1>
         {loaded.status === "unavailable" ? (
           <UnavailablePanel status={{ label: SITES_UNAVAILABLE, tone: "warning", icon: "warning" }} />
         ) : loaded.value.sites.length === 0 ? (

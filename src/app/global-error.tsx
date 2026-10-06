@@ -13,8 +13,9 @@ export default function GlobalError({ retry }: { error: unknown; retry: () => vo
         <title>Something went wrong</title>
       </head>
       <body>
-        <AppBar title="Something went wrong" />
+        <AppBar />
         <main>
+          <h1>Something went wrong</h1>
           <p>Try again.</p>
           <Button type="button" className={styles.primary} onClick={() => retry()}>
             {BUTTONS.tryAgain}

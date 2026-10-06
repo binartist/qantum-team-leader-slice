@@ -109,7 +109,9 @@ test("scenario: escalate sealant, propose 0451, then Kingsway still cannot go", 
 
   await gotoApp(page, "/sites");
   await page.getByRole("link", { name: /Kingsway Works/ }).click();
-  await expect(page.getByRole("heading", { name: "Data problems" })).toBeVisible();
+  await expect(page.getByText("Blocked: hold the crew.")).toBeVisible();
+  await page.getByRole("navigation", { name: "Site sections" }).getByRole("link", { name: "Data problems 2" }).click();
+  await expect(page.getByRole("heading", { name: "Data problems" })).toBeAttached();
   await expect(page.getByText("Solution code 9999 isn't in the catalogue")).toBeVisible();
   await expect(page.getByText("No materials recorded for solution 0393")).toBeVisible();
   await expect(page.getByText("Crew can go")).toHaveCount(0);

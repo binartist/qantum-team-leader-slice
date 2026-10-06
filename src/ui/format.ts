@@ -177,6 +177,10 @@ export function sitePath(siteId: string): string {
   return `/sites/${encodeURIComponent(siteId)}`;
 }
 
+export function dataProblemsPath(siteId: string): string {
+  return `/sites/${encodeURIComponent(siteId)}/data-problems`;
+}
+
 export function actionsPath(siteId: string): string {
   return `/sites/${encodeURIComponent(siteId)}/actions`;
 }

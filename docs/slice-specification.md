@@ -83,7 +83,7 @@ Numbered for use as test names. Sample data is defined in section 7.
 31. All controls are keyboard operable, and interactive targets are at least 44px.
 32. On a 375px wide screen, nothing needs horizontal scrolling.
 33. A candidate that uses a material the site is already short of has availability `short`, even when one install fits in the stock on hand. A material whose site stock is unknown makes the candidate `unknown`. Shortages of other materials leave a candidate that fits on hand `in_stock`.
-34. A blocked banner with both shortages and data problems says to hold the crew until stock arrives and the data problems are sorted. With shortages only, it reads as before.
+34. On the site screen, a blocked site's banner reads "Blocked: hold the crew." on every tab, above the tabs. The tab labels carry the number of shortages and data problems, so the banner never needs to and no tab can hide them. The sites list chip still names the counts.
 
 ## 5. Non-functional requirements
 
@@ -129,7 +129,7 @@ Real authentication, a real inventory or nomination service, approval of substit
 ## 9. Demonstration scenario
 
 1. Open the app. The landing page says it is a demo with invented data. Open sites: site B is blocked.
-2. Open site B. The banner says blocked with N shortages, and the stock figures are labelled shared and not reserved.
+2. Open site B. The banner says blocked, the tabs show N shortages, and the stock figures are labelled shared and not reserved.
 3. Escalate the sealant shortage to purchasing with a note. State shows escalated. Crew is still blocked, and the screen says why.
 4. Open the penetration nominating `0438`. See candidates `0451` and `0464` labelled not verified. `0451` uses sealant, which this site is short of, and says so. Propose `0451` with a reason. It is listed as proposed and nothing else changes.
 5. Open the penetration nominating `0344`. See "no catalogue match, escalate instead".

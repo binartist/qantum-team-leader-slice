@@ -62,9 +62,16 @@ test("landing page explains the demo, every other screen carries a Demo tag, and
   await expect(back).toContainText("Sites");
   const headerBox = await page.getByRole("banner").boundingBox();
   if (!headerBox) throw new Error("header has no box");
-  expect(box.y).toBeGreaterThanOrEqual(headerBox.y + headerBox.height - 1);
-  expect(box.width).toBeGreaterThanOrEqual(44);
-  expect(box.height).toBeGreaterThanOrEqual(44);
+  // The header is one compact row; the back control sits inside it. The title is the h1 in main, in full, below the header.
+  expect(box.y).toBeGreaterThanOrEqual(headerBox.y);
+  expect(box.y + box.height).toBeLessThanOrEqual(headerBox.y + headerBox.height + 1);
+  expect(headerBox.height).toBeLessThan(64);
+  const title = page.getByRole("main").getByRole("heading", { level: 1, name: "Harbour Point, Levels 3 to 5" });
+  await expect(title).toBeVisible();
+  const titleBox = await title.boundingBox();
+  if (!titleBox) throw new Error("title has no box");
+  expect(titleBox.y).toBeGreaterThanOrEqual(headerBox.y + headerBox.height - 1);
+  await expect(page.getByRole("banner").getByRole("heading")).toHaveCount(0);
   await back.click();
   await expect(page).toHaveURL(/\/sites$/);
   await expect(page.getByRole("heading", { level: 1, name: "Sites" })).toBeVisible();

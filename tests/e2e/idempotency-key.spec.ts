@@ -15,7 +15,7 @@ test("a failed send keeps the idempotency key and does not announce success", as
     await route.abort();
   });
 
-  await gotoApp(page, "/sites/site-c");
+  await gotoApp(page, "/sites/site-c/data-problems");
   const card = page.getByRole("article").filter({ has: page.getByRole("heading", { name: "L1, Basement link" }) });
   await card.getByRole("button", { name: /Escalate/ }).click();
   const dialog = page.getByRole("dialog");

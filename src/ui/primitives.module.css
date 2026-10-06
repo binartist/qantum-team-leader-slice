@@ -262,18 +262,23 @@
   display: flex;
   flex: none;
   align-items: center;
-  gap: 0.25rem;
+  justify-content: space-between;
+  gap: 0.5rem;
   align-self: center;
+  box-sizing: border-box;
   width: min(100%, 45rem);
-  padding: 0.25rem var(--space);
+  height: var(--app-bar-height);
+  padding: 0 var(--space);
   border-bottom: 1px solid var(--border);
   background: var(--bg);
   color: var(--text);
 }
 
-.appBar h1 {
-  flex: 1 1 auto;
-  min-width: 0;
+/* A long parent name is cut with an ellipsis; the link's accessible name still carries it in full. */
+.backLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Full-width bar; the button fills it inside the side gutter, capped at the content width. */
@@ -297,6 +302,7 @@
 .demoTag {
   display: inline-flex;
   flex: none;
+  margin-left: auto;
   align-items: center;
   justify-content: center;
   min-width: 44px;
@@ -314,10 +320,65 @@
   font-weight: 600;
 }
 
-.backRow {
-  align-self: center;
-  width: min(100%, 45rem);
-  padding: 0 var(--space);
+/* Route-based tabs: links, the current one marked with aria-current. Sized by their content so all three
+   fit one line at 375px; on a narrower screen a label wraps rather than pushing a tab off screen. */
+/* The tab bar sticks directly below the header, full width of the content column, so the counts stay in view. */
+.tabBar {
+  position: sticky;
+  top: var(--app-bar-height);
+  z-index: 1;
+  max-width: none;
+  margin-inline: calc(-1 * var(--space));
+  padding-inline: var(--space);
+  background: var(--bg);
+}
+
+.tabs {
+  display: flex;
+  margin: 0;
+  padding: 0;
+  border-bottom: 1px solid var(--border);
+  list-style: none;
+}
+
+.tabs > li {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.tab {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem 0.375rem;
+  min-height: 44px;
+  padding: 0.25rem;
+  border-bottom: 3px solid transparent;
+  color: var(--text);
+  font-size: 0.875rem;
+  line-height: 1.2;
+  text-align: center;
+  text-decoration: none;
+}
+
+.tab[aria-current="page"] {
+  border-bottom-color: var(--link);
+  color: var(--link);
+  font-weight: 600;
+}
+
+.tabCount {
+  min-width: 1.25rem;
+  padding: 0 0.3125rem;
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-align: center;
 }
 
 .backControl {
@@ -325,6 +386,7 @@
   align-items: center;
   gap: 0.25rem;
   min-width: 44px;
+  max-width: calc(100% - 4rem);
   min-height: 44px;
   margin-left: -0.5rem;
   padding-inline: 0.5rem;

@@ -11,6 +11,15 @@ export const MANAGER_CHECK = "A manager has to verify this catalogue match.";
 export const EMPTY = {
   sites: "No sites to show.",
   actions: "Nothing recorded for this site yet.",
+  shortages: "No shortages.",
+  dataProblems: "No data problems.",
+} as const;
+
+export const TABS = {
+  label: "Site sections",
+  shortages: "Shortages",
+  dataProblems: "Data problems",
+  actions: "Actions log",
 } as const;
 
 export const SITES_UNAVAILABLE = "Can't check the sites right now. Don't assume any site is clear. Try again.";
@@ -61,23 +70,11 @@ export function apiErrorMessage(code: string): string {
   return ERRORS[code] ?? FALLBACK;
 }
 
-export function readinessBanner(status: string, shortages: number, blockers: number): StatusView {
+/** The site screen's banner. It only says whether the crew can go: the tab labels carry the counts (AC 34). */
+export function readinessBanner(status: string): StatusView {
   switch (status) {
-    case "blocked": {
-      if (shortages === 0 && blockers > 0) {
-        const problems = `${blockers} ${blockers === 1 ? "data problem" : "data problems"}`;
-        return { label: `Blocked: ${problems}. Hold the crew until they are sorted.`, tone: "danger", icon: "cross" };
-      }
-      const shortageText = `${shortages} ${shortages === 1 ? "shortage" : "shortages"}`;
-      const problem = blockers > 0 ? ` (and ${blockers} ${blockers === 1 ? "data problem" : "data problems"})` : "";
-      // Stock arriving does not fix a data problem, so the next step names both.
-      const nextStep = blockers > 0 ? "Hold the crew until stock arrives and the data problems are sorted." : "Hold the crew until stock arrives.";
-      return {
-        label: `Blocked: ${shortageText}${problem}. ${nextStep}`,
-        tone: "danger",
-        icon: "cross",
-      };
-    }
+    case "blocked":
+      return { label: "Blocked: hold the crew.", tone: "danger", icon: "cross" };
     case "nothing_planned":
       return { label: "Nothing planned for this site", tone: "neutral", icon: "dashed-circle" };
     case "clear":

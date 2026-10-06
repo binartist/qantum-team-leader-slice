@@ -3,6 +3,7 @@ import {
   actionSentence,
   actionTarget,
   actionsPath,
+  dataProblemsPath,
   affectedCount,
   formatMaterialSummary,
   formatNeed,
@@ -210,6 +211,8 @@ describe("ratings, counts, and paths", () => {
     expect(penetrationPath("a/b", "c d")).toBe("/sites/a%2Fb/penetrations/c%20d");
     expect(sitePath("a/b")).toBe("/sites/a%2Fb");
     expect(actionsPath("a/b")).toBe("/sites/a%2Fb/actions");
+    expect(dataProblemsPath("site-c")).toBe("/sites/site-c/data-problems");
+    expect(dataProblemsPath("a/b")).toBe("/sites/a%2Fb/data-problems");
   });
 });
 
