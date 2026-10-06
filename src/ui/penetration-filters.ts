@@ -40,20 +40,22 @@ export function materialValues(value: string | string[] | undefined): string[] {
 
 /**
  * One penetration matches a chip when that fact is true of it. Unknown stock is a shortage. Acted means a
- * wait or an escalation on a shortage that lists it, or on its own data problem. None of these is "ready".
+ * wait or an escalation on a shortage that lists it or on its own data problem, or a substitute proposed for it
+ * (`proposed`). None of these is "ready".
  */
 export function penetrationMatches(
   penetrationId: string,
   filter: ShowFilter,
   shortages: readonly FilterShortage[],
   blockers: readonly FilterBlocker[],
+  proposed: ReadonlySet<string> = new Set(),
 ): boolean {
   if (filter === "shortages") return shortages.some((shortage) => shortage.penetrationIds.includes(penetrationId));
   if (filter === "data-problems") return blockers.some((blocker) => blocker.penetrationId === penetrationId);
   const acted = (state: string) => state === "escalated" || state === "waiting";
   const shortageHit = shortages.some((shortage) => acted(shortage.state) && shortage.penetrationIds.includes(penetrationId));
   const blockerHit = blockers.some((blocker) => acted(blocker.state) && blocker.penetrationId === penetrationId);
-  return shortageHit || blockerHit;
+  return shortageHit || blockerHit || proposed.has(penetrationId);
 }
 
 /** No chip selected means the whole list. Otherwise a penetration is kept when any selected chip matches it. */
@@ -62,9 +64,10 @@ export function matchingPenetrations<T extends { readonly id: string }>(
   selected: readonly ShowFilter[],
   shortages: readonly FilterShortage[],
   blockers: readonly FilterBlocker[],
+  proposed: ReadonlySet<string> = new Set(),
 ): readonly T[] {
   if (selected.length === 0) return places;
-  return places.filter((place) => selected.some((filter) => penetrationMatches(place.id, filter, shortages, blockers)));
+  return places.filter((place) => selected.some((filter) => penetrationMatches(place.id, filter, shortages, blockers, proposed)));
 }
 
 /** How many penetrations match each chip, counted on the full list, including zero. */
@@ -72,11 +75,12 @@ export function filterCounts(
   places: readonly { readonly id: string }[],
   shortages: readonly FilterShortage[],
   blockers: readonly FilterBlocker[],
+  proposed: ReadonlySet<string> = new Set(),
 ): Record<ShowFilter, number> {
   const counts: Record<ShowFilter, number> = { shortages: 0, "data-problems": 0, acted: 0 };
   for (const place of places) {
     for (const filter of SHOW_FILTERS) {
-      if (penetrationMatches(place.id, filter, shortages, blockers)) counts[filter] += 1;
+      if (penetrationMatches(place.id, filter, shortages, blockers, proposed)) counts[filter] += 1;
     }
   }
   return counts;

@@ -1,5 +1,5 @@
 export type Tone = "success" | "danger" | "warning" | "neutral" | "info" | "escalation";
-export type IconName = "check" | "stop" | "dashed-circle" | "warning" | "clock" | "arrow-up";
+export type IconName = "check" | "stop" | "dashed-circle" | "warning" | "clock" | "arrow-up" | "swap";
 
 export interface StatusView {
   readonly label: string;

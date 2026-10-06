@@ -55,7 +55,14 @@ test("scenario: escalate sealant, propose 0451, then Kingsway still cannot go", 
   expect(key).toBeTruthy();
 
   await expect(page.locator("[data-announcer]")).toHaveText("Escalation recorded");
-  await expect(page.getByText("Escalated", { exact: true })).toBeVisible();
+  await page.getByRole("navigation", { name: "Material" }).getByRole("link", { name: /Actions log/ }).click();
+  await expect(page).toHaveURL(/tab=log/);
+  await expect(page).toHaveURL(/from=pen-b-01/);
+  await expect(page.getByText("Escalated to purchasing: Intumescent sealant, 310 ml cartridge")).toBeVisible();
+  await expect(page.getByText("At Harbour Point, Levels 3 to 5")).toBeVisible();
+  await expect(page.getByText("Order more sealant")).toBeVisible();
+  await page.getByRole("navigation", { name: "Material" }).getByRole("link", { name: "Stock" }).click();
+  await expect(page.locator("#site-site-b").getByText("Escalated", { exact: true })).toHaveCount(0);
   // Back returns to the penetration that opened the material page, then up to the site.
   await page.getByRole("link", { name: "Back to L3, Riser 2" }).click();
   await expect(page).toHaveURL(/\/sites\/site-b\/penetrations\/pen-b-01$/);
@@ -110,6 +117,10 @@ test("scenario: escalate sealant, propose 0451, then Kingsway still cannot go", 
   await propose.getByLabel("Reason").fill("Materials for this one are in stock");
   await propose.getByRole("button", { name: "Send proposal" }).click();
   await expect(page.locator("[data-announcer]")).toHaveText("Proposal recorded");
+  await gotoApp(page, "/sites/site-b");
+  const proposed = page.locator("a[href$='/penetrations/pen-b-01']").locator("[title='Proposed substitute']");
+  await expect(proposed).toContainText("Proposed substitute");
+  await expect(proposed.locator("span[aria-hidden='true']")).toHaveText("1");
 
   // The actions log is a top-level page. This screen has no menu, so open it from the sites list.
   await gotoApp(page, "/sites");
