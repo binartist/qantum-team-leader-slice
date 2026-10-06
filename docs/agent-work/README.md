@@ -66,6 +66,13 @@ Evidence of how the domain core was built and checked. Files are numbered in the
 | `24-penetration-tabs-brief.md` | Approved Tier 3 spec as a brief: icon-only row marks with no popover, and Solution / Actions log tabs on the penetration page |
 | `25-penetration-tabs-worker-notes.md` | The worker's notes. It reverted docs that the orchestrator was editing in its worktree; the orchestrator re-applied them |
 
+### Material tabs round
+
+| File | What it is |
+| --- | --- |
+| `26-material-tabs-brief.md` | Approved spec as a brief: Stock and Actions log tabs on the material page, no state labels, decision counts on rows |
+| `27-material-tabs-worker-notes.md` | The worker's notes, including the page-only `penetrationMaterialIds` field |
+
 What the orchestrator (Claude) did, as opposed to the workers: wrote the briefs and the decisions in them, ran every gate in its own shell, checked write scope with before and after checksums, ran mutation checks of its own, triaged the review findings (accepting most, rejecting a path jail and a shortage-id re-encoding), and updated the docs.
 
-Cost, domain core: build $0.67, three reviews $2.97, fixes $0.78. API layer: build $2.82 (fast model, 54 turns, 20.5 min), three reviews $4.83 (default model, 35 min), fixes $3.47 (fast model, 61 turns, 16.5 min). UI: build $3.29 (default model, 116 turns, 49 min), three reviews $4.10 (default model, 25 min), fixes $3.24 (default model, 108 turns, 42 min). Navigation: $2.39 (fast model, 41 turns, 10.8 min). Usability: $1.34 (default model, 45 turns, 19.6 min) plus the stopped fast-model start. Database and delivery: $1.42 (default model, 50 turns, 25 min). Actions log: $2.36 (default model, 87 turns). Row marks and penetration tabs: $2.20 (default model, 86 turns). Total worker spend about $35.88. Corrections and rejections are logged in `docs/submission-checklist.md`.
+Cost, domain core: build $0.67, three reviews $2.97, fixes $0.78. API layer: build $2.82 (fast model, 54 turns, 20.5 min), three reviews $4.83 (default model, 35 min), fixes $3.47 (fast model, 61 turns, 16.5 min). UI: build $3.29 (default model, 116 turns, 49 min), three reviews $4.10 (default model, 25 min), fixes $3.24 (default model, 108 turns, 42 min). Navigation: $2.39 (fast model, 41 turns, 10.8 min). Usability: $1.34 (default model, 45 turns, 19.6 min) plus the stopped fast-model start. Database and delivery: $1.42 (default model, 50 turns, 25 min). Actions log: $2.36 (default model, 87 turns). Row marks and penetration tabs: $2.20 (default model, 86 turns). Material tabs: $1.82 (default model, 65 turns). Total worker spend about $37.70. Corrections and rejections are logged in `docs/submission-checklist.md`.

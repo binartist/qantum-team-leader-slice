@@ -2,18 +2,20 @@ import type { Metadata } from "next";
 import { unstable_rethrow } from "next/navigation";
 import { connection } from "next/server";
 import Link from "next/link";
-import type { SiteReadinessView } from "@/application";
+import type { SiteActions, SiteReadinessView } from "@/application";
 import { IdSchema } from "@/ports";
-import { getCachedMaterialDetail, getCachedSite } from "../../_lib/cached";
+import { getCachedActions, getCachedMaterialDetail, getCachedSite } from "../../_lib/cached";
+import { loadPage } from "../../_lib/load";
 import { Notice } from "@/ui/Notice";
 import { PenetrationFilters } from "@/ui/PenetrationFilters";
 import { PenetrationGroups, type PenetrationPlace } from "@/ui/PenetrationGroups";
 import { fromLogPath, materialPagePath, siteFromMaterialPath, sitePath } from "@/ui/format";
 import { logBack, logOrigin } from "@/ui/actions-log";
 import { StockFigures } from "@/ui/StockFigures";
-import { EMPTY, filterLine, NO_FILTER_MATCH, PENETRATION_FILTER } from "@/ui/messages";
+import { DECISIONS_NOTICE, EMPTY, filterLine, NO_FILTER_MATCH, PENETRATION_FILTER } from "@/ui/messages";
 import { filterCounts, matchingPenetrations, materialValues, parseShow, type ShowFilter } from "@/ui/penetration-filters";
-import { filterByMaterial, rowMarks } from "@/ui/penetrations";
+import { penetrationLog } from "@/ui/penetration-log";
+import { filterByMaterial, logCounts, rowMarks } from "@/ui/penetrations";
 import styles from "@/ui/primitives.module.css";
 import { loadSiteFrame, SiteFrame } from "./site-frame";
 
@@ -43,6 +45,9 @@ export default async function SitePage({ params, searchParams }: PageProps) {
   const fromMaterial = await materialOrigin(id, query.fromMaterial);
   // A material page that opened this site wins; else the actions log; else back goes to the sites list.
   const fromLog = fromMaterial ? undefined : logOrigin(query.fromLog, [id]);
+  const showList = frame.status === "ready" && frame.readiness !== null && frame.places !== null;
+  // The list's decision marks count the same log as the penetration page. A failed read leaves the rows up.
+  const actionsLoad = showList ? await loadPage(() => getCachedActions(id)) : null;
   return (
     <SiteFrame frame={frame} back={fromMaterial?.back ?? (fromLog ? logBack(fromLog) : undefined)}>
       {frame.status === "ready" && frame.readiness && frame.places ? (
@@ -54,6 +59,8 @@ export default async function SitePage({ params, searchParams }: PageProps) {
           material={materialValues(query.material)}
           fromMaterial={fromMaterial?.id}
           fromLog={fromLog}
+          penetrationMaterialIds={frame.penetrationMaterialIds}
+          actions={actionsLoad?.status === "ready" ? actionsLoad.value : null}
         />
       ) : null}
     </SiteFrame>
@@ -83,6 +90,8 @@ function SitePenetrations({
   material,
   fromMaterial,
   fromLog,
+  penetrationMaterialIds,
+  actions,
 }: {
   siteId: string;
   readiness: SiteReadinessView;
@@ -91,12 +100,17 @@ function SitePenetrations({
   material: readonly string[];
   fromMaterial?: string;
   fromLog?: string;
+  penetrationMaterialIds: Readonly<Record<string, readonly string[]>>;
+  /** Null when this site's actions could not be read. Rows then show problems only. */
+  actions: SiteActions | null;
 }) {
   // A repeated ?material= is not one material. Joining it keeps the unknown-material note and the full list.
   const materialId = material.length === 0 ? undefined : material.length === 1 ? material[0] : material.join(",");
   const filtered = filterByMaterial(places, readiness.shortages, readiness.materials, materialId);
-  const shown = matchingPenetrations(filtered.places, selected, readiness.shortages, readiness.blockers);
-  const counts = filterCounts(places, readiness.shortages, readiness.blockers);
+  // A proposed substitute is a decision too (Acted). With the log unreadable, Acted counts waits and escalations only.
+  const proposed = new Set(actions?.proposals.map((proposal) => proposal.penetrationId) ?? []);
+  const shown = matchingPenetrations(filtered.places, selected, readiness.shortages, readiness.blockers, proposed);
+  const counts = filterCounts(places, readiness.shortages, readiness.blockers, proposed);
   return (
     <>
       {places.length === 0 ? null : (
@@ -118,13 +132,23 @@ function SitePenetrations({
           </p>
         ) : null}
         {filtered.unknownMaterial ? <Notice>{PENETRATION_FILTER.unknown}</Notice> : null}
+        {actions ? null : <Notice>{DECISIONS_NOTICE}</Notice>}
         {selected.length > 0 && shown.length === 0 ? <p>{NO_FILTER_MATCH}</p> : null}
         {selected.length === 0 && shown.length === 0 ? <p>{EMPTY.penetrations}</p> : null}
         {shown.length > 0 ? (
           <PenetrationGroups
             siteId={siteId}
             places={shown}
-            marks={(penetrationId) => rowMarks(penetrationId, readiness.shortages, readiness.blockers)}
+            marks={(penetrationId) =>
+              rowMarks(
+                penetrationId,
+                readiness.shortages,
+                readiness.blockers,
+                actions
+                  ? logCounts(penetrationLog(actions, siteId, penetrationId, penetrationMaterialIds[penetrationId] ?? []))
+                  : null,
+              )
+            }
           />
         ) : null}
       </section>

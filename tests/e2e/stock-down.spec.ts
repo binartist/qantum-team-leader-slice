@@ -46,4 +46,15 @@ test("AC 38, AC 39: with the stock down, the materials pages say they can't chec
   await expect(page.getByText("Can't check stock right now. Don't assume any material is in stock. Try again.")).toBeVisible();
   await expect(page.getByRole("button", { name: /Wait|Escalate/ })).toHaveCount(0);
   await expect(page.getByText(/Needs \d/)).toHaveCount(0);
+  await expect(page.getByText("Nothing recorded")).toHaveCount(0);
+  await expect(page.getByText("0", { exact: true })).toHaveCount(0);
+  const tabs = page.getByRole("navigation", { name: "Material" });
+  await expect(tabs.getByRole("link", { name: "Stock" })).toHaveAttribute("aria-current", "page");
+  await expect(tabs.getByRole("link", { name: "Actions log" })).not.toContainText(/\d/);
+
+  await gotoApp(page, "/materials/MAT-SEALANT?tab=log");
+  await expect(page.getByText("We can't load this material's actions right now. Try again shortly.")).toBeVisible();
+  await expect(page.getByText("Nothing recorded")).toHaveCount(0);
+  await expect(page.getByText("0", { exact: true })).toHaveCount(0);
+  await expect(page.getByRole("navigation", { name: "Material" }).getByRole("link", { name: "Actions log" })).not.toContainText(/\d/);
 });
