@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { penetrationsPath } from "@/ui/format";
-import { filterByMaterial, penetrationFacts } from "@/ui/penetrations";
+import { penetrationLine, penetrationsByPlace, penetrationsPath } from "@/ui/format";
+import { filterByMaterial, listFactChips, penetrationFacts } from "@/ui/penetrations";
 
 const materials = {
   "MAT-SEALANT": { name: "Intumescent sealant, 310 ml cartridge" },
@@ -15,11 +15,11 @@ describe("penetration facts on the planned-work list", () => {
     ];
     // Colour-coded and never colour alone: each fact carries a tone and an icon.
     expect(penetrationFacts("p1", shortages, [], materials)).toEqual([
-      { label: "Uses short material: Intumescent sealant, 310 ml cartridge", tone: "danger", icon: "stop" },
+      { label: "Short material: Intumescent sealant, 310 ml cartridge", tone: "danger", icon: "stop" },
       { label: "Stock unknown: Fire mastic tube", tone: "warning", icon: "warning" },
     ]);
     expect(penetrationFacts("p2", shortages, [], materials).map((fact) => fact.label)).toEqual([
-      "Uses short material: Intumescent sealant, 310 ml cartridge",
+      "Short material: Intumescent sealant, 310 ml cartridge",
     ]);
   });
 
@@ -45,7 +45,27 @@ describe("penetration facts on the planned-work list", () => {
 
   it("falls back to the material id when the name is missing", () => {
     expect(penetrationFacts("p1", [{ materialId: "MAT-X", kind: "short", penetrationIds: ["p1"] }], [], {}).map((fact) => fact.label)).toEqual([
-      "Uses short material: MAT-X",
+      "Short material: MAT-X",
+    ]);
+  });
+
+  it("links a short material to its stock page, and leaves stock unknown as text", () => {
+    const shortages = [
+      { materialId: "MAT-SEALANT", kind: "short" as const, penetrationIds: ["p1"] },
+      { materialId: "MAT-MASTIC", kind: "unknown" as const, penetrationIds: ["p1"] },
+    ];
+    expect(penetrationFacts("p1", shortages, [], materials, "site-b")).toEqual([
+      {
+        label: "Short material: Intumescent sealant, 310 ml cartridge",
+        tone: "danger",
+        icon: "stop",
+        href: "/sites/site-b/materials/MAT-SEALANT",
+      },
+      { label: "Stock unknown: Fire mastic tube", tone: "warning", icon: "warning" },
+    ]);
+    expect(penetrationFacts("p1", shortages, [], materials)).toEqual([
+      { label: "Short material: Intumescent sealant, 310 ml cartridge", tone: "danger", icon: "stop" },
+      { label: "Stock unknown: Fire mastic tube", tone: "warning", icon: "warning" },
     ]);
   });
 
@@ -84,5 +104,61 @@ describe("filtering the list to one short material", () => {
       shown: 1,
       total: 3,
     });
+  });
+});
+
+describe("compact chips on the site list", () => {
+  const labels = (chips: readonly { label: string }[]) => chips.map((chip) => chip.label);
+
+  it("names each data problem by kind only, in a danger chip", () => {
+    const blockers = [
+      { penetrationId: "p1", reason: "unknown_solution_code" as const },
+      { penetrationId: "p1", reason: "solution_mismatch" as const },
+      { penetrationId: "p2", reason: "no_material_mapping" as const },
+      { penetrationId: "p3", reason: "invalid_quantity" as const },
+    ];
+    expect(labels(listFactChips("p1", [], blockers))).toEqual(["Unknown solution", "Doesn't fit"]);
+    expect(labels(listFactChips("p2", [], blockers))).toEqual(["No materials"]);
+    expect(listFactChips("p3", [], blockers)).toEqual([{ label: "Invalid quantity", tone: "danger", icon: "warning" }]);
+  });
+
+  it("counts short and unknown-stock materials, and never says ready", () => {
+    const shortages = [
+      { kind: "short" as const, penetrationIds: ["p1", "p2"] },
+      { kind: "short" as const, penetrationIds: ["p1"] },
+      { kind: "unknown" as const, penetrationIds: ["p1", "p3"] },
+      { kind: "unknown" as const, penetrationIds: ["p1"] },
+    ];
+    expect(labels(listFactChips("p1", shortages, []))).toEqual(["Short material × 2", "Stock unknown × 2"]);
+    expect(listFactChips("p2", shortages, [])).toEqual([{ label: "Short material", tone: "danger", icon: "stop" }]);
+    expect(listFactChips("p3", shortages, [])).toEqual([{ label: "Stock unknown", tone: "warning", icon: "warning" }]);
+    expect(listFactChips("p4", shortages, [])).toEqual([]);
+  });
+});
+
+describe("site-list order and row text", () => {
+  const row = (id: string, floor: string, location: string, serviceType = "PEX Pipe", serviceSize = "Ø25mm") => ({
+    id,
+    floor,
+    location,
+    serviceType,
+    serviceSize,
+    nominatedCode: "0438",
+  });
+
+  it("orders by floor (numerically), place, service, size, then id", () => {
+    const sorted = penetrationsByPlace([
+      row("e", "L10", "Core"),
+      row("d", "L3", "Riser 2", "PEX Pipe", "Ø32mm"),
+      row("c", "L3", "Riser 2"),
+      row("b", "L3", "Riser 2"),
+      row("a", "L3", "Lobby", "Steel Pipe"),
+      row("f", "L3", "Riser 2", "Copper Pipe"),
+    ]);
+    expect(sorted.map((place) => place.id)).toEqual(["a", "f", "b", "c", "d", "e"]);
+  });
+
+  it("names a row by place and service, with tidied spacing", () => {
+    expect(penetrationLine(row("a", "L3", "Riser 2", "PEX  Pipe", " Ø25mm"))).toBe("L3, Riser 2 · PEX Pipe Ø25mm");
   });
 });

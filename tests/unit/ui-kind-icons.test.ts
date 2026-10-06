@@ -34,7 +34,6 @@ describe("kind icons", () => {
     const uses: [string, string][] = [
       ["src/ui/SiteCard.tsx", 'kind="site"'],
       ["src/ui/ShortageCard.tsx", 'kind="material"'],
-      ["src/ui/PenetrationGroups.tsx", 'kind="solution"'],
       ["src/ui/BlockerCard.tsx", 'kind="data-problem"'],
       ["src/ui/CandidateCard.tsx", 'kind="solution"'],
       ["src/ui/ActionRow.tsx", 'kind="decision"'],
@@ -43,8 +42,8 @@ describe("kind icons", () => {
     for (const [file, use] of uses) expect(readFileSync(file, "utf8"), `${file} ${use}`).toContain(use);
   });
 
-  it("stays off the tab bar, banners and status chips", () => {
-    for (const file of ["src/ui/SiteTabs.tsx", "src/ui/Banner.tsx", "src/ui/StatusChip.tsx"]) {
+  it("stays off the filter chips, the actions panel, banners and status chips", () => {
+    for (const file of ["src/ui/PenetrationFilters.tsx", "src/ui/ActionsDrawer.tsx", "src/ui/Banner.tsx", "src/ui/StatusChip.tsx"]) {
       expect(readFileSync(file, "utf8"), file).not.toContain("KindIcon");
     }
   });

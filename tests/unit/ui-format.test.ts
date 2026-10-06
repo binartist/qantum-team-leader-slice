@@ -6,6 +6,12 @@ import {
   dataProblemsPath,
   plannedWorkLine,
   affectedCount,
+  plannedAt,
+  decisionScope,
+  siteNeedLine,
+  groupPlaces,
+  siteMaterialPath,
+  materialPath,
   formatMaterialSummary,
   formatNeed,
   formatQuantity,
@@ -209,6 +215,25 @@ describe("ratings, counts, and paths", () => {
     expect(affectedCount(0)).toBe("Affects 0 penetrations");
   });
 
+  // User decision: the need is this site's, the stock is shared, and a decision covers the whole site.
+  it("scopes a material page to its site", () => {
+    expect(plannedAt("Harbour Point", 1)).toBe("Planned at Harbour Point: 1 penetration");
+    expect(plannedAt("Harbour Point", 4)).toBe("Planned at Harbour Point: 4 penetrations");
+    expect(decisionScope(1)).toBe("For the 1 penetration at this site");
+    expect(decisionScope(4)).toBe("For all 4 penetrations at this site");
+    expect(siteNeedLine("Harbour Point", 4, 2, 2, "each")).toBe("Harbour Point needs 4, on hand 2 (shared with other sites), short 2");
+    expect(siteNeedLine("Harbour Point", 10, 8, 2, "cartridge")).toBe(
+      "Harbour Point needs 10, on hand 8 (shared with other sites), short 2 cartridges",
+    );
+    expect(siteNeedLine("Kingsway", 1, null, null, "tube")).toBe("Kingsway needs 1, stock unknown");
+    expect(siteNeedLine("Kingsway", 1, 0, null, "tube")).toBe("Kingsway needs 1, stock unknown");
+  });
+
+  it("groups identical places in first-seen order, counting repeats", () => {
+    expect(groupPlaces(["L3, Riser 2", "L4, Core", "L3, Riser 2", "L3, Riser 2"])).toEqual(["L3, Riser 2 ×3", "L4, Core"]);
+    expect(groupPlaces([])).toEqual([]);
+  });
+
   it("encodes ids into paths", () => {
     expect(sitePath("site-b")).toBe("/sites/site-b");
     expect(actionsPath("site-b")).toBe("/sites/site-b/actions");
@@ -218,6 +243,10 @@ describe("ratings, counts, and paths", () => {
     expect(actionsPath("a/b")).toBe("/sites/a%2Fb/actions");
     expect(dataProblemsPath("site-c")).toBe("/sites/site-c/data-problems");
     expect(dataProblemsPath("a/b")).toBe("/sites/a%2Fb/data-problems");
+    expect(materialPath("site-b", "MAT-SEALANT")).toBe("/sites/site-b/materials/MAT-SEALANT");
+    expect(materialPath("a/b", "c d")).toBe("/sites/a%2Fb/materials/c%20d");
+    expect(siteMaterialPath("site-b", "MAT-COLLAR-25")).toBe("/sites/site-b?material=MAT-COLLAR-25");
+    expect(siteMaterialPath("a/b", "c d")).toBe("/sites/a%2Fb?material=c%20d");
   });
 });
 
@@ -245,14 +274,14 @@ describe("action wording", () => {
   });
 
   it("links a decision to the work it is about", () => {
-    expect(actionLink("site-b", "site-b:MAT-SEALANT", "current")).toBe("/sites/site-b/penetrations?material=MAT-SEALANT");
-    expect(actionLink("site-b", "site-b:MAT-SEALANT", "earlier")).toBe("/sites/site-b/penetrations?material=MAT-SEALANT");
+    expect(actionLink("site-b", "site-b:MAT-SEALANT", "current")).toBe("/sites/site-b?material=MAT-SEALANT");
+    expect(actionLink("site-b", "site-b:MAT-SEALANT", "earlier")).toBe("/sites/site-b?material=MAT-SEALANT");
     // A resolved shortage has no filtered list to show; the entry already says so.
     expect(actionLink("site-b", "site-b:MAT-SEALANT", "resolved")).toBeNull();
     expect(actionLink("site-c", "site-c:blocker.pen-c-03", "current")).toBe("/sites/site-c/penetrations/pen-c-03");
     expect(actionLink("site-c", "site-c:blocker.pen-c-03", "resolved")).toBe("/sites/site-c/penetrations/pen-c-03");
     expect(actionLink("site-c", "site-c:blocker.", "current")).toBeNull();
-    expect(actionLink("site-c", "other:MAT-X", "current")).toBe("/sites/site-c/penetrations?material=other%3AMAT-X");
+    expect(actionLink("site-c", "other:MAT-X", "current")).toBe("/sites/site-c?material=other%3AMAT-X");
   });
 });
 

@@ -15,6 +15,9 @@ export const screens = [
   "/sites/site-c/penetrations",
   "/sites/site-a/penetrations/pen-a-01",
   "/sites/site-b/penetrations/pen-b-01",
+  "/sites/site-b/materials/MAT-COLLAR-25",
+  "/sites/site-b/materials/MAT-PUTTY",
+  "/sites/site-c/materials/MAT-MASTIC",
   "/sites/site-b/penetrations/pen-b-10",
   "/sites/site-c/penetrations/pen-c-01",
   "/sites/site-c/penetrations/pen-c-03",
@@ -25,7 +28,18 @@ export const screens = [
 
 export async function gotoApp(page: Page, path: string): Promise<void> {
   await page.goto(path);
-  await page.waitForFunction(() => document.documentElement.dataset.hydrated === "true");
+  // A redirect route paints the loading shell, hydrates it, then navigates. Evaluating in that
+  // gap loses the document. Wait until the page that landed has its own heading.
+  await expect
+    .poll(async () =>
+      page
+        .evaluate(() => {
+          const heading = document.querySelector("h1")?.textContent ?? "";
+          return document.documentElement.dataset.hydrated === "true" && heading !== "" && heading !== "Loading";
+        })
+        .catch(() => false),
+    )
+    .toBe(true);
 }
 
 export async function assertNoOverflow(page: Page): Promise<void> {

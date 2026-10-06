@@ -50,7 +50,7 @@ Boundary rule enforced by lint: the domain core may not import Next.js, React, t
 | 29 | API | `Cache-Control: no-store` on readiness and actions |
 | 30, 31, 32 | E2E, accessibility | Row contents, keyboard use, target size, 375px layout without horizontal scroll |
 | 33 | Unit, API, E2E | A material the site is short of (or has unknown stock for) makes a candidate short (or unknown). Harbour Point's `0451` shows it |
-| 34 | Unit, E2E | Short blocked banner on every tab; the tab counts carry the detail |
+| 34 | Unit, E2E | A blocked site has no summary banner. Chips filter the rows and count penetrations. A clear site still says Crew can go |
 | 35 | Unit, API | Each fit rule, normalisation, a cut-off substrate on either side never fits (even identical text), blank text never matches, fail-closed requirements, order of blocker checks, no added need; wait 422 and escalate 201 on the new blocker |
 | 36 | Unit, E2E | Side-by-side rows for penetration and nominated solution; a field that does not fit marked with an icon and text |
 

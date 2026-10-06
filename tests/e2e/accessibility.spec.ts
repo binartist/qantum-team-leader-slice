@@ -26,28 +26,25 @@ test("axe reports no serious or critical violations in light and dark", async ({
 });
 
 async function openEscalate(page: Page): Promise<void> {
-  await gotoApp(page, "/sites/site-b");
-  await page.getByRole("button", { name: /Escalate/ }).first().click();
+  await gotoApp(page, "/sites/site-b/materials/MAT-COLLAR-25");
+  await page.getByRole("button", { name: "Escalate Pipe collar for 25 mm pipe" }).click();
   await expect(page.getByRole("dialog")).toBeVisible();
 }
 
 async function openWait(page: Page): Promise<void> {
-  await gotoApp(page, "/sites/site-c");
-  const mastic = page.getByRole("article").filter({ has: page.getByRole("heading", { name: "Fire mastic tube" }) });
-  await mastic.getByRole("button", { name: /Wait/ }).click();
+  await gotoApp(page, "/sites/site-c/materials/MAT-MASTIC");
+  await page.getByRole("button", { name: "Wait Fire mastic tube" }).click();
   await expect(page.getByRole("dialog")).toBeVisible();
 }
 
 async function openPropose(page: Page): Promise<void> {
   await gotoApp(page, "/sites/site-b/penetrations/pen-b-01");
-  await page.getByRole("article").filter({ has: page.getByRole("heading", { name: "0451" }) }).getByRole("button", { name: /Propose this/ }).click();
+  await page.getByRole("article").filter({ has: page.getByRole("heading", { name: "Solution 0451" }) }).getByRole("button", { name: /Propose this/ }).click();
   await expect(page.getByRole("dialog")).toBeVisible();
 }
 
 async function openDisclosure(page: Page): Promise<void> {
-  // The shortage card's penetrations now open as a filtered list page.
   await gotoApp(page, "/sites/site-b");
-  const collar = page.getByRole("article").filter({ has: page.getByRole("heading", { name: "Pipe collar for 25 mm pipe" }) });
-  await collar.getByRole("link", { name: "Affects 4 penetrations" }).click();
-  await expect(page).toHaveURL(/\/penetrations\?material=MAT-COLLAR-25$/);
+  await page.getByRole("button", { name: /^Actions log/ }).click();
+  await expect(page.getByRole("dialog", { name: "Actions log" })).toBeVisible();
 }

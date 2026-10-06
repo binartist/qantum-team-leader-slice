@@ -26,10 +26,14 @@ export const CANDIDATE_NOTICE = "Catalogue match, not verified";
 export interface CandidateView {
   readonly internalCode: string;
   readonly supplierRefCode: string;
+  readonly orientation: Solution["orientation"];
+  readonly substrateDetail: string;
   readonly serviceType: string;
   readonly serviceSize: string;
   readonly integrityMinutes: number;
   readonly insulationMinutes: number | null;
+  /** Fields that do not fit this penetration. A catalogue match is usually none. */
+  readonly mismatches: readonly FitField[];
   readonly availability: CandidateAvailability;
   readonly materials: Readonly<Record<string, { readonly name: string; readonly unit: string }>>;
 }
@@ -86,13 +90,23 @@ export interface PenetrationDetail {
   readonly nominated: Solution | null;
   /** Fields on which the nominated solution does not fit the penetration (AC 35). */
   readonly mismatches: readonly FitField[];
+  /** Product names the nominated solution needs, in mapping order. Empty when none are recorded. */
+  readonly materialNames: readonly string[];
 }
 
 /** For the penetration page: both sides of the fit, for a side-by-side comparison (AC 36). Not an API route. */
 export async function describePenetration(deps: Dependencies, siteId: string, penetrationId: string): Promise<PenetrationDetail> {
   const penetration = await requirePenetration(deps, siteId, penetrationId);
   const nominated = deps.catalogue.byCode.get(penetration.nominatedCode) ?? null;
-  return { penetration, nominated, mismatches: nominated ? solutionMismatches(penetration, nominated) : [] };
+  const mapped = await deps.solutionMaterials.getSolutionMaterials([penetration.nominatedCode]);
+  const materialNames: string[] = [];
+  const seen = new Set<string>();
+  for (const item of mapped.items) {
+    if (item.internalCode !== penetration.nominatedCode || seen.has(item.materialId)) continue;
+    seen.add(item.materialId);
+    materialNames.push(mapped.materials.find((material) => material.id === item.materialId)?.name ?? item.materialId);
+  }
+  return { penetration, nominated, mismatches: nominated ? solutionMismatches(penetration, nominated) : [], materialNames };
 }
 
 export async function listCandidates(deps: Dependencies, siteId: string, penetrationId: string): Promise<CandidateList> {
@@ -115,10 +129,13 @@ export async function listCandidates(deps: Dependencies, siteId: string, penetra
     return {
       internalCode: solution.internalCode,
       supplierRefCode: solution.supplierRefCode,
+      orientation: solution.orientation,
+      substrateDetail: solution.substrateDetail,
       serviceType: solution.serviceType,
       serviceSize: solution.serviceSize,
       integrityMinutes: solution.integrityMinutes,
       insulationMinutes: solution.insulationMinutes,
+      mismatches: solutionMismatches(penetration, solution),
       availability,
       materials,
     };

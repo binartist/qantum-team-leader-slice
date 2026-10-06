@@ -1,44 +1,47 @@
 import { expect, test } from "@playwright/test";
 import { gotoApp } from "./support";
 
-test("AC 30: shortage cards show material, need, have, short, affected count and state as text", async ({ page }) => {
-  // Read-only. Expects untouched cards with no decision yet. The write project runs after this one.
+test("AC 30: a material page shows need, have, short, who it is planned on, and its state as text", async ({ page }) => {
+  // Read-only. Expects no decision yet. The write project runs after this one.
+  await gotoApp(page, "/sites/site-b/materials/MAT-SEALANT");
+  await expect(page.getByRole("heading", { level: 1, name: "Intumescent sealant, 310 ml cartridge" })).toBeVisible();
+  // User decision: the need and the places are this site's; the stock on hand is shared with other sites.
+  await expect(page.getByText("Harbour Point, Levels 3 to 5 needs 10, on hand 8 (shared with other sites), short 2 cartridges")).toBeVisible();
+  await expect(page.getByRole("heading", { level: 2, name: "Planned at Harbour Point, Levels 3 to 5: 12 penetrations" })).toBeVisible();
+  // Identical places are one line; none is a link, because the penetration page links here.
+  await expect(page.getByText("L3, Riser 2 · PEX Pipe Ø25mm ×4", { exact: true })).toBeVisible();
+  await expect(page.getByText("L5, Plant room · Steel Pipe Ø28mm", { exact: true })).toBeVisible();
+  await expect(page.getByRole("main").getByRole("link", { name: /L3, Riser 2/ })).toHaveCount(0);
+
+  await gotoApp(page, "/sites/site-b/materials/MAT-COLLAR-25");
+  await expect(page.getByText("Harbour Point, Levels 3 to 5 needs 4, on hand 2 (shared with other sites), short 2", { exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 2, name: "Planned at Harbour Point, Levels 3 to 5: 4 penetrations" })).toBeVisible();
+  // A wait or escalate covers the whole site's need, not one penetration.
+  await expect(page.getByText("For all 4 penetrations at this site", { exact: true })).toBeVisible();
+  const collarState = page.getByText("No decision yet", { exact: true });
+  await expect(collarState).toBeVisible();
+  await expect(collarState.locator("svg")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Wait Pipe collar for 25 mm pipe" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Escalate Pipe collar for 25 mm pipe" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "L3, Riser 2 · PEX Pipe Ø25mm" })).toHaveCount(0);
+  await expect(page.getByText("L3, Riser 2 · PEX Pipe Ø25mm ×4", { exact: true })).toHaveCount(1);
+  // The way to act on one of them is up through the site list, filtered to this material.
+  await expect(page.getByRole("link", { name: "Show these on the site list" })).toHaveAttribute("href", "/sites/site-b?material=MAT-COLLAR-25");
+
   await gotoApp(page, "/sites/site-b");
-  const sealant = page.getByRole("article").filter({ has: page.getByRole("heading", { name: "Intumescent sealant, 310 ml cartridge" }) });
-  const collar = page.getByRole("article").filter({ has: page.getByRole("heading", { name: "Pipe collar for 25 mm pipe" }) });
+  await expect(page.getByText("Blocked: hold the crew.")).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Shortages 12" })).toBeVisible();
 
-  await expect(sealant.getByText("Need 10, have 8, short 2 cartridges")).toBeVisible();
-  await expect(sealant.getByText("Affects 12 penetrations")).toBeVisible();
-  await expect(collar.getByText("Need 4, have 2, short 2", { exact: true })).toBeVisible();
-  await expect(collar.getByText("Affects 4 penetrations")).toBeVisible();
-
-  for (const card of [sealant, collar]) {
-    const label = card.getByText("No decision yet", { exact: true });
-    await expect(label).toBeVisible();
-    await expect(label.locator("svg")).toHaveCount(0);
-  }
-
-  const banner = page.locator("div").filter({ hasText: /^Blocked:/ }).first();
-  await expect(banner).toBeVisible();
-  await expect(banner.locator("svg[aria-hidden='true']")).toHaveCount(1);
-
-  // The affected count opens the penetrations that use the material, on the filtered list.
-  await expect(collar.getByRole("link", { name: "Affects 4 penetrations" })).toHaveAttribute("href", "/sites/site-b/penetrations?material=MAT-COLLAR-25");
-  await collar.getByRole("link", { name: "Affects 4 penetrations" }).click();
+  await gotoApp(page, "/sites/site-b?material=MAT-COLLAR-25");
   await expect(page.getByText("Using Pipe collar for 25 mm pipe · 4 of 12")).toBeVisible();
-  await expect(page.getByRole("link", { name: "Show all" })).toHaveAttribute("href", "/sites/site-b/penetrations");
-  await expect(page.getByRole("heading", { name: "Solution 0438 · 4" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Show all" })).toHaveAttribute("href", "/sites/site-b");
   await expect(page.locator("main a[href*='/penetrations/pen-b-']")).toHaveCount(4);
-  for (const id of ["pen-b-01", "pen-b-02", "pen-b-03", "pen-b-04"]) {
-    const link = page.locator(`a[href$='/penetrations/${id}']`);
-    await expect(link).toContainText("L3, Riser 2 · PEX Pipe Ø25mm");
-    await expect(link).toContainText("Substitutes");
-  }
+  const collarRow = page.locator("a[href$='/penetrations/pen-b-01']");
+  await expect(collarRow).toContainText("Substitutes");
 
-  await gotoApp(page, "/sites/site-b");
-  await sealant.getByRole("link", { name: "Affects 12 penetrations" }).click();
-  await expect(page.getByRole("heading", { name: "Solution 0438 · 4" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Solution 0434 · 3" })).toBeVisible();
+  await gotoApp(page, "/sites/site-b?material=MAT-SEALANT");
+  // One row per penetration, no solution group headings (user decision).
+  await expect(page.locator("main a[href*='/penetrations/pen-b-']")).toHaveCount(12);
   const pex = page.locator("a[href$='/penetrations/pen-b-01']");
   const kelox = page.locator("a[href$='/penetrations/pen-b-05']");
   await expect(pex).toContainText("L3, Riser 2 · PEX Pipe Ø25mm");
@@ -46,23 +49,25 @@ test("AC 30: shortage cards show material, need, have, short, affected count and
   await expect(kelox).toContainText("L4, Corridor south · KELOX Pipe - 13mm PE Ø32mm");
   expect((await pex.innerText()).replace(/\s+/g, " ").trim()).not.toBe((await kelox.innerText()).replace(/\s+/g, " ").trim());
 
-  // A material that is not a shortage here shows everything and says so, never an empty list.
   await gotoApp(page, "/sites/site-b/penetrations?material=MAT-NOPE");
   await expect(page.getByText("That material is not a shortage on this site. Showing all penetrations.")).toBeVisible();
   await expect(page.locator("main a[href*='/penetrations/pen-b-']")).toHaveCount(12);
 
-  await gotoApp(page, "/sites/site-c");
-  const mastic = page.getByRole("article").filter({ has: page.getByRole("heading", { name: "Fire mastic tube" }) });
-  await expect(mastic.getByText("Need 1, stock unknown")).toBeVisible();
-  await expect(mastic.getByText("Affects 1 penetration")).toBeVisible();
-  const masticState = mastic.getByText("No decision yet", { exact: true });
+  await gotoApp(page, "/sites/site-c/materials/MAT-MASTIC");
+  await expect(page.getByRole("heading", { level: 1, name: "Fire mastic tube" })).toBeVisible();
+  await expect(page.getByText("Kingsway Works, Phase 2 needs 1, stock unknown")).toBeVisible();
+  await expect(page.getByRole("heading", { level: 2, name: "Planned at Kingsway Works, Phase 2: 1 penetration" })).toBeVisible();
+  await expect(page.getByText("For the 1 penetration at this site", { exact: true })).toBeVisible();
+  const masticState = page.getByText("No decision yet", { exact: true });
   await expect(masticState).toBeVisible();
   await expect(masticState.locator("svg")).toHaveCount(0);
-  await expect(page.getByText(/^Blocked:/)).toBeVisible();
-  await mastic.getByRole("link", { name: "Affects 1 penetration" }).click();
-  const plant = page.locator("a[href$='/penetrations/pen-c-05']");
-  await expect(plant).toContainText("L2, Plant room · Copper Pipe Ø40mm");
-  await expect(page.getByRole("heading", { name: "Solution 0348 · 1" })).toBeVisible();
-  await expect(plant).toContainText("Substitutes");
+  await expect(page.getByRole("button", { name: /Wait/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Escalate/ })).toBeVisible();
+  // The place is text; the way on is up through the site list, filtered to this material.
+  await expect(page.getByRole("link", { name: "L2, Plant room · Copper Pipe Ø40mm" })).toHaveCount(0);
+  await page.getByRole("link", { name: "Show these on the site list" }).click();
+  await expect(page).toHaveURL(/\/sites\/site-c\?material=MAT-MASTIC$/);
+  await expect(page.locator("main a[href*='/penetrations/pen-c-']")).toHaveCount(1);
+  await expect(page.locator("a[href$='/penetrations/pen-c-05']")).toContainText("Stock unknown");
   await expect(page.getByText("Crew can go")).toHaveCount(0);
 });

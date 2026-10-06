@@ -204,6 +204,29 @@
   width: 100%;
 }
 
+.switchField {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.switchLabel {
+  font-weight: 600;
+}
+
+.switchControl {
+  width: 100%;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0.5rem;
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+}
+
 .button:disabled {
   cursor: not-allowed;
   background: var(--neutral-bg);
@@ -320,6 +343,13 @@
   color: var(--text-secondary);
 }
 
+/* Places on a material page are text, identical ones grouped. The penetration page links here, so a link back
+   would loop; the page links up to the site list instead. */
+.plannedPlace {
+  padding: 0.75rem 0.25rem;
+  border-top: 1px solid var(--border);
+}
+
 .penetrationLink {
   display: flex;
   align-items: center;
@@ -347,8 +377,8 @@
   gap: 1.25rem;
 }
 
-/* "Job ref HP-345 · 12 penetrations, 5 solutions ›": the counts are a 44px link to the full list. */
-/* No separator dot: on a narrow screen the link wraps under the job ref without leaving one dangling. */
+/* "Job ref HP-345" then "12 penetrations, 5 solutions". The list is this page, so the counts are text. */
+/* No separator dot: on a narrow screen the second part wraps under the job ref without leaving one dangling. */
 .plannedWork {
   display: flex;
   flex-wrap: wrap;
@@ -396,6 +426,38 @@
 
 .penetrationFact {
   font-size: 0.875rem;
+}
+
+.factChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  margin-top: 0.35rem;
+}
+
+.factChips:empty {
+  display: none;
+}
+
+/* A short-material line that opens the stock page. The words stay danger-coloured; the chevron is the link colour. */
+.factLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  align-self: flex-start;
+  max-width: 100%;
+  min-height: 44px;
+  color: var(--link);
+}
+
+.factLink .icon {
+  margin-top: 0;
+}
+
+.factLinkLabel {
+  min-width: 0;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
 }
 
 .substitutesCue {
@@ -454,54 +516,122 @@
   width: min(100%, 45rem);
 }
 
-/* Route-based tabs: links, the current one marked with aria-current. Sized by their content so all three
-   fit one line at 375px; on a narrower screen a label wraps rather than pushing a tab off screen. */
-/* The tab bar sticks directly below the header, full width of the content column, so the counts stay in view. */
-.tabBar {
+/* Sits under the sticky header once the title has scrolled away. The bar covers the row, including the gaps between chips. */
+.filterDock {
   position: sticky;
   top: var(--app-bar-height);
   z-index: 1;
-  max-width: none;
   margin-inline: calc(-1 * var(--space));
-  padding-inline: var(--space);
+  padding: 0.25rem var(--space) 0.5rem;
   background: var(--bg);
 }
 
-.tabs {
+/* Filter chips wrap onto as many lines as they need, so they never force a sideways scroll. */
+.filterBar {
   display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
   margin: 0;
   padding: 0;
-  border-bottom: 1px solid var(--border);
   list-style: none;
 }
 
-.tabs > li {
+.filterBar > li {
   display: flex;
-  flex: 1 1 auto;
-  min-width: 0;
+  max-width: 100%;
 }
 
-.tab {
-  display: flex;
-  flex: 1;
-  flex-wrap: wrap;
+.filterChip {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.25rem 0.375rem;
+  gap: 0.375rem;
+  max-width: 100%;
   min-height: 44px;
-  padding: 0.25rem;
-  border-bottom: 3px solid transparent;
+  padding: 0.25rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg);
   color: var(--text);
   font-size: 0.875rem;
   line-height: 1.2;
-  text-align: center;
   text-decoration: none;
 }
 
-.tab[aria-current="page"] {
-  border-bottom-color: var(--link);
+.filterChip[aria-current="true"] {
+  border-color: var(--link);
   color: var(--link);
   font-weight: 600;
+}
+
+/* Header control for the actions panel. It stays one line so the fixed header does not grow. */
+.actionsButton {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 0.375rem;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 0.5rem;
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--link);
+  font: inherit;
+  font-size: 0.875rem;
+  line-height: 1.2;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+/* Right-hand panel. showModal puts the dialog in the top layer, so this fixed box is the viewport's. */
+.drawer {
+  position: fixed;
+  inset: 0 0 0 auto;
+  width: min(100%, 24rem);
+  max-width: 100%;
+  height: auto;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-left: 1px solid var(--border);
+  border-radius: 0;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.drawer::backdrop {
+  background: var(--backdrop);
+}
+
+.drawerPanel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.drawerHeader {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.drawerTitle {
+  margin: 0;
+  font-size: 1.2rem;
+  line-height: 1.3;
+}
+
+.drawerBody {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: var(--space);
 }
 
 .tabCount {
@@ -520,7 +650,7 @@
   align-items: center;
   gap: 0.25rem;
   min-width: 44px;
-  max-width: calc(100% - 4rem);
+  max-width: calc(100% - 10.5rem);
   min-height: 44px;
   margin-left: -0.5rem;
   padding-inline: 0.5rem;

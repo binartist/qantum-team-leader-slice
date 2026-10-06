@@ -71,7 +71,7 @@ test("landing page explains the demo, no screen carries a Demo tag, and there is
   await expect(page.getByRole("heading", { level: 1, name: "Sites" })).toBeVisible();
 
   await gotoApp(page, "/sites/site-b");
-  await expect(page.getByRole("heading", { level: 2, name: "Intumescent sealant, 310 ml cartridge" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Shortages 12" })).toBeVisible();
   await page.setViewportSize({ width: 375, height: 500 });
   // In dev the stylesheet can land after hydration, so retry until the full-height layout can scroll.
   await expect
