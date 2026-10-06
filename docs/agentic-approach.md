@@ -50,7 +50,8 @@ The agents proposed; I decided. Each case is logged with the reason in `docs/sub
 - **Navigation.** The design had a top demo bar, a full-width Back button and an unlabelled site code. From my own phone review I moved the demo label to the bottom, put the title in the header with a chevron back row below it, and had the code labelled.
 - **Review approach.** Instead of the proposed fan-out of review subagents, I gave my own observations, which were faster and more specific.
 - **Worker model.** A worker run went out on the fast model by default. I stopped it and set the default model as the rule, fast only when I ask.
-- **What the screens carry.** I questioned the site reference on every card (now only on the site screen, as "Job ref") and replaced the permanent demo bar with a landing page that explains the demo, keeping a small Demo tag in each header after the AI pointed out that deep links would otherwise skip the explanation.
+- **What the screens carry.** I questioned the site reference on every card (now only on the site screen, as "Job ref") and replaced the permanent demo bar with a landing page that explains the demo, keeping a small Demo tag in each header after the AI pointed out that deep links would otherwise skip the explanation (I later removed the tag as clutter).
+- **Shared stock on a material page.** I questioned why Wait and Escalate sit on the material page when work is done per penetration, and why its list named no site when stock is shared. The AI's point held for the buttons (a shortage is per site and material, so one escalation covers every penetration), so they stayed with their scope stated; the site is now named in the need line and the heading. When the AI proposed linking each place back to its penetration, I rejected it as circular: the places stay text, grouped, with one link up to the site list.
 
 ## Cost
 
