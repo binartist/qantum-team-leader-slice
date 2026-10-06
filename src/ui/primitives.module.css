@@ -830,51 +830,65 @@ section:has(> .stickyHeading) {
   font-weight: 600;
 }
 
+.navSecondary {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
 .navFooter {
   flex: none;
   padding: 0.5rem 0.5rem max(0.5rem, env(safe-area-inset-bottom));
   border-top: 1px solid var(--border);
 }
 
-/* The theme choice: one segmented row of three radios, the chosen one filled. The native input stays (visually
-   hidden) so arrow keys, the radio role and the group name come from the browser. */
+/* The theme choice: one slim row, the legend on the left and a compact segmented switch on the right. The
+   native radios stay (visually hidden) so arrow keys, the radio role and the group name come from the browser.
+   Each radio reaches 6px above and below its pill, so the tap target stays 44px while the pill is 32px. */
 .themeSwitch {
-  margin: 0 0 0.5rem;
-  padding: 0 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-width: 0;
+  margin: 0.375rem 0 0;
+  padding: 0 0.25rem 0 0.75rem;
   border: 0;
 }
 
 .themeLegend {
-  margin-bottom: 0.375rem;
+  float: left;
+  margin: 0;
   padding: 0;
   color: var(--text-secondary);
   font-size: 0.875rem;
 }
 
 .themeOptions {
-  display: flex;
+  display: inline-flex;
+  flex: none;
   padding: 2px;
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: 999px;
   background: var(--surface);
 }
 
 .themeOption {
   position: relative;
   display: flex;
-  flex: 1 1 0;
   align-items: center;
   justify-content: center;
-  min-height: 44px;
-  border-radius: calc(var(--radius) - 2px);
+  min-height: 32px;
+  padding: 0 0.75rem;
+  border-radius: 999px;
   color: var(--text-secondary);
-  font-size: 0.9375rem;
+  font-size: 0.8125rem;
   cursor: pointer;
 }
 
 .themeOption input {
   position: absolute;
-  inset: 0;
+  inset: -6px 0;
   margin: 0;
   opacity: 0;
   cursor: pointer;

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { penetrationLine, penetrationsByPlace } from "@/ui/format";
-import { candidateFacts, filterByMaterial, penetrationFacts, rowMarks } from "@/ui/penetrations";
+import { penetrationLog, type PenetrationLogSource } from "@/ui/penetration-log";
+import { candidateFacts, filterByMaterial, logCounts, penetrationFacts, rowMarks } from "@/ui/penetrations";
 
 const materials = {
   "MAT-SEALANT": { name: "Intumescent sealant, 310 ml cartridge" },
@@ -172,46 +173,96 @@ describe("compact marks on the site list", () => {
 });
 
 describe("AC 44: a row shows each problem and decision as an icon with its full wording", () => {
-  it("puts problems first, then one Escalated and one Waiting, and counts a repeated problem", () => {
+  const decisions = { escalations: 0, waits: 0, proposals: 0 };
+
+  it("puts problems first, then escalated, waiting and proposed, and shows a count of 1 or 2", () => {
     const marks = rowMarks(
       "p1",
       [
-        { kind: "short" as const, penetrationIds: ["p1", "p2"], state: "escalated" },
-        { kind: "short" as const, penetrationIds: ["p1"], state: "escalated" },
-        { kind: "unknown" as const, penetrationIds: ["p1"], state: "waiting" },
+        { kind: "short" as const, penetrationIds: ["p1", "p2"], state: "open" },
+        { kind: "short" as const, penetrationIds: ["p1"], state: "open" },
+        { kind: "unknown" as const, penetrationIds: ["p1"], state: "open" },
       ],
       [{ penetrationId: "p1", reason: "solution_mismatch" as const, state: "open" }],
+      { escalations: 2, waits: 1, proposals: 2 },
     );
     expect(marks).toEqual([
       { label: "Doesn't fit", tone: "danger", icon: "warning", count: 1 },
       { label: "Short material × 2", tone: "danger", icon: "stop", count: 2 },
       { label: "Stock unknown", tone: "warning", icon: "warning", count: 1 },
+      { label: "Escalated × 2", tone: "escalation", icon: "arrow-up", count: 2 },
+      { label: "Waiting", tone: "info", icon: "clock", count: 1 },
+      { label: "Proposed substitutes × 2", tone: "neutral", icon: "swap", count: 2 },
+    ]);
+  });
+
+  it("shows a proposal on its own, and no mark for a kind with no entries", () => {
+    expect(rowMarks("p1", [], [], { ...decisions, proposals: 1 })).toEqual([
+      { label: "Proposed substitute", tone: "neutral", icon: "swap", count: 1 },
+    ]);
+    expect(rowMarks("p1", [{ kind: "short" as const, penetrationIds: ["p1"], state: "escalated" }], [], decisions)).toEqual([
+      { label: "Short material", tone: "danger", icon: "stop", count: 1 },
+    ]);
+    expect(rowMarks("p9", [{ kind: "short" as const, penetrationIds: ["p5"], state: "waiting" }], [], null)).toEqual([]);
+  });
+
+  it("agrees with the penetration log's counts for one fixture", () => {
+    const listed: PenetrationLogSource = {
+      materials: { "MAT-SEALANT": { name: "Intumescent sealant, 310 ml cartridge" } },
+      penetrations: { "pen-b-01": { floor: "L3", location: "Riser 2" } },
+      actions: [
+        {
+          id: "sealant-wait",
+          shortageId: "site-b:MAT-SEALANT",
+          kind: "wait",
+          escalateTo: null,
+          note: null,
+          createdBy: "demo-leader",
+          createdAt: "2026-10-01T00:00:00.000Z",
+          status: "current",
+        },
+        {
+          id: "sealant",
+          shortageId: "site-b:MAT-SEALANT",
+          kind: "escalate",
+          escalateTo: "purchasing",
+          note: null,
+          createdBy: "demo-leader",
+          createdAt: "2026-10-02T00:00:00.000Z",
+          status: "current",
+        },
+        {
+          id: "other",
+          shortageId: "site-b:MAT-OTHER",
+          kind: "escalate",
+          escalateTo: "purchasing",
+          note: null,
+          createdBy: "demo-leader",
+          createdAt: "2026-10-03T00:00:00.000Z",
+          status: "current",
+        },
+      ],
+      proposals: [
+        {
+          id: "this-proposal",
+          penetrationId: "pen-b-01",
+          fromInternalCode: "0438",
+          toInternalCode: "0451",
+          reason: "Materials for this one are in stock",
+          createdBy: "demo-leader",
+          createdAt: "2026-10-04T00:00:00.000Z",
+        },
+      ],
+    };
+    const entries = penetrationLog(listed, "site-b", "pen-b-01", ["MAT-SEALANT"]);
+    const counts = logCounts(entries);
+    expect(counts).toEqual({ escalations: 1, waits: 1, proposals: 1 });
+    expect(rowMarks("pen-b-01", [{ kind: "short" as const, penetrationIds: ["pen-b-01"], state: "escalated" }], [], counts)).toEqual([
+      { label: "Short material", tone: "danger", icon: "stop", count: 1 },
       { label: "Escalated", tone: "escalation", icon: "arrow-up", count: 1 },
       { label: "Waiting", tone: "info", icon: "clock", count: 1 },
+      { label: "Proposed substitute", tone: "neutral", icon: "swap", count: 1 },
     ]);
-  });
-
-  it("shows one decision mark for a blocker, and none for an open problem or a penetration the shortage does not list", () => {
-    expect(rowMarks("pen-c-03", [], [{ penetrationId: "pen-c-03", reason: "unknown_solution_code" as const, state: "escalated" }])).toEqual([
-      { label: "Unknown solution", tone: "danger", icon: "warning", count: 1 },
-      { label: "Escalated", tone: "escalation", icon: "arrow-up", count: 1 },
-    ]);
-    const open = [{ kind: "short" as const, penetrationIds: ["p5"], state: "open" }];
-    expect(rowMarks("p5", open, [])).toEqual([{ label: "Short material", tone: "danger", icon: "stop", count: 1 }]);
-    expect(rowMarks("p9", open, [])).toEqual([]);
-  });
-
-  it("follows the Acted rule: several decisions of one kind are still a single mark", () => {
-    const marks = rowMarks(
-      "p1",
-      [
-        { kind: "short" as const, penetrationIds: ["p1"], state: "waiting" },
-        { kind: "short" as const, penetrationIds: ["p1"], state: "waiting" },
-      ],
-      [{ penetrationId: "p1", reason: "invalid_quantity" as const, state: "waiting" }],
-    );
-    expect(marks.filter((mark) => mark.label === "Waiting")).toEqual([{ label: "Waiting", tone: "info", icon: "clock", count: 1 }]);
-    expect(marks.some((mark) => mark.label === "Escalated")).toBe(false);
   });
 });
 

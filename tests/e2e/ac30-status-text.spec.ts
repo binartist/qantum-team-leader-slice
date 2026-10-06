@@ -22,9 +22,8 @@ test("AC 30: a material page shows need, short, who it is planned on, and its st
   await expect(collar.getByText("Needs 4, short 2", { exact: true })).toBeVisible();
   // A wait or escalate covers the whole site's need, not one penetration.
   await expect(collar.getByText("For all 4 penetrations at this site", { exact: true })).toBeVisible();
-  const collarState = collar.getByText("No decision yet", { exact: true });
-  await expect(collarState).toBeVisible();
-  await expect(collarState.locator("svg")).toHaveCount(0);
+  // AC 39: the decision state label is gone. The scope line, the need, and the buttons stay.
+  await expect(collar.getByText("No decision yet", { exact: true })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Wait Pipe collar for 25 mm pipe at Harbour Point, Levels 3 to 5" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Escalate Pipe collar for 25 mm pipe at Harbour Point, Levels 3 to 5" })).toBeVisible();
   await expect(collar.getByText("L3, Riser 2 · PEX Pipe Ø25mm ×4", { exact: true })).toHaveCount(1);
@@ -65,9 +64,7 @@ test("AC 30: a material page shows need, short, who it is planned on, and its st
   const kingsway = page.getByRole("region", { name: "Kingsway Works, Phase 2" });
   await expect(kingsway.getByText("Needs 1, stock unknown", { exact: true })).toBeVisible();
   await expect(kingsway.getByText("For the 1 penetration at this site", { exact: true })).toBeVisible();
-  const masticState = kingsway.getByText("No decision yet", { exact: true });
-  await expect(masticState).toBeVisible();
-  await expect(masticState.locator("svg")).toHaveCount(0);
+  await expect(kingsway.getByText("No decision yet", { exact: true })).toHaveCount(0);
   await expect(kingsway.getByRole("button", { name: /Wait/ })).toBeVisible();
   await expect(kingsway.getByRole("button", { name: /Escalate/ })).toBeVisible();
   await expect(page.getByRole("link", { name: "L2, Plant room · Copper Pipe Ø40mm" })).toHaveCount(0);

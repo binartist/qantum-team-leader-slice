@@ -31,6 +31,16 @@ export function Icon({ name }: { name: IconName | "chevron-left" | "chevron-righ
       {name === "arrow-up" ? (
         <path d="M10 16.5V4 M5 8.75 10 3.75l5 5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
       ) : null}
+      {name === "swap" ? (
+        <path
+          d="M3.75 6.5h11.25 M11.5 3.5 15.75 6.5 11.5 9.5 M16.25 13.5H5 M8.5 10.5 4.25 13.5 8.5 16.5"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      ) : null}
       {name === "warning" ? (
         <>
           <path d="M10 3 18 17 H2 Z" fill="none" stroke="currentColor" strokeWidth="2" />

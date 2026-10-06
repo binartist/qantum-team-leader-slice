@@ -1,5 +1,5 @@
 import { materialPagePath, shortageBrief } from "./format";
-import { availabilityStatus, blockerReason, shortageState, type AvailabilityChip, type BlockerCode, type FitFieldCode, type StatusView } from "./status";
+import { availabilityStatus, blockerReason, proposalMark, type AvailabilityChip, type BlockerCode, type FitFieldCode, type StatusView } from "./status";
 
 /** A per-penetration fact. On the penetration page a shortage links to its material page. */
 export interface PenetrationFact extends StatusView {
@@ -93,27 +93,49 @@ export interface RowMark {
   readonly count: number;
 }
 
-function noteDecision(state: string, flags: { escalated: boolean; waiting: boolean }): void {
-  if (state === "escalated") flags.escalated = true;
-  else if (state === "waiting") flags.waiting = true;
+/** How many entries of each kind are in this penetration's Actions log. */
+export interface DecisionCounts {
+  readonly escalations: number;
+  readonly waits: number;
+  readonly proposals: number;
+}
+
+/** Counts the Actions log entries the row marks should agree with. */
+export function logCounts(
+  entries: readonly { readonly kind: "action" | "proposal"; readonly decision?: "wait" | "escalate" }[],
+): DecisionCounts {
+  let escalations = 0;
+  let waits = 0;
+  let proposals = 0;
+  for (const entry of entries) {
+    if (entry.kind === "proposal") proposals += 1;
+    else if (entry.decision === "escalate") escalations += 1;
+    else waits += 1;
+  }
+  return { escalations, waits, proposals };
+}
+
+function decisionCountMark(count: number, one: string, many: string, tone: RowMark["tone"], icon: RowMark["icon"]): RowMark | null {
+  if (!(count > 0)) return null;
+  return { label: count === 1 ? one : `${many} × ${count}`, tone, icon, count };
 }
 
 /**
  * Icon marks for one site-list row. Problems are counted as before (a repeated kind keeps its full wording,
- * such as "Short material × 2"). A decision follows the Acted filter: at most one Escalated and one Waiting,
- * after the problems. Names and figures stay on the penetration page.
+ * such as "Short material × 2"). Decision marks count that penetration's Actions log, in order: escalated,
+ * waiting, then proposed. A kind with no entries has no mark. Pass null when the log could not be read:
+ * the row then shows problems only, never a zero.
  */
 export function rowMarks(
   penetrationId: string,
   shortages: readonly { readonly kind: "short" | "unknown"; readonly penetrationIds: readonly string[]; readonly state: string }[],
   blockers: readonly { readonly penetrationId: string; readonly reason: BlockerCode; readonly state: string }[],
+  decisions: DecisionCounts | null = null,
 ): RowMark[] {
   const marks: RowMark[] = [];
-  const decided = { escalated: false, waiting: false };
   for (const blocker of blockers) {
     if (blocker.penetrationId !== penetrationId) continue;
     marks.push({ label: LIST_BLOCKER[blocker.reason], tone: "danger", icon: "warning", count: 1 });
-    noteDecision(blocker.state, decided);
   }
   let short = 0;
   let unknown = 0;
@@ -121,14 +143,20 @@ export function rowMarks(
     if (!shortage.penetrationIds.includes(penetrationId)) continue;
     if (shortage.kind === "short") short += 1;
     else unknown += 1;
-    noteDecision(shortage.state, decided);
   }
   if (short === 1) marks.push({ label: "Short material", tone: "danger", icon: "stop", count: 1 });
   else if (short > 1) marks.push({ label: `Short material × ${short}`, tone: "danger", icon: "stop", count: short });
   if (unknown === 1) marks.push({ label: "Stock unknown", tone: "warning", icon: "warning", count: 1 });
   else if (unknown > 1) marks.push({ label: `Stock unknown × ${unknown}`, tone: "warning", icon: "warning", count: unknown });
-  if (decided.escalated) marks.push({ ...shortageState("escalated"), count: 1 });
-  if (decided.waiting) marks.push({ ...shortageState("waiting"), count: 1 });
+  if (decisions) {
+    const escalated = decisionCountMark(decisions.escalations, "Escalated", "Escalated", "escalation", "arrow-up");
+    const waiting = decisionCountMark(decisions.waits, "Waiting", "Waiting", "info", "clock");
+    const { tone, icon } = proposalMark();
+    const proposed = decisionCountMark(decisions.proposals, "Proposed substitute", "Proposed substitutes", tone, icon);
+    if (escalated) marks.push(escalated);
+    if (waiting) marks.push(waiting);
+    if (proposed) marks.push(proposed);
+  }
   return marks;
 }
 

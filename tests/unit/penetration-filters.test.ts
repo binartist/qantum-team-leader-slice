@@ -55,6 +55,16 @@ describe("penetration filters", () => {
     ).toEqual({ shortages: 1, "data-problems": 1, acted: 1 });
   });
 
+  it("AC 34: a proposed substitute counts as acted, once, alongside waits and escalations", () => {
+    const proposed = new Set(["plain", "both"]);
+    expect(penetrationMatches("plain", "acted", shortages, blockers, proposed)).toBe(true);
+    expect(penetrationMatches("plain", "acted", shortages, blockers)).toBe(false);
+    // A proposal makes nothing a shortage or a data problem.
+    expect(penetrationMatches("plain", "shortages", shortages, blockers, proposed)).toBe(false);
+    expect(matchingPenetrations(places, ["acted"], shortages, blockers, proposed).map((place) => place.id)).toEqual(["problem", "both", "plain"]);
+    expect(filterCounts(places, shortages, blockers, proposed).acted).toBe(3);
+  });
+
   it("returns every penetration until a chip is selected, then the union", () => {
     expect(matchingPenetrations(places, [], shortages, blockers)).toBe(places);
     expect(matchingPenetrations(places, ["shortages", "data-problems"], shortages, blockers).map((place) => place.id)).toEqual([

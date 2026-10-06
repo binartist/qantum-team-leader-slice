@@ -1,5 +1,5 @@
 export type Tone = "success" | "danger" | "warning" | "neutral" | "info" | "escalation";
-export type IconName = "check" | "stop" | "dashed-circle" | "warning" | "clock" | "arrow-up";
+export type IconName = "check" | "stop" | "dashed-circle" | "warning" | "clock" | "arrow-up" | "swap";
 
 export interface StatusView {
   readonly label: string;
@@ -60,6 +60,11 @@ export function shortageState(state: string): StatusView {
 export function decisionMark(kind: "wait" | "escalate"): { tone: Tone; icon: IconName } {
   const view = shortageState(kind === "wait" ? "waiting" : "escalated");
   return { tone: view.tone, icon: view.icon };
+}
+
+/** A proposed substitute's mark, on its log entry and on the row that counts it. */
+export function proposalMark(): { tone: Tone; icon: IconName } {
+  return { tone: "neutral", icon: "swap" };
 }
 
 export function earlierDecision(): StatusView {
