@@ -23,6 +23,8 @@ export type SiteFrameData =
       readonly plannedWork: string | null;
       /** Every planned penetration. Null when the site's work could not be read. */
       readonly places: readonly PenetrationPlace[] | null;
+      /** Nominated-solution material ids per penetration. Empty when the site's work could not be read. */
+      readonly penetrationMaterialIds: Readonly<Record<string, readonly string[]>>;
     };
 
 /** Loads what the site screen shows above its list: the site, its readiness banner, and the planned work. */
@@ -34,18 +36,14 @@ export async function loadSiteFrame(id: string): Promise<SiteFrameData> {
   });
   if (siteLoad.status === "unavailable") return { status: "unavailable" };
   const siteDataLoad = await loadPage(() => getCachedSiteData(id));
+  const loaded = siteDataLoad.status === "ready" ? siteDataLoad.value : null;
   return {
     status: "ready",
     site: siteLoad.value,
-    readiness: siteDataLoad.status === "ready" ? siteDataLoad.value.readiness : null,
-    plannedWork:
-      siteDataLoad.status === "ready"
-        ? plannedWorkLine(Object.values(siteDataLoad.value.sitePenetrations).map((place) => place.nominatedCode))
-        : null,
-    places:
-      siteDataLoad.status === "ready"
-        ? Object.entries(siteDataLoad.value.sitePenetrations).map(([penetrationId, place]) => ({ id: penetrationId, ...place }))
-        : null,
+    readiness: loaded ? loaded.readiness : null,
+    plannedWork: loaded ? plannedWorkLine(Object.values(loaded.sitePenetrations).map((place) => place.nominatedCode)) : null,
+    places: loaded ? Object.entries(loaded.sitePenetrations).map(([penetrationId, place]) => ({ id: penetrationId, ...place })) : null,
+    penetrationMaterialIds: loaded ? loaded.penetrationMaterialIds : {},
   };
 }
 

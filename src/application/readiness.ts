@@ -74,6 +74,36 @@ export interface SiteData {
   readonly shortageActions: readonly ShortageAction[];
   readonly referencedMaterials: SiteReadinessView["materials"];
   readonly sitePenetrations: SiteReadinessView["penetrations"];
+  /**
+   * Material ids of each planned penetration's nominated solution, in mapping order.
+   * Page only: the site list counts Actions-log entries with the same ids the penetration page uses.
+   * Not part of the readiness API view.
+   */
+  readonly penetrationMaterialIds: Readonly<Record<string, readonly string[]>>;
+}
+
+/** Material ids one nominated solution uses, first occurrence, in the order the mapping lists them. */
+function nominatedMaterialIds(
+  nominatedCode: string,
+  items: readonly { readonly internalCode: string; readonly materialId: string }[],
+): readonly string[] {
+  const ids: string[] = [];
+  const seen = new Set<string>();
+  for (const item of items) {
+    if (item.internalCode !== nominatedCode || seen.has(item.materialId)) continue;
+    seen.add(item.materialId);
+    ids.push(item.materialId);
+  }
+  return ids;
+}
+
+function penetrationMaterialIds(
+  nominations: readonly { readonly id: string; readonly nominatedCode: string }[],
+  items: readonly { readonly internalCode: string; readonly materialId: string }[],
+): Readonly<Record<string, readonly string[]>> {
+  const result: Record<string, readonly string[]> = {};
+  for (const penetration of nominations) result[penetration.id] = nominatedMaterialIds(penetration.nominatedCode, items);
+  return result;
 }
 
 function penetrationsForSite(nominations: readonly NominatedPenetration[]): SiteReadinessView["penetrations"] {
@@ -140,6 +170,7 @@ export function buildSiteData(deps: Dependencies, inputs: SiteInputs, stock: Sto
     shortageActions: actions,
     referencedMaterials: materialsReferenced(solutionMaterials.items, solutionMaterials.materials),
     sitePenetrations: penetrationsForSite(nominations),
+    penetrationMaterialIds: penetrationMaterialIds(nominations, solutionMaterials.items),
   };
 }
 

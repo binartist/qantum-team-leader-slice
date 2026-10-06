@@ -180,6 +180,43 @@ test("AC 45: a penetration page has Solution and Actions log tabs", async ({ pag
   await assertAxe(page);
 });
 
+test("AC 39, AC 46: a material page has Stock and Actions log tabs", async ({ page }) => {
+  await gotoApp(page, "/materials/MAT-MASTIC");
+  const tabs = page.getByRole("navigation", { name: "Material" });
+  await expect(tabs.getByRole("link", { name: "Stock" })).toHaveAttribute("aria-current", "page");
+  await expect(tabs.getByRole("link", { name: /Actions log/ })).toBeVisible();
+  const kingsway = page.getByRole("region", { name: "Kingsway Works, Phase 2" });
+  await expect(kingsway.getByText("Needs 1, stock unknown", { exact: true })).toBeVisible();
+  await expect(kingsway.getByText("No decision yet", { exact: true })).toHaveCount(0);
+
+  await gotoApp(page, "/materials/MAT-MASTIC?tab=log");
+  const logTabs = page.getByRole("navigation", { name: "Material" });
+  await expect(logTabs.getByRole("link", { name: /Actions log/ })).toHaveAttribute("aria-current", "page");
+  await expect(logTabs.getByRole("link", { name: /Actions log/ })).toContainText("0");
+  await expect(page.getByText("Nothing recorded for this material yet.")).toBeVisible();
+  await expect(page.getByRole("region", { name: "Kingsway Works, Phase 2" })).toHaveCount(0);
+
+  await gotoApp(page, "/materials/MAT-MASTIC?tab=junk");
+  await expect(page.getByRole("navigation", { name: "Material" }).getByRole("link", { name: "Stock" })).toHaveAttribute("aria-current", "page");
+  await expect(page.getByRole("region", { name: "Kingsway Works, Phase 2" })).toBeVisible();
+
+  await gotoApp(page, "/materials/MAT-MASTIC?from=pen-c-05");
+  const kept = page.getByRole("navigation", { name: "Material" });
+  await expect(kept.getByRole("link", { name: "Stock" })).toHaveAttribute("href", "/materials/MAT-MASTIC?from=pen-c-05");
+  await expect(kept.getByRole("link", { name: /Actions log/ })).toHaveAttribute("href", "/materials/MAT-MASTIC?tab=log&from=pen-c-05");
+  await expect(page.getByRole("link", { name: "Back to L2, Plant room" })).toBeVisible();
+  await kept.getByRole("link", { name: /Actions log/ }).click();
+  await expect(page).toHaveURL(/\/materials\/MAT-MASTIC\?tab=log&from=pen-c-05$/);
+  await expect(page.getByRole("link", { name: "Back to L2, Plant room" })).toBeVisible();
+  await expect(page.getByText("Nothing recorded for this material yet.")).toBeVisible();
+
+  await page.setViewportSize({ width: 375, height: 800 });
+  await gotoApp(page, "/materials/MAT-MASTIC?tab=log");
+  await assertTargets(page);
+  await assertNoOverflow(page);
+  await assertAxe(page);
+});
+
 test("AC 35: a cut-off catalogue substrate never fits, and the page says why", async ({ page }) => {
   await gotoApp(page, "/sites/site-c/penetrations/pen-c-01");
   const nominated = page.getByRole("region", { name: "Nominated solution 0943" });

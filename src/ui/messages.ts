@@ -48,6 +48,19 @@ export const PENETRATION_LOG = {
   empty: "Nothing recorded for this penetration yet.",
 } as const;
 
+export const MATERIAL_LOG = {
+  unavailable: "We can't load this material's actions right now. Try again shortly.",
+  empty: "Nothing recorded for this material yet.",
+} as const;
+
+/** The site a material-log entry was recorded at. */
+export function atSite(siteName: string): string {
+  return `At ${siteName}`;
+}
+
+/** Shown above the site list when that site's actions could not be read. */
+export const DECISIONS_NOTICE = "Can't check decisions right now. Rows don't show them.";
+
 /** How widely a material decision on one penetration still applies. */
 export function appliesToPenetrations(count: number): string {
   return `Applies to all ${count} penetrations at this site`;

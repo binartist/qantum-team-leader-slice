@@ -24,15 +24,24 @@ test("AC 31: escalate with the keyboard only, and targets are at least 44 by 44"
   await page.keyboard.press("Enter");
 
   await expect(page.locator("[data-announcer]")).toHaveText("Escalation recorded");
-  await expect(page.getByText("Escalated", { exact: true })).toBeVisible();
+  await page.getByRole("navigation", { name: "Material" }).getByRole("link", { name: /Actions log/ }).click();
+  await expect(page).toHaveURL(/\/materials\/MAT-COLLAR-25\?tab=log$/);
+  await expect(page.getByText("Escalated to purchasing: Pipe collar for 25 mm pipe")).toBeVisible();
+  await expect(page.getByText("At Harbour Point, Levels 3 to 5")).toBeVisible();
+  await expect(page.getByText("Noted from the keyboard")).toBeVisible();
+  await page.getByRole("navigation", { name: "Material" }).getByRole("link", { name: "Stock" }).click();
+  await expect(page.locator("#site-site-b").getByText("Escalated", { exact: true })).toHaveCount(0);
   await gotoApp(page, "/sites/site-b");
   await expect(page.getByRole("link", { name: "Acted 4" })).toBeVisible();
   await page.getByRole("link", { name: "Acted 4" }).click();
   await expect(page).toHaveURL(/show=acted/);
   await expect(page.locator("main a[href*='/penetrations/pen-b-']")).toHaveCount(4);
-  // The decision is an icon inside the row link (AC 44). The full wording is a hidden label.
+  // The decision is an icon inside the row link (AC 44). The hidden label is the full wording; the count is visible.
   const row = page.locator("a[href$='/penetrations/pen-b-01']");
-  await expect(row).toContainText("Escalated");
+  const escalated = row.locator("[title='Escalated']");
+  await expect(escalated).toContainText("Escalated");
+  await expect(escalated.locator("span[aria-hidden='true']")).toHaveText("1");
+  await expect(escalated.locator("span[aria-hidden='true']")).toBeVisible();
   await expect(row.locator("svg").first()).toBeVisible();
   await expect(row.locator("button")).toHaveCount(0);
   await expect(page.getByText("Blocked: hold the crew.")).toHaveCount(0);

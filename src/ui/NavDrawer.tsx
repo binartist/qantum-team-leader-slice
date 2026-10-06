@@ -45,13 +45,18 @@ export function NavDrawer({ current }: { current: NavSection }) {
             </li>
           ))}
         </ul>
+        {/* About the demo is not part of the work, so it sits apart from the main entries. */}
+        <ul className={`${styles.navItems} ${styles.navSecondary}`}>
+          <li>
+            <Link className={styles.navItem} href="/" aria-current={current === "about" ? "page" : undefined}>
+              <KindIcon kind="about" />
+              <span>{NAV.about}</span>
+            </Link>
+          </li>
+        </ul>
       </nav>
       <div className={styles.navFooter}>
         <ThemeSwitch />
-        <Link className={styles.navItem} href="/" aria-current={current === "about" ? "page" : undefined}>
-          <KindIcon kind="about" />
-          <span>{NAV.about}</span>
-        </Link>
       </div>
     </Drawer>
   );
