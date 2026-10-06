@@ -17,6 +17,7 @@ test("the sites list shows crew can go for Riverside and nothing planned for Old
 test("landing page explains the demo, no screen carries a Demo tag, and there is no demo footer", async ({ page }) => {
   // Read-only. Follows links only. Does not record an action.
   await gotoApp(page, "/");
+  await expect(page).toHaveURL(/\/about-this-demo$/);
   await expect(page.getByRole("heading", { level: 1, name: "Ready to send the crew?" })).toBeVisible();
   await expect(page.getByText("Sample sites and stock.", { exact: false })).toBeVisible();
   await expect(page.getByText("No login.", { exact: false })).toBeVisible();

@@ -181,3 +181,10 @@ main > * {
     scroll-behavior: auto;
   }
 }
+
+/* At wide widths a top-level page's menu header is hidden, so sticky regions sit at the top of the viewport. */
+@media (min-width: 1024px) {
+  :root:has([data-menu-bar]) {
+    --app-bar-height: 0;
+  }
+}
