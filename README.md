@@ -10,7 +10,7 @@ Before sending a crew to site, a team leader checks whether the materials for th
 The live demo uses invented sample data and has no login. Decisions are stored in Postgres and shared by everyone who visits, so some may already be recorded. The first page explains this.
 
 1. **Sites** (the menu on the first page, or `/sites`). Harbour Point and Kingsway Works are blocked, and the chip says why. Riverside Plaza can go. Old Mill Annex has nothing planned.
-2. **Harbour Point.** The page lists 12 penetrations across 5 solutions. There is no blocked banner. The Shortages chip counts penetrations (12 here, because every opening uses the short sealant), which is not the same unit as the sites-list chip ("2 shortages"). Each of those openings also says so on its row. Stock figures are labelled "on hand, shared, not reserved", with their age and a warning when they are more than a day old.
+2. **Harbour Point.** The page lists 12 penetrations across 5 solutions. There is no blocked banner. The Shortages chip counts penetrations (12 here, because every opening uses the short sealant), which is not the same unit as the sites-list chip ("2 shortages"). Each of those openings also says so on its row. Stock figures are labelled "on hand, shared, not reserved", with their age and a warning when they are more than a day old (always, in the demo: the sample stock is dated 3 Oct 2026).
 3. **Open the sealant.** Open an `L3, Riser 2` row and tap its line "Short material: Intumescent sealant … · this site short 2 of 10". The sealant's page opens at Harbour Point's section. Escalate it to Purchasing with a note. The sealant's Actions log tab shows it. Back returns to the penetration. On the Sites list Harbour Point is still Blocked, because a decision records intent, it does not create stock.
 4. **On that `L3, Riser 2` penetration** (solution `0438`), candidates `0451` and `0464` are shown with their fire rating, whether they meet the required rating, and stock. Every candidate is "Catalogue match, not verified", and `0451` warns that it uses sealant, which this site is already short of. **Propose `0451`** with a reason anyway: a manager decides.
 5. **Back on Harbour Point**, open the `L5, Plant room` row (solution `0344`): no catalogue match. The shortage is decided on the sealant's page.
@@ -34,7 +34,7 @@ Open http://localhost:3000. Decisions are kept in memory and reset when the serv
 ```bash
 npm run typecheck
 npm run lint
-npm run test:coverage   # unit and API tests; 100% coverage on src/domain and src/ui pure modules
+npm run test:coverage   # unit and API tests; 95% coverage gate on src/domain, pure src/ui modules, the decision client and the Postgres config
 npm run check:ac        # every acceptance criterion in the spec is referenced by a test
 npm run test:e2e        # Playwright at 375px with axe in light and dark (run `npx playwright install chromium` once)
 ```
@@ -60,7 +60,7 @@ CI deploys `main` to Vercel after the checks, database and browser jobs pass, th
 2. **Vercel project** (framework Next.js, region `syd1` from `vercel.json`) with `ACTIONS_STORE=postgres`, `DB_HOST`, `DB_PORT=6543`, `DB_USER=qantum_slice.<project-ref>`, `DB_NAME=qantum_slice`, `DB_SSL=require`, `DB_POOL_MAX=1`, and `DB_PASSWORD` as a sensitive variable.
 3. **GitHub:** secret `VERCEL_TOKEN`; variables `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`, `PRODUCTION_URL`.
 
-Every variable is listed in `.env.example` and explained in `docs/api.md` (Configuration).
+Every runtime variable of the app is listed in `.env.example` and explained in `docs/api.md` (Configuration). The test and CI variables above (`TEST_DB_ADMIN_URL`, `REQUIRE_DB_CONTRACT`, `PRODUCTION_URL`, `VERCEL_*`) are not.
 
 ## Sample data
 
@@ -73,6 +73,7 @@ Everything in `data/sample/` is invented and labelled so: four sites, their plan
 - **Stock is shared and not reserved.** Two sites can both read the same units as available. The screens say so.
 - **Substitutes are suggestions only.** A catalogue match is not proof of compliance. Proposals are recorded for a manager; there is no approval workflow, and nothing is sent to anyone automatically.
 - **Database TLS encrypts but does not authenticate the server** (`require`), because the Supabase pooler's chain is not in Node's trust store. `verify-full` with a CA bundle is supported.
+- **Idempotent repeats are not compared.** A repeat request with the same key and target but a different note or reason returns the original record unchanged.
 - **Not built:** offline use, crew scheduling and work dates, rate limiting, editing a recorded decision, a separate escalation route for data problems.
 
 ## How it is built
