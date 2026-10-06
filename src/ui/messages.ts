@@ -2,7 +2,6 @@ import { crewStatus, type StatusView } from "./status";
 
 export const CREW_STAYS = "This does not release the crew.";
 export const RECORDS_ONLY = "This records your decision here. Nobody is notified automatically yet.";
-export const OPEN_PENETRATION = "Open a penetration to see possible substitutes.";
 export const STOCK_STALE = "These stock figures are more than a day old. Check with the warehouse before relying on them.";
 export const SUBSTITUTES = "Substitutes";
 export const GIVE_REASON = "Give a reason.";
@@ -11,10 +10,73 @@ export const MANAGER_CHECK = "A manager has to verify this catalogue match.";
 export const EMPTY = {
   sites: "No sites to show.",
   actions: "Nothing recorded for this site yet.",
+  penetrations: "No penetrations planned for this site.",
+} as const;
+
+export const PENETRATION_FILTER = {
+  showAll: "Show all",
+  unknown: "That material is not a shortage on this site. Showing all penetrations.",
+} as const;
+
+/** The drawer side menu (AC 37). */
+export const NAV = {
+  open: "Open menu",
+  close: "Close menu",
+  title: "Team leader",
+  label: "Main",
+  sites: "Sites",
+  materials: "Materials",
+  actions: "Actions log",
+  about: "About this demo",
+} as const;
+
+export const THEME = {
+  legend: "Theme",
+  system: "System",
+  light: "Light",
+  dark: "Dark",
+} as const;
+
+export const ACTIONS_LOG = {
+  unavailable: "We can't load the actions log right now. Try again shortly.",
+  siteUnavailable: "We can't check this site's actions right now.",
+  empty: "No sites to show.",
+} as const;
+
+export const PENETRATION_LOG = {
+  unavailable: "We can't load this penetration's actions right now. Try again shortly.",
+  empty: "Nothing recorded for this penetration yet.",
+} as const;
+
+/** How widely a material decision on one penetration still applies. */
+export function appliesToPenetrations(count: number): string {
+  return `Applies to all ${count} penetrations at this site`;
+}
+
+export const MATERIALS = {
+  title: "Materials",
+  detailTitle: "Material",
+  empty: "No materials planned at any site.",
+  emptyChecked: "No materials planned at the sites that could be checked.",
+  unavailable: "Can't check stock right now. Don't assume any material is in stock. Try again.",
+  notShortAnywhere: "Not short at any site",
+  siteUnavailable: "Can't check this site right now. Don't assume it has enough.",
+} as const;
+
+export const NO_FILTER_MATCH = "No penetrations match these filters.";
+
+export function filterLine(materialName: string, shown: number, total: number): string {
+  return `Using ${materialName} · ${shown} of ${total}`;
+}
+
+export const FILTERS = {
+  label: "Filter penetrations",
+  shortages: "Shortages",
+  dataProblems: "Data problems",
+  acted: "Acted",
 } as const;
 
 export const SITES_UNAVAILABLE = "Can't check the sites right now. Don't assume any site is clear. Try again.";
-export const DEMO_BANNER = "Demo: sample data, no login";
 
 export const BUTTONS = {
   wait: "Wait",
@@ -26,7 +88,6 @@ export const BUTTONS = {
   cancel: "Cancel",
   sending: "Sending…",
   tryAgain: "Try again",
-  actionsLog: "Actions log",
 } as const;
 
 export const ANNOUNCE = {
@@ -60,21 +121,11 @@ export function apiErrorMessage(code: string): string {
   return ERRORS[code] ?? FALLBACK;
 }
 
-export function readinessBanner(status: string, shortages: number, blockers: number): StatusView {
+/** Banner for a clear site, or for nothing planned. A blocked site has no banner: the rows say why (AC 34). */
+export function readinessBanner(status: string): StatusView {
   switch (status) {
-    case "blocked": {
-      if (shortages === 0 && blockers > 0) {
-        const problems = `${blockers} ${blockers === 1 ? "data problem" : "data problems"}`;
-        return { label: `Blocked: ${problems}. Hold the crew until they are sorted.`, tone: "danger", icon: "cross" };
-      }
-      const shortageText = `${shortages} ${shortages === 1 ? "shortage" : "shortages"}`;
-      const problem = blockers > 0 ? ` (and ${blockers} ${blockers === 1 ? "data problem" : "data problems"})` : "";
-      return {
-        label: `Blocked: ${shortageText}${problem}. Hold the crew until stock arrives.`,
-        tone: "danger",
-        icon: "cross",
-      };
-    }
+    case "blocked":
+      return { label: "Blocked: hold the crew.", tone: "danger", icon: "stop" };
     case "nothing_planned":
       return { label: "Nothing planned for this site", tone: "neutral", icon: "dashed-circle" };
     case "clear":

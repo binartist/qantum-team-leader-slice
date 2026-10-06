@@ -1,7 +1,15 @@
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"] as const;
 
 export function formatReference(reference: string): string {
-  return `Ref ${reference}`;
+  return `Job ref ${reference}`;
+}
+
+/** How much work the site check covered, from each planned penetration's nominated code. Null when nothing is planned. */
+export function plannedWorkLine(nominatedCodes: readonly string[]): string | null {
+  if (nominatedCodes.length === 0) return null;
+  const penetrations = nominatedCodes.length;
+  const solutions = new Set(nominatedCodes).size;
+  return `${penetrations} ${penetrations === 1 ? "penetration" : "penetrations"}, ${solutions} ${solutions === 1 ? "solution" : "solutions"}`;
 }
 
 function snappedQuantity(value: number): number | null {
@@ -28,14 +36,6 @@ export function formatUnit(quantity: number, unit: string): string {
   const snapped = snappedQuantity(quantity);
   if (snapped === 1) return unit;
   return UNIT_PLURAL[unit] ?? `${unit}s`;
-}
-
-export function formatNeed(required: number, onHand: number | null, shortfall: number | null, unit: string): string {
-  if (onHand === null || shortfall === null) return `Need ${formatQuantity(required)}, stock unknown`;
-  // The unit is printed once, beside the shortfall, so plural follows that number.
-  const unitWord = formatUnit(shortfall, unit);
-  const amounts = `Need ${formatQuantity(required)}, have ${formatQuantity(onHand)}, short ${formatQuantity(shortfall)}`;
-  return unitWord.length > 0 ? `${amounts} ${unitWord}` : amounts;
 }
 
 function utcStamp(iso: string): string | null {
@@ -91,18 +91,6 @@ export function formatRecordedAt(iso: string): string {
   return utcStamp(iso) ?? "Time unknown";
 }
 
-export function formatMaterialSummary(
-  lines: readonly { readonly materialId: string; readonly requiredQty: number; readonly onHandQty: number | null }[],
-  materials: Readonly<Record<string, { readonly name: string }>>,
-): string {
-  return lines
-    .map((line) => {
-      const name = materials[line.materialId]?.name ?? line.materialId;
-      return `${name} x${formatQuantity(line.requiredQty)}`;
-    })
-    .join(", ");
-}
-
 export function characterCountLabel(value: string): string {
   return `${value.trim().length} of 500 characters`;
 }
@@ -112,14 +100,9 @@ function ratingPart(minutes: number | null, kind: "integrity" | "insulation"): s
   return `${formatQuantity(minutes)} min ${kind}`;
 }
 
-export function formatRating(integrity: number | null, insulation: number | null): string {
-  return `Fire rating: ${ratingPart(integrity, "integrity")}, ${ratingPart(insulation, "insulation")}`;
-}
-
-export function supplierRefLine(code: string): string | null {
-  const trimmed = code.trim();
-  if (trimmed.length === 0) return null;
-  return `Supplier ref ${trimmed}`;
+/** "90 min integrity, 60 min insulation", for a labelled field. */
+export function ratingValue(integrity: number | null, insulation: number | null): string {
+  return `${ratingPart(integrity, "integrity")}, ${ratingPart(insulation, "insulation")}`;
 }
 
 export interface PenetrationRow {
@@ -131,7 +114,7 @@ export interface PenetrationRow {
 }
 
 // Display only: catalogue text keeps its raw spacing for matching, the screen collapses runs of spaces.
-function tidy(text: string): string {
+export function tidy(text: string): string {
   return text.replace(/\s+/g, " ").trim();
 }
 
@@ -139,46 +122,109 @@ export function serviceLine(place: Pick<PenetrationRow, "serviceType" | "service
   return `${tidy(place.serviceType)}, ${tidy(place.serviceSize)}`;
 }
 
-// The solution code is the group heading, so a row names only the place and the service.
+/** The site list is one row per penetration, named by its place and service. */
 export function penetrationLine(place: PenetrationRow): string {
   return `${place.floor}, ${place.location} · ${tidy(place.serviceType)} ${tidy(place.serviceSize)}`;
 }
 
-export function penetrationDisclosureLabel(count: number): string {
-  return `Penetrations and substitutes (${count})`;
+/** Site-list order: floor, then location, then the service, so one place stays together. */
+export function penetrationsByPlace<T extends PenetrationRow & { readonly id: string }>(places: readonly T[]): T[] {
+  return [...places].sort(
+    (a, b) =>
+      a.floor.localeCompare(b.floor, undefined, { numeric: true }) ||
+      a.location.localeCompare(b.location) ||
+      a.serviceType.localeCompare(b.serviceType) ||
+      a.serviceSize.localeCompare(b.serviceSize) ||
+      a.id.localeCompare(b.id),
+  );
 }
 
-export function penetrationGroups<T extends { readonly nominatedCode: string }>(
-  places: readonly T[],
-): { heading: string; places: T[] }[] {
-  const groups: { code: string; places: T[] }[] = [];
-  const index = new Map<string, { code: string; places: T[] }>();
-  for (const place of places) {
-    const existing = index.get(place.nominatedCode);
-    if (existing) {
-      existing.places.push(place);
-      continue;
-    }
-    const created = { code: place.nominatedCode, places: [place] };
-    index.set(place.nominatedCode, created);
-    groups.push(created);
+/** A wait or escalate on a shortage covers every penetration that needs the material at this site. */
+export function decisionScope(count: number): string {
+  return count === 1 ? "For the 1 penetration at this site" : `For all ${count} penetrations at this site`;
+}
+
+function amount(quantity: number, unit: string): string {
+  const unitWord = formatUnit(quantity, unit);
+  return unitWord.length > 0 ? `${formatQuantity(quantity)} ${unitWord}` : formatQuantity(quantity);
+}
+
+/** One site's part on a material page. Not short is only ever "for this site alone": stock is shared. */
+export function siteMaterialLine(
+  required: number,
+  shortage: { readonly kind: "short" | "unknown"; readonly shortfallQty: number | null } | null,
+  unit: string,
+): string {
+  const need = `Needs ${formatQuantity(required)}`;
+  if (shortage === null) return `${need}, not short for this site alone`;
+  if (shortage.kind === "unknown" || shortage.shortfallQty === null) return `${need}, stock unknown`;
+  return `${need}, short ${amount(shortage.shortfallQty, unit)}`;
+}
+
+/** A penetration's shortage line: the material and this site's figures, inline. */
+export function shortageBrief(
+  name: string,
+  shortage: { readonly kind: "short" | "unknown"; readonly requiredQty: number; readonly shortfallQty: number | null },
+): string {
+  if (shortage.kind === "unknown" || shortage.shortfallQty === null) {
+    return `Stock unknown: ${name} · this site needs ${formatQuantity(shortage.requiredQty)}`;
   }
-  return groups.map((group) => ({
-    heading: `Solution ${group.code} · ${group.places.length}`,
-    places: group.places,
-  }));
+  return `Short material: ${name} · this site short ${formatQuantity(shortage.shortfallQty)} of ${formatQuantity(shortage.requiredQty)}`;
 }
 
-export function affectedCount(count: number): string {
-  return count === 1 ? "Affects 1 penetration" : `Affects ${count} penetrations`;
+/** Every site's need added up; empty when a site could not be checked, so no total is claimed. */
+export function plannedAcrossLine(planned: number | null, unit: string): string {
+  return planned === null ? "" : `Planned across sites ${amount(planned, unit)}`;
+}
+
+/** The shared stock against the across-sites need. The total is left out when a site could not be checked. */
+export function materialStockLine(onHand: number | null, planned: number | null, unit: string): string {
+  const stock = onHand === null ? "Stock unknown" : `On hand ${amount(onHand, unit)}`;
+  return planned === null ? stock : `${stock} · planned across sites ${amount(planned, unit)}`;
+}
+
+export function shortSiteCount(count: number): string {
+  return count === 1 ? "Short at 1 site" : `Short at ${count} sites`;
+}
+
+export function uncheckedSiteCount(count: number): string {
+  return count === 1 ? "1 site couldn't be checked" : `${count} sites couldn't be checked`;
+}
+
+/** Identical place lines collapse into one, "×N" when repeated, in the order first seen. */
+export function groupPlaces(labels: readonly string[]): string[] {
+  const counts = new Map<string, number>();
+  for (const label of labels) counts.set(label, (counts.get(label) ?? 0) + 1);
+  return [...counts].map(([label, count]) => (count === 1 ? label : `${label} ×${count}`));
 }
 
 export function sitePath(siteId: string): string {
   return `/sites/${encodeURIComponent(siteId)}`;
 }
 
-export function actionsPath(siteId: string): string {
-  return `/sites/${encodeURIComponent(siteId)}/actions`;
+/** The site screen opened from a material page, so its back control can return there. */
+export function siteFromMaterialPath(siteId: string, materialId: string): string {
+  return `${sitePath(siteId)}?fromMaterial=${encodeURIComponent(materialId)}`;
+}
+
+export const MATERIALS_PATH = "/materials";
+
+export const ACTIONS_PATH = "/actions";
+
+/** The anchor of one site's section on a material page. */
+export function siteAnchor(siteId: string): string {
+  return `site-${siteId}`;
+}
+
+/**
+ * A material page. From a penetration, `from` lets the back control return there, and the anchor scrolls
+ * to that site's section; the page itself always shows every site.
+ */
+export function materialPagePath(materialId: string, from?: { readonly siteId: string; readonly penetrationId?: string }): string {
+  const base = `${MATERIALS_PATH}/${encodeURIComponent(materialId)}`;
+  if (!from) return base;
+  const query = from.penetrationId === undefined ? "" : `?from=${encodeURIComponent(from.penetrationId)}`;
+  return `${base}${query}#${encodeURIComponent(siteAnchor(from.siteId))}`;
 }
 
 export function penetrationPath(siteId: string, penetrationId: string): string {
@@ -214,6 +260,32 @@ export function actionSentence(
   return `Escalated: ${target}`;
 }
 
-export function proposalSentence(fromCode: string, toCode: string): string {
-  return `Proposed substitute: ${fromCode} to ${toCode}`;
+export function proposalSentence(fromCode: string, toCode: string, place?: string): string {
+  return place ? `Proposed substitute for ${place}: ${fromCode} to ${toCode}` : `Proposed substitute: ${fromCode} to ${toCode}`;
+}
+
+/**
+ * A page opened from the actions log: `fromLog` names the site whose section it was opened from, so the
+ * page's back control can return there. Added after any query and before any anchor.
+ */
+export function fromLogPath(path: string, siteId: string): string {
+  const hashAt = path.indexOf("#");
+  const base = hashAt === -1 ? path : path.slice(0, hashAt);
+  const hash = hashAt === -1 ? "" : path.slice(hashAt);
+  return `${base}${base.includes("?") ? "&" : "?"}fromLog=${encodeURIComponent(siteId)}${hash}`;
+}
+
+/**
+ * Where a logged decision leads: a data problem to its penetration, a material shortage to the material
+ * page at that site's section, where it was decided. A resolved shortage has nothing to open. Either page
+ * returns to the log.
+ */
+export function actionLink(siteId: string, shortageId: string, status: "current" | "earlier" | "resolved"): string | null {
+  const prefix = `${siteId}:`;
+  const rest = shortageId.startsWith(prefix) ? shortageId.slice(prefix.length) : shortageId;
+  if (rest.startsWith("blocker.")) {
+    const penetrationId = rest.slice("blocker.".length);
+    return penetrationId.length === 0 ? null : fromLogPath(penetrationPath(siteId, penetrationId), siteId);
+  }
+  return status === "resolved" ? null : fromLogPath(materialPagePath(rest, { siteId }), siteId);
 }

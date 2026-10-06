@@ -22,11 +22,14 @@ while (Date.now() <= deadline) {
     const noStore = cache.split(",").some((part) => part.trim().toLowerCase() === "no-store");
     const homeResponse = await fetch(new URL("/", raw), { cache: "no-store" });
     const homeText = await homeResponse.text();
-    if (sitesResponse.status === 200 && noStore && count === 4 && homeResponse.status === 200 && homeText.includes("Sites")) {
+    const listResponse = await fetch(new URL("/sites", raw), { cache: "no-store" });
+    const listText = await listResponse.text();
+    const pagesOk = homeResponse.status === 200 && homeText.includes("Ready to send the crew?") && listResponse.status === 200 && listText.includes("Sites");
+    if (sitesResponse.status === 200 && noStore && count === 4 && pagesOk) {
       console.log("smoke ok");
       process.exit(0);
     }
-    last = `sites ${sitesResponse.status} cache ${cache || "missing"} count ${count} home ${homeResponse.status}`;
+    last = `sites ${sitesResponse.status} cache ${cache || "missing"} count ${count} home ${homeResponse.status} list ${listResponse.status}`;
   } catch (error) {
     last = error instanceof Error ? error.name : "request failed";
   }

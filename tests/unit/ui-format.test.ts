@@ -2,25 +2,34 @@ import { describe, expect, it } from "vitest";
 import {
   actionSentence,
   actionTarget,
-  actionsPath,
-  affectedCount,
-  formatMaterialSummary,
-  formatNeed,
+  plannedWorkLine,
+  decisionScope,
+  groupPlaces,
+  siteFromMaterialPath,
+  materialPagePath,
+  siteMaterialLine,
+  shortageBrief,
+  materialStockLine,
+  plannedAcrossLine,
+  shortSiteCount,
+  uncheckedSiteCount,
+  siteAnchor,
+  ACTIONS_PATH,
+  MATERIALS_PATH,
   formatQuantity,
-  formatRating,
+  ratingValue,
   formatRecordedAt,
   formatReference,
   formatUnit,
-  penetrationDisclosureLabel,
-  penetrationGroups,
   penetrationLine,
   serviceLine,
   penetrationPath,
   proposalSentence,
+  actionLink,
+  fromLogPath,
   sitePath,
   stockFiguresLine,
   stockIsStale,
-  supplierRefLine,
 } from "@/ui/format";
 
 describe("quantities", () => {
@@ -39,24 +48,6 @@ describe("quantities", () => {
     expect(formatQuantity(Number.NaN)).toBe("unknown");
     expect(formatQuantity(Number.POSITIVE_INFINITY)).toBe("unknown");
     expect(formatQuantity(Number.NEGATIVE_INFINITY)).toBe("unknown");
-  });
-
-  it("formats a known shortage and an unknown-stock shortage", () => {
-    expect(formatNeed(10, 8, 2, "cartridge")).toBe("Need 10, have 8, short 2 cartridges");
-    expect(formatNeed(1, 0, 1, "cartridge")).toBe("Need 1, have 0, short 1 cartridge");
-    expect(formatNeed(2, 0, 2, "tube")).toBe("Need 2, have 0, short 2 tubes");
-    expect(formatNeed(1, 0, 1, "tube")).toBe("Need 1, have 0, short 1 tube");
-    expect(formatNeed(1, 0, 1, "metre")).toBe("Need 1, have 0, short 1 metre");
-    expect(formatNeed(2.5, 0, 2.5, "metre")).toBe("Need 2.5, have 0, short 2.5 metres");
-    expect(formatNeed(0, 0, 0, "metre")).toBe("Need 0, have 0, short 0 metres");
-    expect(formatNeed(4, 2, 2, "each")).toBe("Need 4, have 2, short 2");
-    expect(formatNeed(1, 0, 1, "each")).toBe("Need 1, have 0, short 1");
-    expect(formatNeed(1, null, null, "tube")).toBe("Need 1, stock unknown");
-    expect(formatNeed(4, null, 2, "each")).toBe("Need 4, stock unknown");
-    expect(formatNeed(4, 2, null, "each")).toBe("Need 4, stock unknown");
-    expect(formatNeed(1, 0, 1, "")).toBe("Need 1, have 0, short 1");
-    expect(formatNeed(3, 1, 2, "box")).toBe("Need 3, have 1, short 2 boxs");
-    expect(formatNeed(1, 0, Number.NaN, "metre")).toBe("Need 1, have 0, short unknown metres");
   });
 
   it("pluralises a unit from the shortfall, and omits each", () => {
@@ -140,39 +131,14 @@ describe("times", () => {
   });
 });
 
-describe("candidate material lines", () => {
-  it("joins named lines and falls back to the material id", () => {
-    const line = formatMaterialSummary(
-      [
-        { materialId: "MAT-PUTTY", requiredQty: 1, onHandQty: 20 },
-        { materialId: "MAT-SEALANT", requiredQty: 1, onHandQty: 8 },
-        { materialId: "MAT-GONE", requiredQty: 2, onHandQty: null },
-      ],
-      { "MAT-PUTTY": { name: "Fire putty pad" }, "MAT-SEALANT": { name: "Intumescent sealant, 310 ml cartridge" } },
-    );
-    expect(line).toBe("Fire putty pad x1, Intumescent sealant, 310 ml cartridge x1, MAT-GONE x2");
-    expect(formatMaterialSummary([{ materialId: "M", requiredQty: 1, onHandQty: 0 }], { M: { name: "Pad" } })).toBe("Pad x1");
-    expect(formatMaterialSummary([], {})).toBe("");
-  });
-});
-
 describe("ratings, counts, and paths", () => {
-  it("prints a fire rating in minutes and names a missing part", () => {
-    expect(formatRating(60, 30)).toBe("Fire rating: 60 min integrity, 30 min insulation");
-    expect(formatRating(60, null)).toBe("Fire rating: 60 min integrity, no insulation rating");
-    expect(formatRating(null, 30)).toBe("Fire rating: no integrity rating, 30 min insulation");
-    expect(formatRating(null, null)).toBe("Fire rating: no integrity rating, no insulation rating");
-    expect(formatRating(60.5, 0)).toBe("Fire rating: 60.5 min integrity, 0 min insulation");
+  it("prints a rating value without the label, for a labelled field", () => {
+    expect(ratingValue(90, 60)).toBe("90 min integrity, 60 min insulation");
+    expect(ratingValue(60, null)).toBe("60 min integrity, no insulation rating");
+    expect(ratingValue(null, 30)).toBe("no integrity rating, 30 min insulation");
   });
 
-  it("prints a supplier reference only when one is present", () => {
-    expect(supplierRefLine("V21.27-22SFR00053-158-E")).toBe("Supplier ref V21.27-22SFR00053-158-E");
-    expect(supplierRefLine(" ABC ")).toBe("Supplier ref ABC");
-    expect(supplierRefLine("")).toBeNull();
-    expect(supplierRefLine("   ")).toBeNull();
-  });
-
-  it("names a penetration row and groups rows when more than one solution is nominated", () => {
+  it("names a penetration row and its service", () => {
     const pex = { id: "pen-b-01", floor: "L3", location: "Riser 2", serviceType: "PEX Pipe", serviceSize: "Ø25mm", nominatedCode: "0438" };
     const kelox = {
       id: "pen-b-05",
@@ -182,34 +148,58 @@ describe("ratings, counts, and paths", () => {
       serviceSize: "Ø32mm",
       nominatedCode: "0434",
     };
-    const again = { ...pex, id: "pen-b-02" };
     expect(penetrationLine(pex)).toBe("L3, Riser 2 · PEX Pipe Ø25mm");
     // Raw catalogue text keeps its double spaces for matching; the screen shows single spaces.
     expect(penetrationLine(kelox)).toBe("L4, Corridor south · KELOX Pipe - 13mm PE Ø32mm");
     expect(serviceLine(kelox)).toBe("KELOX Pipe - 13mm PE, Ø32mm");
-    expect(penetrationDisclosureLabel(1)).toBe("Penetrations and substitutes (1)");
-    expect(penetrationDisclosureLabel(12)).toBe("Penetrations and substitutes (12)");
-    expect(penetrationGroups([pex, again])).toEqual([{ heading: "Solution 0438 · 2", places: [pex, again] }]);
-    expect(penetrationGroups([pex, kelox, again])).toEqual([
-      { heading: "Solution 0438 · 2", places: [pex, again] },
-      { heading: "Solution 0434 · 1", places: [kelox] },
-    ]);
-    expect(penetrationGroups([])).toEqual([]);
   });
 
-  it("counts affected penetrations", () => {
-    expect(affectedCount(1)).toBe("Affects 1 penetration");
-    expect(affectedCount(12)).toBe("Affects 12 penetrations");
-    expect(affectedCount(0)).toBe("Affects 0 penetrations");
+  // User decisions: a decision covers the whole site, and "not short" is only ever for one site alone.
+  it("words a material across sites", () => {
+    expect(decisionScope(1)).toBe("For the 1 penetration at this site");
+    expect(decisionScope(4)).toBe("For all 4 penetrations at this site");
+    expect(siteMaterialLine(4, { kind: "short", shortfallQty: 2 }, "each")).toBe("Needs 4, short 2");
+    expect(siteMaterialLine(10, { kind: "short", shortfallQty: 2 }, "cartridge")).toBe("Needs 10, short 2 cartridges");
+    expect(siteMaterialLine(1, { kind: "unknown", shortfallQty: null }, "tube")).toBe("Needs 1, stock unknown");
+    expect(siteMaterialLine(1, { kind: "short", shortfallQty: null }, "tube")).toBe("Needs 1, stock unknown");
+    expect(siteMaterialLine(2, null, "each")).toBe("Needs 2, not short for this site alone");
+    expect(materialStockLine(2, 6, "each")).toBe("On hand 2 · planned across sites 6");
+    expect(materialStockLine(8, 12, "cartridge")).toBe("On hand 8 cartridges · planned across sites 12 cartridges");
+    expect(materialStockLine(null, 1, "tube")).toBe("Stock unknown · planned across sites 1 tube");
+    expect(materialStockLine(5, null, "each")).toBe("On hand 5");
+    expect(plannedAcrossLine(1, "tube")).toBe("Planned across sites 1 tube");
+    expect(plannedAcrossLine(null, "tube")).toBe("");
+    expect(shortSiteCount(1)).toBe("Short at 1 site");
+    expect(shortSiteCount(2)).toBe("Short at 2 sites");
+    expect(uncheckedSiteCount(1)).toBe("1 site couldn't be checked");
+    expect(uncheckedSiteCount(3)).toBe("3 sites couldn't be checked");
+  });
+
+  it("briefs a penetration's shortage inline with this site's figures (AC 40)", () => {
+    expect(shortageBrief("Pipe collar", { kind: "short", requiredQty: 4, shortfallQty: 2 })).toBe("Short material: Pipe collar · this site short 2 of 4");
+    expect(shortageBrief("Fire mastic", { kind: "unknown", requiredQty: 1, shortfallQty: null })).toBe("Stock unknown: Fire mastic · this site needs 1");
+  });
+
+  it("groups identical places in first-seen order, counting repeats", () => {
+    expect(groupPlaces(["L3, Riser 2", "L4, Core", "L3, Riser 2", "L3, Riser 2"])).toEqual(["L3, Riser 2 ×3", "L4, Core"]);
+    expect(groupPlaces([])).toEqual([]);
   });
 
   it("encodes ids into paths", () => {
     expect(sitePath("site-b")).toBe("/sites/site-b");
-    expect(actionsPath("site-b")).toBe("/sites/site-b/actions");
     expect(penetrationPath("site-b", "pen-b-01")).toBe("/sites/site-b/penetrations/pen-b-01");
     expect(penetrationPath("a/b", "c d")).toBe("/sites/a%2Fb/penetrations/c%20d");
     expect(sitePath("a/b")).toBe("/sites/a%2Fb");
-    expect(actionsPath("a/b")).toBe("/sites/a%2Fb/actions");
+    expect(MATERIALS_PATH).toBe("/materials");
+    expect(ACTIONS_PATH).toBe("/actions");
+    expect(siteAnchor("site-b")).toBe("site-site-b");
+    expect(materialPagePath("MAT-SEALANT")).toBe("/materials/MAT-SEALANT");
+    expect(materialPagePath("c d", { siteId: "site-b" })).toBe("/materials/c%20d#site-site-b");
+    expect(materialPagePath("MAT-COLLAR-25", { siteId: "site-b", penetrationId: "pen-b-01" })).toBe(
+      "/materials/MAT-COLLAR-25?from=pen-b-01#site-site-b",
+    );
+    expect(siteFromMaterialPath("site-b", "MAT-COLLAR-25")).toBe("/sites/site-b?fromMaterial=MAT-COLLAR-25");
+    expect(siteFromMaterialPath("a/b", "c d")).toBe("/sites/a%2Fb?fromMaterial=c%20d");
   });
 });
 
@@ -232,33 +222,59 @@ describe("action wording", () => {
     expect(actionSentence("escalate", "warehouse", "L1, Basement link")).toBe("Escalated to warehouse: L1, Basement link");
     expect(actionSentence("escalate", null, "Intumescent sealant")).toBe("Escalated: Intumescent sealant");
     expect(proposalSentence("0438", "0451")).toBe("Proposed substitute: 0438 to 0451");
+    // Four penetrations can look alike, so a proposal names its place when it is known.
+    expect(proposalSentence("0438", "0451", "L3, Riser 2")).toBe("Proposed substitute for L3, Riser 2: 0438 to 0451");
+  });
+
+  it("AC 43: links a decision to the work it is about, marked as opened from the log", () => {
+    // A material decision opens the cross-site material page at that site's section, where it was decided.
+    // `fromLog` lets that page's back control return to the log.
+    expect(actionLink("site-b", "site-b:MAT-SEALANT", "current")).toBe("/materials/MAT-SEALANT?fromLog=site-b#site-site-b");
+    expect(actionLink("site-b", "site-b:MAT-SEALANT", "earlier")).toBe("/materials/MAT-SEALANT?fromLog=site-b#site-site-b");
+    // A resolved shortage has nothing left to open.
+    expect(actionLink("site-b", "site-b:MAT-SEALANT", "resolved")).toBeNull();
+    expect(actionLink("site-c", "site-c:blocker.pen-c-03", "current")).toBe("/sites/site-c/penetrations/pen-c-03?fromLog=site-c");
+    expect(actionLink("site-c", "site-c:blocker.pen-c-03", "resolved")).toBe("/sites/site-c/penetrations/pen-c-03?fromLog=site-c");
+    expect(actionLink("site-c", "site-c:blocker.", "current")).toBeNull();
+    expect(actionLink("site-c", "other:MAT-X", "current")).toBe("/materials/other%3AMAT-X?fromLog=site-c#site-site-c");
+  });
+
+  it("AC 43: adds the log origin to a path, before any anchor and after any query", () => {
+    expect(fromLogPath("/sites/site-b", "site-b")).toBe("/sites/site-b?fromLog=site-b");
+    expect(fromLogPath("/materials/M?from=p1#site-site-b", "site-b")).toBe("/materials/M?from=p1&fromLog=site-b#site-site-b");
+    expect(fromLogPath("/sites/a", "a b")).toBe("/sites/a?fromLog=a%20b");
+  });
+});
+
+describe("planned work", () => {
+  it("counts the penetrations and distinct nominated solutions, with singulars", () => {
+    expect(plannedWorkLine(["0438", "0438", "0434"])).toBe("3 penetrations, 2 solutions");
+    expect(plannedWorkLine(["0438"])).toBe("1 penetration, 1 solution");
+    expect(plannedWorkLine(["0344", "0344", "0375", "0375", "0452", "0452"])).toBe("6 penetrations, 3 solutions");
+  });
+
+  it("returns nothing when no work is planned, so the line is not shown", () => {
+    expect(plannedWorkLine([])).toBeNull();
   });
 });
 
 describe("site reference", () => {
-  it("labels the code with the word Ref", () => {
-    expect(formatReference("RP-A2")).toBe("Ref RP-A2");
-    expect(formatReference("HP-345")).toBe("Ref HP-345");
+  it("labels the code as a job reference", () => {
+    expect(formatReference("RP-A2")).toBe("Job ref RP-A2");
+    expect(formatReference("HP-345")).toBe("Job ref HP-345");
   });
 });
 
 describe("forbidden words", () => {
   it("no formatted string contains compatible or approved", () => {
     const texts = [
-      formatNeed(1, 1, 0, "each"),
-      formatMaterialSummary([{ materialId: "M", requiredQty: 1, onHandQty: 1 }], { M: { name: "Pad" } }),
-      formatRating(60, null),
-      formatRating(null, 30),
-      supplierRefLine("ABC") ?? "",
       stockFiguresLine("2026-10-03T08:00:00Z", "2026-10-05T08:00:00Z"),
       penetrationLine({ floor: "L3", location: "Riser 2", serviceType: "PEX Pipe", serviceSize: "Ø25mm", nominatedCode: "0438" }),
-      penetrationDisclosureLabel(4),
-      penetrationGroups([
-        { id: "a", nominatedCode: "0438" },
-        { id: "b", nominatedCode: "0434" },
-      ])[0]?.heading ?? "",
       actionSentence("escalate", "purchasing", "Pad"),
       proposalSentence("0438", "0451"),
+      siteMaterialLine(2, null, "each"),
+      shortageBrief("Pad", { kind: "short", requiredQty: 4, shortfallQty: 2 }),
+      materialStockLine(5, 6, "each"),
       formatReference("RP-A2"),
     ];
     for (const text of texts) expect(text).not.toMatch(/compatible|approved/i);

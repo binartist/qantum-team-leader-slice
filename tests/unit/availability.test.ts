@@ -114,4 +114,29 @@ describe("describeCandidateAvailability", () => {
     expect(result.lines[0]).toEqual(expect.objectContaining({ onHandQty: null, status: "unknown" }));
     expect(result.overall).toBe("unknown");
   });
+
+  describe("AC 33: materials the site is already short of", () => {
+    const rows = [material("MAT-PUTTY", 1), material("MAT-SEALANT", 0.25)];
+    const onHand = [stock("MAT-PUTTY", 20), stock("MAT-SEALANT", 8)];
+
+    it("a material the site is short of makes the candidate short, even when one install fits on hand", () => {
+      const result = describeCandidateAvailability("0451", rows, onHand, new Map([["MAT-SEALANT", "short"]]));
+      expect(result.overall).toBe("short");
+      expect(result.lines).toEqual([
+        { materialId: "MAT-PUTTY", quantityPerInstall: 1, requiredQty: 1, onHandQty: 20, status: "in_stock" },
+        { materialId: "MAT-SEALANT", quantityPerInstall: 0.25, requiredQty: 1, onHandQty: 8, status: "short" },
+      ]);
+    });
+
+    it("a material whose site stock is unknown makes the candidate unknown, never in_stock", () => {
+      const result = describeCandidateAvailability("0451", rows, onHand, new Map([["MAT-SEALANT", "unknown"]]));
+      expect(result.overall).toBe("unknown");
+      expect(result.lines[1]).toEqual(expect.objectContaining({ onHandQty: 8, status: "unknown" }));
+    });
+
+    it("shortages of other materials leave a candidate that fits on hand in_stock", () => {
+      const result = describeCandidateAvailability("0451", rows, onHand, new Map([["MAT-COLLAR-25", "short"]]));
+      expect(result.overall).toBe("in_stock");
+    });
+  });
 });

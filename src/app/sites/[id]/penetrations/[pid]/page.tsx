@@ -1,24 +1,35 @@
 import type { Metadata } from "next";
 import { unstable_rethrow } from "next/navigation";
 import { connection } from "next/server";
-import type { SiteReadinessView } from "@/application";
+import Link from "next/link";
+import type { CandidateList, SiteReadinessView } from "@/application";
+import { FitTable } from "@/ui/FitTable";
+import { SubstituteSwitcher } from "@/ui/SubstituteSwitcher";
+import { fitRows } from "@/ui/fit";
 import { SiteNotFoundError } from "@/ports";
-import { getCachedCandidates, getCachedReadiness, getCachedSite } from "../../../../_lib/cached";
+import { getCachedActions, getCachedCandidates, getCachedPenetrationDetail, getCachedReadiness, getCachedSite } from "../../../../_lib/cached";
+import { KindIcon } from "@/ui/KindIcon";
+import { logBack, logOrigin } from "@/ui/actions-log";
 import { AppBar } from "@/ui/AppBar";
-import { CandidateCard } from "@/ui/CandidateCard";
 import { UnavailablePanel } from "@/ui/UnavailablePanel";
 import { EscalateDialog } from "@/ui/decisions/EscalateDialog";
-import { formatMaterialSummary, formatRating, sitePath, actionsPath, serviceLine } from "@/ui/format";
-import { LinkButton } from "@/ui/LinkButton";
+import { ratingValue, sitePath, serviceLine } from "@/ui/format";
+import { FactLine } from "@/ui/FactLine";
 import { Notice } from "@/ui/Notice";
-import { BUTTONS, readinessBanner } from "@/ui/messages";
-import { candidateStatus, emptyCatalogueLabel } from "@/ui/status";
+import { NAV, PENETRATION_LOG, readinessBanner } from "@/ui/messages";
+import { PenetrationLog } from "@/ui/PenetrationLog";
+import { penetrationLog } from "@/ui/penetration-log";
+import { parsePenetrationTab, penetrationTabHref } from "@/ui/penetration-tabs";
+import { candidateStatus, emptyCatalogueLabel, type StatusView } from "@/ui/status";
+import { StatusChip } from "@/ui/StatusChip";
+import { candidateFacts, penetrationFacts } from "@/ui/penetrations";
 import styles from "@/ui/primitives.module.css";
 import { loadPage } from "../../../../_lib/load";
 
 export const dynamic = "force-dynamic";
 
 type RouteParams = { params: Promise<{ id: string; pid: string }> };
+type PageProps = RouteParams & { searchParams: Promise<{ fromLog?: string | string[]; tab?: string | string[] }> };
 
 export async function generateMetadata({ params }: RouteParams): Promise<Metadata> {
   await connection();
@@ -28,108 +39,169 @@ export async function generateMetadata({ params }: RouteParams): Promise<Metadat
     return { title: `${listed.penetration.floor}, ${listed.penetration.location}` };
   } catch (error) {
     unstable_rethrow(error);
-    return { title: "Substitutes" };
+    return { title: "Penetration" };
   }
 }
 
-export default async function SubstitutesPage({ params }: RouteParams) {
+export default async function PenetrationPage({ params, searchParams }: PageProps) {
   const { id, pid } = await params;
+  const query = await searchParams;
+  const origin = logOrigin(query.fromLog, [id]);
+  const tab = parsePenetrationTab(query.tab);
   const siteLoad = await loadPage(async () => {
     const site = await getCachedSite(id);
     if (!site) throw new SiteNotFoundError();
     return site;
   });
-  if (siteLoad.status === "unavailable") return unavailable("This site", "/", "Sites");
+  if (siteLoad.status === "unavailable") return unavailable("This site", "/sites", "Sites");
+  // Back to the actions log when it opened this page, else up to the site.
+  const back = origin ? logBack(id) : { href: sitePath(id), name: siteLoad.value.name };
 
   const listedLoad = await loadPage(() => getCachedCandidates(id, pid));
-  if (listedLoad.status === "unavailable") return unavailable(siteLoad.value.name, sitePath(id), siteLoad.value.name);
+  if (listedLoad.status === "unavailable") return unavailable(siteLoad.value.name, back.href, back.name);
+  const readinessLoad = await loadPage(() => getCachedReadiness(id));
+  if (readinessLoad.status === "unavailable") return unavailable(siteLoad.value.name, back.href, back.name);
+  const detailLoad = await loadPage(() => getCachedPenetrationDetail(id, pid));
+  if (detailLoad.status === "unavailable") return unavailable(siteLoad.value.name, back.href, back.name);
+  const detail = detailLoad.value;
+  const actionsLoad = await loadPage(() => getCachedActions(id));
+  const entries = actionsLoad.status === "ready" ? penetrationLog(actionsLoad.value, id, pid, detail.materialIds) : [];
+  const logCount = actionsLoad.status === "ready" ? entries.length : null;
 
   const listed = listedLoad.value;
-  const needsEscalate = listed.status !== "ok" || listed.candidates.length === 0;
-  let related: { id: string; target: string }[] = [];
-  if (needsEscalate) {
-    const readinessLoad = await loadPage(() => getCachedReadiness(id));
-    if (readinessLoad.status === "unavailable") return unavailable(siteLoad.value.name, sitePath(id), siteLoad.value.name);
-    related = relatedDecisions(readinessLoad.value, pid);
-  }
-
+  const readiness = readinessLoad.value;
   const penetration = listed.penetration;
-  const message =
-    listed.status === "ok"
-      ? listed.candidates.length === 0
-        ? emptyCatalogueLabel(related.length > 0)
-        : null
-      : candidateStatus(listed.status).label;
+  const facts = penetrationFacts({ siteId: id, penetrationId: pid }, readiness.shortages, readiness.blockers, readiness.materials);
+  const hasCandidates = listed.status === "ok" && listed.candidates.length > 0;
+  // A data problem is escalated here, even when substitutes exist. A material shortage is decided on its
+  // material page, which the shortage line links to.
+  const blockers = blockerDecisions(readiness, pid);
+  const empty = hasCandidates ? null : emptyState(listed.status, blockers.length > 0);
 
   return (
     <>
-      <AppBar title="Substitutes" backHref={sitePath(id)} backName={siteLoad.value.name} />
+      <AppBar backHref={back.href} backName={back.name} />
       <main>
-        <p>{`${penetration.floor}, ${penetration.location}`}</p>
-        <p>{serviceLine(penetration)}</p>
-        <p>{`Nominated solution ${penetration.nominatedCode}`}</p>
-        <p>{formatRating(penetration.requiredIntegrityMinutes, penetration.requiredInsulationMinutes)}</p>
-        {listed.candidates.length > 0 ? <Notice>{listed.notice}</Notice> : null}
-        {message ? <p>{message}</p> : null}
-        {needsEscalate && related.length > 0 ? (
-          <ul className={styles.list}>
-            {related.map((item) => (
-              <li key={item.id}>
-                <EscalateDialog siteId={id} shortageId={item.id} target={item.target} />
-              </li>
-            ))}
-          </ul>
+        <h1>{`${detail.penetration.floor}, ${detail.penetration.location}`}</h1>
+        <nav className={styles.tabBar} aria-label="Penetration">
+          <Link className={styles.tab} href={penetrationTabHref(id, pid, "solution", origin)} aria-current={tab === "solution" ? "page" : undefined}>
+            Solution
+          </Link>
+          <Link className={styles.tab} href={penetrationTabHref(id, pid, "log", origin)} aria-current={tab === "log" ? "page" : undefined}>
+            <span>{NAV.actions}</span>
+            {logCount === null ? null : <span className={styles.tabCount}>{logCount}</span>}
+          </Link>
+        </nav>
+
+        {tab === "log" ? (
+          <section className={styles.section} aria-labelledby="penetration-log-heading">
+            <h2 id="penetration-log-heading" className={styles.srOnly}>
+              {NAV.actions}
+            </h2>
+            {actionsLoad.status === "unavailable" ? (
+              <UnavailablePanel status={{ label: PENETRATION_LOG.unavailable, tone: "warning", icon: "warning" }} />
+            ) : (
+              <PenetrationLog entries={entries} shortages={readiness.shortages} />
+            )}
+          </section>
         ) : null}
-        {listed.status === "ok" && listed.candidates.length > 0 ? (
-          <ul className={styles.list}>
-            {listed.candidates.map((candidate) => (
-              <li key={candidate.internalCode}>
-                <CandidateCard
-                  siteId={id}
-                  penetrationId={pid}
-                  fromCode={listed.nominatedCode}
-                  toCode={candidate.internalCode}
-                  integrityMinutes={candidate.integrityMinutes}
-                  insulationMinutes={candidate.insulationMinutes}
-                  requiredIntegrityMinutes={penetration.requiredIntegrityMinutes}
-                  requiredInsulationMinutes={penetration.requiredInsulationMinutes}
-                  supplierRefCode={candidate.supplierRefCode}
-                  overall={candidate.availability.overall}
-                  summary={formatMaterialSummary(candidate.availability.lines, candidate.materials)}
+
+        {tab === "solution" ? (
+          <>
+            <section className={styles.section} aria-labelledby="nominated-heading">
+              <h2 id="nominated-heading" className={styles.kindTitle}>
+                <KindIcon kind="solution" />
+                {`Nominated solution ${penetration.nominatedCode}`}
+              </h2>
+              {facts.length === 0 ? null : (
+                <ul className={styles.list}>
+                  {facts.map((fact) => (
+                    <li key={fact.label}>
+                      <FactLine fact={fact} />
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {detail.nominated ? (
+                <FitTable
+                  code={penetration.nominatedCode}
+                  rows={fitRows(detail.penetration, { ...detail.nominated, materialNames: detail.materialNames }, detail.mismatches)}
                 />
-              </li>
-            ))}
-          </ul>
+              ) : (
+                <dl className={styles.fields}>
+                  <dt>Service</dt>
+                  <dd>{serviceLine(penetration)}</dd>
+                  <dt>Required rating</dt>
+                  <dd>{ratingValue(penetration.requiredIntegrityMinutes, penetration.requiredInsulationMinutes)}</dd>
+                </dl>
+              )}
+            </section>
+
+            <section className={styles.section} aria-labelledby="substitutes-heading">
+              <h2 id="substitutes-heading">Substitutes</h2>
+              {hasCandidates ? (
+                <>
+                  <Notice>{listed.notice}</Notice>
+                  <SubstituteSwitcher
+                    siteId={id}
+                    penetrationId={pid}
+                    fromCode={listed.nominatedCode}
+                    choices={listed.candidates.map((candidate) => ({
+                      code: candidate.internalCode,
+                      facts: candidateFacts(candidate.availability, candidate.materials, readiness.shortages, { siteId: id, penetrationId: pid }),
+                      rows: fitRows(
+                        detail.penetration,
+                        {
+                          ...candidate,
+                          materialNames: candidate.availability.lines.map((line) => candidate.materials[line.materialId]?.name ?? line.materialId),
+                        },
+                        candidate.mismatches,
+                      ),
+                    }))}
+                  />
+                </>
+              ) : null}
+              {empty ? <StatusChip status={empty} appearance="label" /> : null}
+              {blockers.length > 0 ? (
+                <ul className={styles.list}>
+                  {blockers.map((item) => (
+                    <li key={item.id}>
+                      <EscalateDialog siteId={id} shortageId={item.id} target={item.target} prominent />
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </section>
+          </>
         ) : null}
-        <LinkButton href={actionsPath(id)}>{BUTTONS.actionsLog}</LinkButton>
       </main>
     </>
   );
+}
+
+/** Why there are no substitutes, as a status line. A plain miss is neutral; a catalogue gap is a warning. */
+function emptyState(status: CandidateList["status"], hasRelated: boolean): StatusView {
+  if (status !== "ok") return candidateStatus(status);
+  return { label: emptyCatalogueLabel(hasRelated), tone: "neutral", icon: "dashed-circle" };
 }
 
 function unavailable(title: string, backHref: string, backName: string) {
   return (
     <>
-      <AppBar title={title} backHref={backHref} backName={backName} />
+      <AppBar backHref={backHref} backName={backName} />
       <main>
-        <UnavailablePanel status={readinessBanner("unavailable", 0, 0)} />
+        <h1>{title}</h1>
+        <UnavailablePanel status={readinessBanner("unavailable")} />
       </main>
     </>
   );
 }
 
-function relatedDecisions(readiness: SiteReadinessView, penetrationId: string): { id: string; target: string }[] {
-  const shortages = readiness.shortages
-    .filter((shortage) => shortage.penetrationIds.includes(penetrationId))
-    .map((shortage) => ({
-      id: shortage.id,
-      target: readiness.materials[shortage.materialId]?.name ?? shortage.materialId,
-    }));
-  const blockers = readiness.blockers
+function blockerDecisions(readiness: SiteReadinessView, penetrationId: string): { id: string; target: string }[] {
+  return readiness.blockers
     .filter((blocker) => blocker.penetrationId === penetrationId)
     .map((blocker) => {
       const place = readiness.penetrations[blocker.penetrationId];
       return { id: blocker.id, target: place ? `${place.floor}, ${place.location}` : blocker.penetrationId };
     });
-  return [...shortages, ...blockers];
 }

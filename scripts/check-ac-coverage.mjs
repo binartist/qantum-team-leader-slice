@@ -3,7 +3,14 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 
-const AC_COUNT = 32;
+// Count the numbered items in section 4 of the spec, so a new criterion cannot go unchecked.
+const spec = readFileSync("docs/slice-specification.md", "utf8");
+const section = spec.split(/^## 4\. Acceptance criteria$/m)[1]?.split(/^## /m)[0] ?? "";
+const AC_COUNT = section.match(/^\d+\. /gm)?.length ?? 0;
+if (AC_COUNT === 0) {
+  console.error("No acceptance criteria found in docs/slice-specification.md section 4.");
+  process.exit(1);
+}
 
 function files(dir) {
   return readdirSync(dir).flatMap((name) => {

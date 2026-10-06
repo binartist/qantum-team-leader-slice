@@ -1,7 +1,9 @@
+import type { FitFieldCode } from "@/ui/status";
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import {
+  doesNotFit,
   actionStatus,
   availabilityStatus,
   blockerReason,
@@ -9,7 +11,6 @@ import {
   crewStatus,
   earlierDecision,
   hasEarlierDecision,
-  ratingComparison,
   shortageState,
   siteChip,
   type StatusView,
@@ -24,7 +25,7 @@ function expectView(actual: StatusView, expected: StatusView): void {
 describe("crew status", () => {
   it("maps each crew status to text, a tone, and an icon", () => {
     expectView(crewStatus("clear"), { label: "Crew can go", tone: "success", icon: "check" });
-    expectView(crewStatus("blocked"), { label: "Blocked", tone: "danger", icon: "cross" });
+    expectView(crewStatus("blocked"), { label: "Blocked", tone: "danger", icon: "stop" });
     expectView(crewStatus("nothing_planned"), { label: "Nothing planned", tone: "neutral", icon: "dashed-circle" });
     expectView(crewStatus("unavailable"), { label: "Can't check", tone: "warning", icon: "warning" });
   });
@@ -37,8 +38,9 @@ describe("crew status", () => {
 describe("shortage state", () => {
   it("AC 30: maps no decision yet, waiting, and escalated, including an earlier decision", () => {
     expectView(shortageState("open"), { label: "No decision yet", tone: "neutral", icon: "dashed-circle" });
-    expectView(shortageState("waiting"), { label: "Waiting", tone: "warning", icon: "warning" });
-    expectView(shortageState("escalated"), { label: "Escalated", tone: "warning", icon: "warning" });
+    // Decisions are neither "can go" nor an alarm, and the two must be told apart at a glance.
+    expectView(shortageState("waiting"), { label: "Waiting", tone: "info", icon: "clock" });
+    expectView(shortageState("escalated"), { label: "Escalated", tone: "escalation", icon: "arrow-up" });
     expectView(earlierDecision(), { label: "Earlier decision, shortfall has grown", tone: "warning", icon: "warning" });
     expect(hasEarlierDecision([{ current: true }, { current: false }])).toBe(true);
     expect(hasEarlierDecision([{ current: true }])).toBe(false);
@@ -92,7 +94,7 @@ describe("candidate status and availability", () => {
 
   it("maps each availability", () => {
     expectView(availabilityStatus("in_stock"), { label: "Materials in stock", tone: "success", icon: "check" });
-    expectView(availabilityStatus("short"), { label: "Some of its materials are short.", tone: "danger", icon: "cross" });
+    expectView(availabilityStatus("short"), { label: "Uses a material this site is short of.", tone: "danger", icon: "stop" });
     expectView(availabilityStatus("unknown"), { label: "No stock record for one of its materials.", tone: "warning", icon: "warning" });
     expectView(availabilityStatus("no_material_mapping"), {
       label: "We can't tell if its materials are in stock.",
@@ -109,44 +111,17 @@ describe("candidate status and availability", () => {
 
 describe("home chip", () => {
   it("names shortages and data problems on a blocked site, and leaves other statuses alone", () => {
-    expectView(siteChip("blocked", 2, 0), { label: "Blocked · 2 shortages", tone: "danger", icon: "cross" });
-    expectView(siteChip("blocked", 1, 0), { label: "Blocked · 1 shortage", tone: "danger", icon: "cross" });
-    expectView(siteChip("blocked", 1, 2), { label: "Blocked · 1 shortage, 2 data problems", tone: "danger", icon: "cross" });
-    expectView(siteChip("blocked", 2, 1), { label: "Blocked · 2 shortages, 1 data problem", tone: "danger", icon: "cross" });
-    expectView(siteChip("blocked", 0, 2), { label: "Blocked · 2 data problems", tone: "danger", icon: "cross" });
-    expectView(siteChip("blocked", 0, 1), { label: "Blocked · 1 data problem", tone: "danger", icon: "cross" });
-    expectView(siteChip("blocked", 0, 0), { label: "Blocked", tone: "danger", icon: "cross" });
+    expectView(siteChip("blocked", 2, 0), { label: "Blocked · 2 shortages", tone: "danger", icon: "stop" });
+    expectView(siteChip("blocked", 1, 0), { label: "Blocked · 1 shortage", tone: "danger", icon: "stop" });
+    expectView(siteChip("blocked", 1, 2), { label: "Blocked · 1 shortage, 2 data problems", tone: "danger", icon: "stop" });
+    expectView(siteChip("blocked", 2, 1), { label: "Blocked · 2 shortages, 1 data problem", tone: "danger", icon: "stop" });
+    expectView(siteChip("blocked", 0, 2), { label: "Blocked · 2 data problems", tone: "danger", icon: "stop" });
+    expectView(siteChip("blocked", 0, 1), { label: "Blocked · 1 data problem", tone: "danger", icon: "stop" });
+    expectView(siteChip("blocked", 0, 0), { label: "Blocked", tone: "danger", icon: "stop" });
     expect(siteChip("clear", 2, 2)).toEqual(crewStatus("clear"));
     expect(siteChip("nothing_planned", 1, 1)).toEqual(crewStatus("nothing_planned"));
     expect(siteChip("unavailable", 1, 1)).toEqual(crewStatus("unavailable"));
     expect(siteChip("bogus", 1, 1).label).toBe("Can't check");
-  });
-});
-
-describe("rating comparison", () => {
-  const meets: StatusView = { label: "Meets the required rating", tone: "success", icon: "check" };
-  const below: StatusView = { label: "Below the required rating", tone: "warning", icon: "warning" };
-
-  it("meets when both candidate minutes cover the requirement, and a null requirement is met by anything", () => {
-    expectView(ratingComparison(60, 30, 60, 30), meets);
-    expectView(ratingComparison(60, 60, 60, 30), meets);
-    expectView(ratingComparison(120, 90, 60, 30), meets);
-    expectView(ratingComparison(null, null, null, null), meets);
-    expectView(ratingComparison(null, 30, null, 30), meets);
-    expectView(ratingComparison(60, null, 60, null), meets);
-    expectView(ratingComparison(0, 0, null, null), meets);
-  });
-
-  it("is below when a candidate minute misses a stated requirement, including a null or non-finite minute", () => {
-    expectView(ratingComparison(59, 30, 60, 30), below);
-    expectView(ratingComparison(60, 29, 60, 30), below);
-    expectView(ratingComparison(null, null, 60, null), below);
-    expectView(ratingComparison(60, null, 60, 30), below);
-    expectView(ratingComparison(null, 90, 60, 30), below);
-    expectView(ratingComparison(Number.NaN, 30, 60, 30), below);
-    expectView(ratingComparison(60, Number.POSITIVE_INFINITY, 60, 30), below);
-    expectView(ratingComparison(60, 30, Number.NaN, 30), below);
-    expect(below.label).not.toMatch(/compatible|approved/i);
   });
 });
 
@@ -191,8 +166,6 @@ describe("forbidden words", () => {
       actionStatus("resolved"),
       siteChip("blocked", 1, 2),
       siteChip("clear", 0, 0),
-      ratingComparison(60, 60, 60, 30),
-      ratingComparison(30, 30, 60, 60),
     ].map((view) => view.label);
     for (const label of labels) expect(label).not.toMatch(/compatible|approved/i);
   });
@@ -211,3 +184,61 @@ function filesUnder(dir: string): string[] {
     return statSync(full).isDirectory() ? filesUnder(full) : [full];
   });
 }
+
+describe("status icons", () => {
+  it("blocked and short use a stop sign, never a cross, which reads as dismiss", async () => {
+    const { readFileSync } = await import("node:fs");
+    const icon = readFileSync("src/ui/Icon.tsx", "utf8");
+    expect(icon).toContain('name === "stop"');
+    expect(icon).not.toContain('"cross"');
+    expect(readFileSync("src/ui/status.ts", "utf8")).not.toContain('"cross"');
+  });
+});
+
+describe("decision icons", () => {
+  it("gives wait and escalate the icon and tone of the state they create", async () => {
+    const { decisionMark, shortageState: state } = await import("@/ui/status");
+    expect(decisionMark("wait")).toEqual({ tone: state("waiting").tone, icon: state("waiting").icon });
+    expect(decisionMark("escalate")).toEqual({ tone: state("escalated").tone, icon: state("escalated").icon });
+  });
+
+  it("puts the same icons on the Wait and Escalate buttons, which stay neutral", async () => {
+    const { readFileSync } = await import("node:fs");
+    const wait = readFileSync("src/ui/decisions/WaitDialog.tsx", "utf8");
+    const escalate = readFileSync("src/ui/decisions/EscalateDialog.tsx", "utf8");
+    expect(wait).toContain('<Icon name="clock" />');
+    expect(escalate).toContain('<Icon name="arrow-up" />');
+    // A logged wait or escalation shows the same mark.
+    expect(readFileSync("src/ui/ActionRow.tsx", "utf8")).toContain("mark={decisionMark(decision)}");
+  });
+});
+
+describe("AC 35: wording for a nominated solution that does not fit", () => {
+  it("names the solution and every field that does not fit, in plain words", async () => {
+    const { blockerReason, fitFieldLabel } = await import("@/ui/status");
+    expect(blockerReason("solution_mismatch", "0435", ["insulation"])).toEqual({
+      label: "Solution 0435 doesn't fit this penetration: insulation",
+      tone: "danger",
+      icon: "warning",
+    });
+    expect(blockerReason("solution_mismatch", "0435", ["orientation", "serviceType", "serviceSize"]).label).toBe(
+      "Solution 0435 doesn't fit this penetration: orientation, service type, size",
+    );
+    expect(blockerReason("solution_mismatch", "0435").label).toBe("Solution 0435 doesn't fit this penetration");
+    const fields: FitFieldCode[] = ["orientation", "substrate", "serviceType", "serviceSize", "integrity", "insulation"];
+    expect(fields.map((field) => fitFieldLabel(field))).toEqual([
+      "orientation",
+      "substrate",
+      "service type",
+      "size",
+      "integrity",
+      "insulation",
+    ]);
+  });
+});
+
+describe("AC 36: a field that does not fit", () => {
+  it("is worded with the solution's value and a stop sign, never colour alone", () => {
+    expectView(doesNotFit("60 min"), { label: "60 min, doesn't fit", tone: "danger", icon: "stop" });
+  });
+});

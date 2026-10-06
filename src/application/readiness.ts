@@ -1,5 +1,9 @@
 import { computeSiteReadiness, type ShortageAction, type SiteReadiness } from "@/domain";
-import { SiteNotFoundError, UpstreamError, type Material, type NominatedPenetration } from "@/ports";
+import { SiteNotFoundError, UpstreamError, type Material, type NominatedPenetration, type Site } from "@/ports";
+import type { SolutionMaterialsPort, StockPort } from "@/ports";
+
+type StockRead = Awaited<ReturnType<StockPort["getStock"]>>;
+type SolutionMaterialsRead = Awaited<ReturnType<SolutionMaterialsPort["getSolutionMaterials"]>>;
 import { uniqueIds, type Dependencies } from "./types";
 
 export const STOCK_NOTICE = "On hand, shared, not reserved";
@@ -86,7 +90,17 @@ function penetrationsForSite(nominations: readonly NominatedPenetration[]): Site
   return result;
 }
 
-export async function loadSiteData(deps: Dependencies, siteId: string): Promise<SiteData> {
+/** Everything a site's readiness needs except the stock, so several sites can share one stock read. */
+export interface SiteInputs {
+  readonly site: Site;
+  readonly nominations: readonly NominatedPenetration[];
+  readonly solutionMaterials: SolutionMaterialsRead;
+  readonly actions: readonly ShortageAction[];
+  /** Every material the site's nominated solutions use: what the stock read must cover. */
+  readonly materialIds: readonly string[];
+}
+
+export async function readSiteInputs(deps: Dependencies, siteId: string): Promise<SiteInputs> {
   const site = await deps.sites.getSite(siteId);
   if (!site) throw new SiteNotFoundError();
   const nominations = await deps.nominations.getNominations(siteId);
@@ -94,14 +108,18 @@ export async function loadSiteData(deps: Dependencies, siteId: string): Promise<
   if (nominations.some((penetration) => penetration.siteId !== siteId)) {
     throw new UpstreamError("upstream_invalid", "nominations");
   }
-
   const codes = uniqueIds(nominations.map((penetration) => penetration.nominatedCode));
   const solutionMaterials = await deps.solutionMaterials.getSolutionMaterials(codes);
-  const materialIds = uniqueIds(solutionMaterials.items.map((item) => item.materialId));
-  const stock = await deps.stock.getStock(materialIds);
   const actions = await deps.actions.listShortageActions(siteId);
+  const materialIds = uniqueIds(solutionMaterials.items.map((item) => item.materialId));
+  return { site, nominations, solutionMaterials, actions, materialIds };
+}
+
+/** A site's readiness from its inputs and a stock read that covers its materials. */
+export function buildSiteData(deps: Dependencies, inputs: SiteInputs, stock: StockRead): SiteData {
+  const { site, nominations, solutionMaterials, actions } = inputs;
   const readiness = computeSiteReadiness({
-    siteId,
+    siteId: site.id,
     penetrations: nominations,
     catalogue: deps.catalogue,
     solutionMaterials: solutionMaterials.items,
@@ -123,6 +141,11 @@ export async function loadSiteData(deps: Dependencies, siteId: string): Promise<
     referencedMaterials: materialsReferenced(solutionMaterials.items, solutionMaterials.materials),
     sitePenetrations: penetrationsForSite(nominations),
   };
+}
+
+export async function loadSiteData(deps: Dependencies, siteId: string): Promise<SiteData> {
+  const inputs = await readSiteInputs(deps, siteId);
+  return buildSiteData(deps, inputs, await deps.stock.getStock(inputs.materialIds));
 }
 
 export async function getSiteReadiness(deps: Dependencies, siteId: string): Promise<SiteReadinessView> {

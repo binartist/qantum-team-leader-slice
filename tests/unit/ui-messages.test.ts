@@ -2,13 +2,13 @@ import { describe, expect, it } from "vitest";
 import {
   ANNOUNCE,
   BUTTONS,
-  DEMO_BANNER,
   SITES_UNAVAILABLE,
   CREW_STAYS,
   EMPTY,
+  filterLine,
+  PENETRATION_FILTER,
   GIVE_REASON,
   MANAGER_CHECK,
-  OPEN_PENETRATION,
   RECORDS_ONLY,
   STOCK_STALE,
   SUBSTITUTES,
@@ -55,39 +55,38 @@ describe("API error messages", () => {
 
 describe("banners and empty states", () => {
   it("AC 9: the unavailable banner tells the leader not to assume the site is clear", () => {
-    const banner = readinessBanner("unavailable", 0, 0);
+    const banner = readinessBanner("unavailable");
     expect(banner.label).toBe("Can't check this site right now. Don't assume it's clear. Try again.");
     expect(banner.tone).toBe("warning");
     expect(banner.icon).toBe("warning");
     expect(banner.label).not.toContain("Crew can go");
   });
 
-  it("maps the other crew banners, including data problems when present", () => {
-    expect(readinessBanner("clear", 0, 0).label).toBe("Crew can go");
-    expect(readinessBanner("nothing_planned", 0, 0)).toEqual({
+  it("maps the other crew banners", () => {
+    expect(readinessBanner("clear").label).toBe("Crew can go");
+    expect(readinessBanner("nothing_planned")).toEqual({
       label: "Nothing planned for this site",
       tone: "neutral",
       icon: "dashed-circle",
     });
-    expect(readinessBanner("blocked", 2, 0).label).toBe("Blocked: 2 shortages. Hold the crew until stock arrives.");
-    expect(readinessBanner("blocked", 1, 0).label).toBe("Blocked: 1 shortage. Hold the crew until stock arrives.");
-    expect(readinessBanner("blocked", 1, 2).label).toBe(
-      "Blocked: 1 shortage (and 2 data problems). Hold the crew until stock arrives.",
-    );
-    expect(readinessBanner("blocked", 3, 1).label).toBe(
-      "Blocked: 3 shortages (and 1 data problem). Hold the crew until stock arrives.",
-    );
-    expect(readinessBanner("blocked", 2, 0).tone).toBe("danger");
-    expect(readinessBanner("blocked", 2, 0).icon).toBe("cross");
-    expect(readinessBanner("blocked", 0, 2).label).toBe("Blocked: 2 data problems. Hold the crew until they are sorted.");
-    expect(readinessBanner("blocked", 0, 1).label).toBe("Blocked: 1 data problem. Hold the crew until they are sorted.");
-    expect(readinessBanner("blocked", 0, 0).label).toBe("Blocked: 0 shortages. Hold the crew until stock arrives.");
-    expect(readinessBanner("clear", 0, 0)).toEqual({ label: "Crew can go", tone: "success", icon: "check" });
+    expect(readinessBanner("blocked")).toEqual({ label: "Blocked: hold the crew.", tone: "danger", icon: "stop" });
+    expect(readinessBanner("clear")).toEqual({ label: "Crew can go", tone: "success", icon: "check" });
+  });
+
+  it("AC 34: the site screen's blocked banner is short; the tab counts carry the detail", () => {
+    expect(readinessBanner("blocked").label).toBe("Blocked: hold the crew.");
+    expect(readinessBanner("blocked").label).not.toMatch(/\d/);
   });
 
   it("an unknown crew status uses the unavailable banner, never Crew can go", () => {
-    expect(readinessBanner("bogus", 2, 1)).toEqual(readinessBanner("unavailable", 0, 0));
-    expect(readinessBanner("bogus", 2, 1).label).not.toContain("Crew can go");
+    expect(readinessBanner("bogus")).toEqual(readinessBanner("unavailable"));
+    expect(readinessBanner("bogus").label).not.toContain("Crew can go");
+  });
+
+  it("words the penetration filter", () => {
+    expect(filterLine("Intumescent sealant, 310 ml cartridge", 12, 12)).toBe("Using Intumescent sealant, 310 ml cartridge · 12 of 12");
+    expect(PENETRATION_FILTER.showAll).toBe("Show all");
+    expect(PENETRATION_FILTER.unknown).toBe("That material is not a shortage on this site. Showing all penetrations.");
   });
 
   it("has the approved empty states and the fixed decision lines", () => {
@@ -97,7 +96,6 @@ describe("banners and empty states", () => {
     expect(GIVE_REASON).toBe("Give a reason.");
     expect(MANAGER_CHECK).toBe("A manager has to verify this catalogue match.");
     expect(RECORDS_ONLY).toBe("This records your decision here. Nobody is notified automatically yet.");
-    expect(OPEN_PENETRATION).toBe("Open a penetration to see possible substitutes.");
     expect(STOCK_STALE).toBe("These stock figures are more than a day old. Check with the warehouse before relying on them.");
     expect(SUBSTITUTES).toBe("Substitutes");
     expect(BUTTONS).toEqual({
@@ -110,7 +108,6 @@ describe("banners and empty states", () => {
       cancel: "Cancel",
       sending: "Sending…",
       tryAgain: "Try again",
-      actionsLog: "Actions log",
     });
     expect(ANNOUNCE).toEqual({
       escalation: "Escalation recorded",
@@ -126,25 +123,22 @@ describe("forbidden words", () => {
     const texts = [
       ...TABLE.map(([code]) => apiErrorMessage(code)),
       apiErrorMessage("nope"),
-      readinessBanner("clear", 0, 0).label,
-      readinessBanner("blocked", 1, 1).label,
-      readinessBanner("nothing_planned", 0, 0).label,
-      readinessBanner("unavailable", 0, 0).label,
+      readinessBanner("clear").label,
+      readinessBanner("blocked").label,
+      readinessBanner("nothing_planned").label,
+      readinessBanner("unavailable").label,
       ...Object.values(EMPTY),
       ...Object.values(BUTTONS),
       ...Object.values(ANNOUNCE),
       apiErrorMessage("transport_failed"),
-      readinessBanner("blocked", 0, 2).label,
-      readinessBanner("bogus", 0, 0).label,
+      readinessBanner("bogus").label,
       CREW_STAYS,
       GIVE_REASON,
       MANAGER_CHECK,
       RECORDS_ONLY,
-      OPEN_PENETRATION,
       STOCK_STALE,
       SUBSTITUTES,
       SITES_UNAVAILABLE,
-      DEMO_BANNER,
     ];
     for (const text of texts) expect(text).not.toMatch(/compatible|approved/i);
   });

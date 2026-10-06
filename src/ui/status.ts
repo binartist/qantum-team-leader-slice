@@ -1,5 +1,5 @@
-export type Tone = "success" | "danger" | "warning" | "neutral";
-export type IconName = "check" | "cross" | "dashed-circle" | "warning";
+export type Tone = "success" | "danger" | "warning" | "neutral" | "info" | "escalation";
+export type IconName = "check" | "stop" | "dashed-circle" | "warning" | "clock" | "arrow-up";
 
 export interface StatusView {
   readonly label: string;
@@ -9,14 +9,15 @@ export interface StatusView {
 
 export type CrewChip = "clear" | "blocked" | "nothing_planned" | "unavailable";
 export type ShortageChip = "open" | "waiting" | "escalated";
-export type BlockerCode = "unknown_solution_code" | "no_material_mapping" | "invalid_quantity";
+export type BlockerCode = "unknown_solution_code" | "solution_mismatch" | "no_material_mapping" | "invalid_quantity";
+export type FitFieldCode = "orientation" | "substrate" | "serviceType" | "serviceSize" | "integrity" | "insulation";
 export type CandidateChip = "ok" | "substrate_incomplete" | "nominated_code_unknown";
 export type AvailabilityChip = "in_stock" | "short" | "unknown" | "no_material_mapping" | "invalid_quantity";
 export type ActionChip = "current" | "earlier" | "resolved";
 
 export function crewStatus(status: CrewChip): StatusView {
   if (status === "clear") return { label: "Crew can go", tone: "success", icon: "check" };
-  if (status === "blocked") return { label: "Blocked", tone: "danger", icon: "cross" };
+  if (status === "blocked") return { label: "Blocked", tone: "danger", icon: "stop" };
   if (status === "nothing_planned") return { label: "Nothing planned", tone: "neutral", icon: "dashed-circle" };
   return { label: "Can't check", tone: "warning", icon: "warning" };
 }
@@ -37,26 +38,9 @@ function blockedChipLabel(shortages: number, problems: number): string {
 }
 
 export function siteChip(status: string, shortageCount: number, dataProblemCount: number): StatusView {
-  if (status === "blocked") return { label: blockedChipLabel(shortageCount, dataProblemCount), tone: "danger", icon: "cross" };
+  if (status === "blocked") return { label: blockedChipLabel(shortageCount, dataProblemCount), tone: "danger", icon: "stop" };
   if (status === "clear" || status === "nothing_planned" || status === "unavailable") return crewStatus(status);
   return crewStatus("unavailable");
-}
-
-function minuteMeets(candidate: number | null, required: number | null): boolean {
-  if (required === null) return true;
-  if (candidate === null || !Number.isFinite(candidate) || !Number.isFinite(required)) return false;
-  return candidate >= required;
-}
-
-export function ratingComparison(
-  candidateIntegrity: number | null,
-  candidateInsulation: number | null,
-  requiredIntegrity: number | null,
-  requiredInsulation: number | null,
-): StatusView {
-  const meets = minuteMeets(candidateIntegrity, requiredIntegrity) && minuteMeets(candidateInsulation, requiredInsulation);
-  if (meets) return { label: "Meets the required rating", tone: "success", icon: "check" };
-  return { label: "Below the required rating", tone: "warning", icon: "warning" };
 }
 
 export function shortageState(state: string): StatusView {
@@ -64,12 +48,18 @@ export function shortageState(state: string): StatusView {
     case "open":
       return { label: "No decision yet", tone: "neutral", icon: "dashed-circle" };
     case "waiting":
-      return { label: "Waiting", tone: "warning", icon: "warning" };
+      return { label: "Waiting", tone: "info", icon: "clock" };
     case "escalated":
-      return { label: "Escalated", tone: "warning", icon: "warning" };
+      return { label: "Escalated", tone: "escalation", icon: "arrow-up" };
     default:
       return UNKNOWN;
   }
+}
+
+/** The icon and tone of the state a decision creates, for its button and its log entry. */
+export function decisionMark(kind: "wait" | "escalate"): { tone: Tone; icon: IconName } {
+  const view = shortageState(kind === "wait" ? "waiting" : "escalated");
+  return { tone: view.tone, icon: view.icon };
 }
 
 export function earlierDecision(): StatusView {
@@ -80,9 +70,32 @@ export function hasEarlierDecision(actions: readonly { readonly current: boolean
   return actions.some((action) => !action.current);
 }
 
-export function blockerReason(reason: BlockerCode, code: string): StatusView {
+const FIT_FIELD_LABELS: Readonly<Record<FitFieldCode, string>> = {
+  orientation: "orientation",
+  substrate: "substrate",
+  serviceType: "service type",
+  serviceSize: "size",
+  integrity: "integrity",
+  insulation: "insulation",
+};
+
+export function fitFieldLabel(field: FitFieldCode): string {
+  return FIT_FIELD_LABELS[field];
+}
+
+/** A comparison cell whose solution value does not fit the penetration (AC 36). */
+export function doesNotFit(solutionValue: string): StatusView {
+  return { label: `${solutionValue}, doesn't fit`, tone: "danger", icon: "stop" };
+}
+
+export function blockerReason(reason: BlockerCode, code: string, mismatches: readonly FitFieldCode[] = []): StatusView {
   if (reason === "unknown_solution_code") {
     return { label: `Solution code ${code} isn't in the catalogue`, tone: "danger", icon: "warning" };
+  }
+  if (reason === "solution_mismatch") {
+    const fields = mismatches.map(fitFieldLabel).join(", ");
+    const label = fields ? `Solution ${code} doesn't fit this penetration: ${fields}` : `Solution ${code} doesn't fit this penetration`;
+    return { label, tone: "danger", icon: "warning" };
   }
   if (reason === "no_material_mapping") {
     return { label: `No materials recorded for solution ${code}`, tone: "danger", icon: "warning" };
@@ -119,7 +132,7 @@ export function emptyCatalogueLabel(hasRelated: boolean): string {
 
 export function availabilityStatus(overall: AvailabilityChip): StatusView {
   if (overall === "in_stock") return { label: "Materials in stock", tone: "success", icon: "check" };
-  if (overall === "short") return { label: "Some of its materials are short.", tone: "danger", icon: "cross" };
+  if (overall === "short") return { label: "Uses a material this site is short of.", tone: "danger", icon: "stop" };
   if (overall === "unknown") return { label: "No stock record for one of its materials.", tone: "warning", icon: "warning" };
   if (overall === "no_material_mapping") {
     return { label: "We can't tell if its materials are in stock.", tone: "warning", icon: "warning" };

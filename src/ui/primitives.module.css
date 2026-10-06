@@ -18,6 +18,16 @@
   color: var(--neutral-text);
 }
 
+.info {
+  background: var(--info-bg);
+  color: var(--info-text);
+}
+
+.escalation {
+  background: var(--escalation-bg);
+  color: var(--escalation-text);
+}
+
 .chip,
 .banner {
   display: inline-flex;
@@ -53,8 +63,18 @@
 .stateLabel.success,
 .stateLabel.danger,
 .stateLabel.warning,
-.stateLabel.neutral {
+.stateLabel.neutral,
+.stateLabel.info,
+.stateLabel.escalation {
   background: transparent;
+}
+
+.stateLabel.info {
+  color: var(--info-text);
+}
+
+.stateLabel.escalation {
+  color: var(--escalation-text);
 }
 
 .stateLabel.success {
@@ -82,10 +102,34 @@
   margin-top: 0.15rem;
 }
 
+/* Kind icons: outline, secondary text colour, beside the name they mark. Never a status colour. */
+.kindIcon {
+  flex: none;
+  margin-top: 0.2em;
+  color: var(--text-secondary);
+}
+
+.kindTitle {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.kindTitle > span {
+  min-width: 0;
+}
+
+/* A title that is a link is a padded 44px target, so centre the icon on it rather than on its top edge. */
+.kindTitle:has(> .blockLink) {
+  align-items: center;
+}
+
 .button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 0.375rem;
   min-width: 44px;
   min-height: 44px;
   padding: 0.5rem 0.75rem;
@@ -104,6 +148,137 @@
   background: var(--button-bg);
   color: var(--button-text);
   border-color: var(--button-bg);
+}
+
+/* A page section: its own heading, then its content, with room between sections. */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+}
+
+/* Penetration and nominated solution side by side. Wraps long substrate text rather than scrolling. */
+.fitTable {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 0.875rem;
+}
+
+.fitTable th,
+.fitTable td {
+  padding: 0.375rem 0.375rem 0.375rem 0;
+  border-top: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+
+.fitTable thead th {
+  border-top: 0;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.fitTable tbody th {
+  width: 26%;
+  color: var(--text-secondary);
+  font-weight: 400;
+}
+
+/* Label and value pairs: grey labels, normal values. */
+.fields {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.375rem 1rem;
+  margin: 0;
+}
+
+.fields dt {
+  color: var(--text-secondary);
+}
+
+.fields dd {
+  margin: 0;
+  min-width: 0;
+}
+
+.fullWidth {
+  width: 100%;
+}
+
+.switchField {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.switchLabel {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+/* The native select, restyled: its own chevron, a clear border, and the focus ring of every control. The
+   native list still opens on tap, so it stays a real select for keyboards and screen readers. */
+.switchSelect {
+  position: relative;
+  display: block;
+}
+
+.switchControl {
+  width: 100%;
+  min-width: 44px;
+  min-height: 48px;
+  padding: 0.5rem 2.75rem;
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius);
+  appearance: none;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.switchControl:hover {
+  border-color: var(--link);
+}
+
+.switchControl:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* The shield marks the closed control. A native option cannot hold it, so the open list stays text. */
+.switchMark {
+  position: absolute;
+  top: 50%;
+  left: 0.875rem;
+  display: inline-flex;
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+.switchMark .kindIcon {
+  margin-top: 0;
+}
+
+.switchChevron {
+  position: absolute;
+  top: 50%;
+  right: 0.875rem;
+  display: inline-flex;
+  color: var(--link);
+  pointer-events: none;
+  transform: translateY(-50%) rotate(90deg);
+}
+
+.switchChevron .icon {
+  margin-top: 0;
 }
 
 .button:disabled {
@@ -175,51 +350,11 @@
   text-decoration: underline;
 }
 
-.summary {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  min-width: 44px;
-  min-height: 44px;
-  cursor: pointer;
-  list-style: none;
-}
-
-.summary::-webkit-details-marker {
-  display: none;
-}
-
-.disclosureChevron {
-  display: inline-flex;
-  flex: none;
-  transition: transform 150ms linear;
-}
-
-.disclosureChevron .icon {
-  margin-top: 0;
-}
-
-.disclosure[open] .disclosureChevron {
-  transform: rotate(90deg);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .disclosureChevron {
-    transition: none;
-  }
-}
-
-.disclosureBody {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  padding-bottom: 0.25rem;
-}
-
-.groupHeading {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--text-secondary);
+/* Places on a material page are text, identical ones grouped. The penetration page links here, so a link back
+   would loop; the page links up to the site list instead. */
+.plannedPlace {
+  padding: 0.75rem 0.25rem;
+  border-top: 1px solid var(--border);
 }
 
 .penetrationLink {
@@ -242,6 +377,116 @@
   min-width: 0;
 }
 
+/* The penetration list: its heading, then the sticky chips, then the rows. */
+.penetrationSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space);
+}
+
+.listTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* "Job ref HP-345" then "12 penetrations, 5 solutions". The list is this page, so the counts are text. */
+/* No separator dot: on a narrow screen the second part wraps under the job ref without leaving one dangling. */
+.plannedWork {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 0.75rem;
+}
+
+.plannedWorkLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  min-height: 44px;
+  color: var(--link);
+}
+
+.plannedWorkLink .icon {
+  margin-top: 0;
+}
+
+/* The filter on the Penetrations page: what it shows on the left, Show all on the right. */
+.filterRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.filterRow > a {
+  flex: none;
+}
+
+.factChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  margin-top: 0.35rem;
+}
+
+.factChips:empty {
+  display: none;
+}
+
+/* Icon marks under the place line. Colour comes from the tone class; the background stays clear. */
+.rowMarks {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.35rem;
+}
+
+.rowMarks:empty {
+  display: none;
+}
+
+.rowMark {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  background: transparent;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.rowMark .icon {
+  margin-top: 0;
+}
+
+/* A short-material line that opens the stock page. The words stay danger-coloured; the chevron is the link colour. */
+.factLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  align-self: flex-start;
+  max-width: 100%;
+  min-height: 44px;
+  color: var(--link);
+}
+
+.factLink .icon {
+  margin-top: 0;
+}
+
+.factLinkLabel {
+  min-width: 0;
+}
+
+/* The chip is inline-flex, which stops an underline on its parent from reaching the words, so the
+   underline goes on the words themselves: a linked line reads as a link, not by its chevron alone. */
+.factLinkLabel > span > span {
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
 .substitutesCue {
   color: var(--link);
   text-decoration: underline;
@@ -262,24 +507,227 @@
   display: flex;
   flex: none;
   align-items: center;
-  gap: 0.25rem;
+  justify-content: space-between;
+  gap: 0.5rem;
   align-self: center;
+  box-sizing: border-box;
   width: min(100%, 45rem);
-  padding: 0.25rem var(--space);
+  height: var(--app-bar-height);
+  padding: 0 var(--space);
   border-bottom: 1px solid var(--border);
   background: var(--bg);
   color: var(--text);
 }
 
-.appBar h1 {
-  flex: 1 1 auto;
-  min-width: 0;
+/* A long parent name is cut with an ellipsis; the link's accessible name still carries it in full. */
+.backLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.backRow {
-  align-self: center;
-  width: min(100%, 45rem);
-  padding: 0 var(--space);
+/* Sits under the sticky header once the title has scrolled away. The bar covers the row, including the gaps between chips. */
+/* A section heading that stays under the header while its section scrolls (one site of the actions log).
+   Full bleed, like the filter dock, so entries do not show beside it. */
+.stickyHeading {
+  position: sticky;
+  top: var(--app-bar-height);
+  z-index: 1;
+  max-width: none;
+  margin-inline: calc(-1 * var(--space));
+  padding-inline: var(--space);
+  background: var(--bg);
+}
+
+section:has(> .stickyHeading) {
+  scroll-margin-top: var(--app-bar-height);
+}
+
+.filterDock {
+  position: sticky;
+  top: var(--app-bar-height);
+  z-index: 1;
+  /* Full bleed: the main column's max-width would otherwise eat the side padding from the chips' row. */
+  max-width: none;
+  margin-inline: calc(-1 * var(--space));
+  padding: 0.25rem var(--space) 0.5rem;
+  background: var(--bg);
+}
+
+/* Filter chips wrap onto as many lines as they need, so they never force a sideways scroll. Sized so the
+   three fit one row at 375px: a two-row sticky dock would hide focused rows under it. */
+.filterBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.filterBar > li {
+  display: flex;
+  max-width: 100%;
+}
+
+.filterChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  max-width: 100%;
+  min-height: 44px;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.8125rem;
+  line-height: 1.2;
+  text-decoration: none;
+}
+
+.filterChip[aria-current="true"] {
+  border-color: var(--link);
+  color: var(--link);
+  font-weight: 600;
+}
+
+/* Penetration page: Solution and Actions log. Same shape as the filter chips, and each is a 44px target. */
+/* The penetration page's two tabs: equal halves on one rule, the current one underlined in the link colour.
+   They are links (each tab has its own URL), so the current one is aria-current, not a selected tab. */
+.tabBar {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+}
+
+.tab {
+  display: inline-flex;
+  flex: 1 1 0;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-width: 44px;
+  min-height: 48px;
+  margin-bottom: -1px;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 3px solid transparent;
+  color: var(--text-secondary);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1.2;
+  text-decoration: none;
+}
+
+.tab:hover {
+  border-bottom-color: var(--border);
+  color: var(--text);
+}
+
+.tab:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+
+.tab[aria-current="page"] {
+  border-bottom-color: var(--link);
+  color: var(--link);
+  font-weight: 600;
+}
+
+.tab[aria-current="page"] .tabCount {
+  background: var(--info-bg);
+  color: var(--info-text);
+}
+
+/* The rule under the tabs already separates them from the panel. */
+.tabBar + .section {
+  border-top: 0;
+}
+
+/* A side panel. showModal puts the dialog in the top layer, so this fixed box is the viewport's. */
+.drawer {
+  position: fixed;
+  max-width: 100%;
+  height: auto;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* The menu, from the left. */
+.drawerLeft {
+  inset: 0 auto 0 0;
+  width: min(85vw, 20rem);
+  border-right: 1px solid var(--border);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .drawerLeft[open] {
+    animation: navSlideIn 160ms ease-out;
+  }
+}
+
+.drawer::backdrop {
+  background: var(--backdrop);
+}
+
+.drawerPanel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.drawerHeader {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.drawerTitle {
+  margin: 0;
+  font-size: 1.2rem;
+  line-height: 1.3;
+}
+
+/* Dismiss. The accessible name stays on the button; the mark is only the X. */
+.drawerClose {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  margin-right: -0.25rem;
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.drawerClose .icon {
+  margin-top: 0;
+}
+
+.tabCount {
+  min-width: 1.25rem;
+  padding: 0 0.3125rem;
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-align: center;
 }
 
 .backControl {
@@ -287,12 +735,17 @@
   align-items: center;
   gap: 0.25rem;
   min-width: 44px;
+  max-width: 100%;
   min-height: 44px;
   margin-left: -0.5rem;
   padding-inline: 0.5rem;
   border-radius: var(--radius);
   color: var(--link);
   text-decoration: none;
+}
+
+.button .icon {
+  margin-top: 0;
 }
 
 .backControl .icon {
@@ -309,4 +762,155 @@
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+/* The menu control on a top-level screen. A 44px target; the header keeps its height. */
+.menuButton {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  margin-left: -0.5rem;
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--link);
+  cursor: pointer;
+}
+
+.menuButton .icon {
+  margin-top: 0;
+}
+
+@keyframes navSlideIn {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: none;
+  }
+}
+
+.navPanel {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 0.5rem;
+}
+
+.navItems {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 44px;
+  padding: 0 0.75rem;
+  border-radius: var(--radius);
+  color: var(--text);
+  text-decoration: none;
+}
+
+.navItem .kindIcon {
+  margin-top: 0;
+}
+
+.navItem[aria-current="page"] {
+  background: var(--surface);
+  color: var(--link);
+  font-weight: 600;
+}
+
+.navFooter {
+  flex: none;
+  padding: 0.5rem 0.5rem max(0.5rem, env(safe-area-inset-bottom));
+  border-top: 1px solid var(--border);
+}
+
+/* The theme choice: one segmented row of three radios, the chosen one filled. The native input stays (visually
+   hidden) so arrow keys, the radio role and the group name come from the browser. */
+.themeSwitch {
+  margin: 0 0 0.5rem;
+  padding: 0 0.5rem;
+  border: 0;
+}
+
+.themeLegend {
+  margin-bottom: 0.375rem;
+  padding: 0;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+.themeOptions {
+  display: flex;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.themeOption {
+  position: relative;
+  display: flex;
+  flex: 1 1 0;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  border-radius: calc(var(--radius) - 2px);
+  color: var(--text-secondary);
+  font-size: 0.9375rem;
+  cursor: pointer;
+}
+
+.themeOption input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.themeOption:has(input:checked) {
+  background: var(--bg);
+  box-shadow: 0 0 0 1px var(--border);
+  color: var(--text);
+  font-weight: 600;
+}
+
+.themeOption:has(input:focus-visible) {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
+
+.materialName {
+  font-weight: 600;
+}
+
+/* A section heading that goes up to its site: a 44px target, the chevron says it opens. */
+.headingLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  min-height: 44px;
+  color: var(--link);
+  text-decoration: none;
+}
+
+.headingLink .kindTitle {
+  align-items: center;
+}
+
+.headingLink .kindIcon,
+.headingLink .icon {
+  margin-top: 0;
 }
