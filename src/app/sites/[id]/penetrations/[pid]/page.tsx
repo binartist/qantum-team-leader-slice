@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { unstable_rethrow } from "next/navigation";
 import { connection } from "next/server";
-import type { CandidateList, CandidateView, SiteReadinessView } from "@/application";
+import type { CandidateList, SiteReadinessView } from "@/application";
 import { FitTable } from "@/ui/FitTable";
 import { SubstituteSwitcher } from "@/ui/SubstituteSwitcher";
 import { fitRows } from "@/ui/fit";
@@ -14,13 +14,13 @@ import { logIsOpen } from "@/ui/penetration-filters";
 import { SiteActionsButton } from "../../site-actions";
 import { UnavailablePanel } from "@/ui/UnavailablePanel";
 import { EscalateDialog } from "@/ui/decisions/EscalateDialog";
-import { materialPath, ratingValue, sitePath, serviceLine } from "@/ui/format";
+import { ratingValue, sitePath, serviceLine } from "@/ui/format";
 import { FactLine } from "@/ui/FactLine";
 import { Notice } from "@/ui/Notice";
 import { readinessBanner } from "@/ui/messages";
-import { availabilityStatus, candidateStatus, emptyCatalogueLabel, type StatusView } from "@/ui/status";
+import { candidateStatus, emptyCatalogueLabel, type StatusView } from "@/ui/status";
 import { StatusChip } from "@/ui/StatusChip";
-import { penetrationFacts, type PenetrationFact } from "@/ui/penetrations";
+import { candidateFacts, penetrationFacts } from "@/ui/penetrations";
 import styles from "@/ui/primitives.module.css";
 import { loadPage } from "../../../../_lib/load";
 
@@ -63,9 +63,10 @@ export default async function PenetrationPage({ params, searchParams }: PageProp
   const listed = listedLoad.value;
   const readiness = readinessLoad.value;
   const penetration = listed.penetration;
-  const facts = penetrationFacts(pid, readiness.shortages, readiness.blockers, readiness.materials, id);
+  const facts = penetrationFacts({ siteId: id, penetrationId: pid }, readiness.shortages, readiness.blockers, readiness.materials);
   const hasCandidates = listed.status === "ok" && listed.candidates.length > 0;
-  // A data problem is escalated here, even when substitutes exist. A material shortage is decided on its stock page.
+  // A data problem is escalated here, even when substitutes exist. A material shortage is decided on its
+  // material page, which the shortage line links to.
   const blockers = blockerDecisions(readiness, pid);
   const empty = hasCandidates ? null : emptyState(listed.status, blockers.length > 0);
 
@@ -115,7 +116,7 @@ export default async function PenetrationPage({ params, searchParams }: PageProp
                 fromCode={listed.nominatedCode}
                 choices={listed.candidates.map((candidate) => ({
                   code: candidate.internalCode,
-                  facts: candidateFacts(candidate, id),
+                  facts: candidateFacts(candidate.availability, candidate.materials, readiness.shortages, { siteId: id, penetrationId: pid }),
                   rows: fitRows(
                     detail.penetration,
                     {
@@ -142,29 +143,6 @@ export default async function PenetrationPage({ params, searchParams }: PageProp
       </main>
     </>
   );
-}
-
-/** Problem lines for one substitute, in the same shape as the nominated solution. In-stock materials are not listed. */
-function candidateFacts(candidate: CandidateView, siteId: string): PenetrationFact[] {
-  const facts: PenetrationFact[] = [];
-  for (const line of candidate.availability.lines) {
-    if (line.status === "in_stock") continue;
-    const name = candidate.materials[line.materialId]?.name ?? line.materialId;
-    if (line.status === "short") {
-      facts.push({
-        label: `Short material: ${name}`,
-        tone: "danger",
-        icon: "stop",
-        href: materialPath(siteId, line.materialId),
-      });
-    } else {
-      facts.push({ label: `Stock unknown: ${name}`, tone: "warning", icon: "warning" });
-    }
-  }
-  if (facts.length === 0 && candidate.availability.overall !== "in_stock") {
-    facts.push(availabilityStatus(candidate.availability.overall));
-  }
-  return facts;
 }
 
 /** Why there are no substitutes, as a status line. A plain miss is neutral; a catalogue gap is a warning. */

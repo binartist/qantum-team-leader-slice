@@ -1,5 +1,5 @@
 import { cache } from "react";
-import { describePenetration, listActions, listCandidates, loadSiteData } from "@/application";
+import { describeMaterialStock, describePenetration, listActions, listCandidates, listMaterialStock, loadSiteData } from "@/application";
 import { getDependencies } from "@/server/deps";
 
 export const getCachedSite = cache(async (siteId: string) => getDependencies().sites.getSite(siteId));
@@ -17,4 +17,10 @@ export const getCachedCandidates = cache(async (siteId: string, penetrationId: s
 
 export const getCachedPenetrationDetail = cache(async (siteId: string, penetrationId: string) =>
   describePenetration(getDependencies(), siteId, penetrationId),
+);
+
+export const getCachedMaterialList = cache(async () => listMaterialStock(getDependencies()));
+
+export const getCachedMaterialDetail = cache(async (materialId: string, from?: string) =>
+  describeMaterialStock(getDependencies(), materialId, from),
 );

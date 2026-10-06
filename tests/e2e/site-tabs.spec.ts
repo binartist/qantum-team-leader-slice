@@ -12,6 +12,9 @@ test("AC 34: a blocked site has no summary banner; the chips filter the rows", a
   await expect(filters.getByRole("link", { name: "Shortages 1" })).toBeVisible();
   await expect(filters.getByRole("link", { name: "Data problems 4" })).toBeVisible();
   await expect(filters.getByRole("link", { name: "Acted 0" })).toBeVisible();
+  // One row at 375px: a two-row sticky dock would cover focused rows beneath it.
+  const tops = await filters.getByRole("link").evaluateAll((links) => links.map((link) => Math.round(link.getBoundingClientRect().top)));
+  expect(new Set(tops).size).toBe(1);
   // Row chips name the kind of problem; the full reason is on the penetration page.
   await expect(page.locator("a[href$='/penetrations/pen-c-05']")).toContainText("Stock unknown");
   await expect(page.locator("a[href$='/penetrations/pen-c-03']")).toContainText("Unknown solution");

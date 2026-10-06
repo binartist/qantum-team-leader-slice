@@ -4,12 +4,12 @@ import { connection } from "next/server";
 import Link from "next/link";
 import type { SiteReadinessView } from "@/application";
 import { getCachedSite } from "../../_lib/cached";
-import { Banner } from "@/ui/Banner";
 import { Notice } from "@/ui/Notice";
 import { PenetrationFilters } from "@/ui/PenetrationFilters";
 import { PenetrationGroups, type PenetrationPlace } from "@/ui/PenetrationGroups";
-import { sitePath, stockFiguresLine, stockIsStale } from "@/ui/format";
-import { EMPTY, filterLine, NO_FILTER_MATCH, PENETRATION_FILTER, STOCK_STALE } from "@/ui/messages";
+import { sitePath } from "@/ui/format";
+import { StockFigures } from "@/ui/StockFigures";
+import { EMPTY, filterLine, NO_FILTER_MATCH, PENETRATION_FILTER } from "@/ui/messages";
 import { filterCounts, logIsOpen, matchingPenetrations, materialValues, parseShow, type ShowFilter } from "@/ui/penetration-filters";
 import { filterByMaterial, listFactChips } from "@/ui/penetrations";
 import styles from "@/ui/primitives.module.css";
@@ -74,13 +74,7 @@ function SitePenetrations({
   return (
     <>
       {places.length === 0 ? null : (
-        <>
-          <Notice>{readiness.stockNotice}</Notice>
-          <p>{stockFiguresLine(readiness.stockAsOf, readiness.asOf)}</p>
-          {stockIsStale(readiness.stockAsOf, readiness.asOf) ? (
-            <Banner status={{ label: STOCK_STALE, tone: "warning", icon: "warning" }} />
-          ) : null}
-        </>
+        <StockFigures notice={readiness.stockNotice} stockAsOf={readiness.stockAsOf} asOf={readiness.asOf} />
       )}
       <PenetrationFilters siteId={siteId} selected={selected} counts={counts} material={material} />
       {filtered.filter ? (

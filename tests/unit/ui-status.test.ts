@@ -3,6 +3,7 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import {
+  doesNotFit,
   actionStatus,
   availabilityStatus,
   blockerReason,
@@ -10,7 +11,6 @@ import {
   crewStatus,
   earlierDecision,
   hasEarlierDecision,
-  ratingComparison,
   shortageState,
   siteChip,
   type StatusView,
@@ -125,33 +125,6 @@ describe("home chip", () => {
   });
 });
 
-describe("rating comparison", () => {
-  const meets: StatusView = { label: "Meets the required rating", tone: "success", icon: "check" };
-  const below: StatusView = { label: "Below the required rating", tone: "warning", icon: "warning" };
-
-  it("meets when both candidate minutes cover the requirement, and a null requirement is met by anything", () => {
-    expectView(ratingComparison(60, 30, 60, 30), meets);
-    expectView(ratingComparison(60, 60, 60, 30), meets);
-    expectView(ratingComparison(120, 90, 60, 30), meets);
-    expectView(ratingComparison(null, null, null, null), meets);
-    expectView(ratingComparison(null, 30, null, 30), meets);
-    expectView(ratingComparison(60, null, 60, null), meets);
-    expectView(ratingComparison(0, 0, null, null), meets);
-  });
-
-  it("is below when a candidate minute misses a stated requirement, including a null or non-finite minute", () => {
-    expectView(ratingComparison(59, 30, 60, 30), below);
-    expectView(ratingComparison(60, 29, 60, 30), below);
-    expectView(ratingComparison(null, null, 60, null), below);
-    expectView(ratingComparison(60, null, 60, 30), below);
-    expectView(ratingComparison(null, 90, 60, 30), below);
-    expectView(ratingComparison(Number.NaN, 30, 60, 30), below);
-    expectView(ratingComparison(60, Number.POSITIVE_INFINITY, 60, 30), below);
-    expectView(ratingComparison(60, 30, Number.NaN, 30), below);
-    expect(below.label).not.toMatch(/compatible|approved/i);
-  });
-});
-
 describe("action status", () => {
   it("AC 15: maps current, earlier, and resolved", () => {
     expectView(actionStatus("current"), { label: "Still applies", tone: "neutral", icon: "dashed-circle" });
@@ -193,8 +166,6 @@ describe("forbidden words", () => {
       actionStatus("resolved"),
       siteChip("blocked", 1, 2),
       siteChip("clear", 0, 0),
-      ratingComparison(60, 60, 60, 30),
-      ratingComparison(30, 30, 60, 60),
     ].map((view) => view.label);
     for (const label of labels) expect(label).not.toMatch(/compatible|approved/i);
   });
@@ -266,16 +237,8 @@ describe("AC 35: wording for a nominated solution that does not fit", () => {
   });
 });
 
-describe("rating checks agree with the domain on bad numbers", () => {
-  it("a negative or non-finite rating never meets a requirement", async () => {
-    const { ratingComparison: compare } = await import("@/ui/status");
-    expect(compare(60, 30, -5, 30).label).toBe("Below the required rating");
-    expect(compare(-1, 30, 60, 30).label).toBe("Below the required rating");
-    expect(compare(60, Number.NaN, 60, 30).label).toBe("Below the required rating");
-  });
-
-  it("words a field that does not fit with a stop sign", async () => {
-    const { doesNotFit } = await import("@/ui/status");
-    expect(doesNotFit("60 min")).toEqual({ label: "60 min, doesn't fit", tone: "danger", icon: "stop" });
+describe("AC 36: a field that does not fit", () => {
+  it("is worded with the solution's value and a stop sign, never colour alone", () => {
+    expectView(doesNotFit("60 min"), { label: "60 min, doesn't fit", tone: "danger", icon: "stop" });
   });
 });

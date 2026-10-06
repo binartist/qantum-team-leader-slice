@@ -25,11 +25,11 @@ test("scenario: escalate sealant, propose 0451, then Kingsway still cannot go", 
   await expect(page.locator("a[href$='/penetrations/pen-b-01']")).toContainText("Short material");
   await expect(page.getByText("Crew can go")).toHaveCount(0);
 
-  // Row chips only name the problem; the material link is on the penetration page.
+  // Row chips only name the problem; the shortage is briefed and linked on the penetration page.
   await page.locator("a[href$='/penetrations/pen-b-01']").click();
-  await page.getByRole("link", { name: "Short material: Intumescent sealant, 310 ml cartridge" }).first().click();
-  await expect(page).toHaveURL(/\/sites\/site-b\/materials\/MAT-SEALANT$/);
-  await page.getByRole("button", { name: "Escalate Intumescent sealant, 310 ml cartridge" }).click();
+  await page.getByRole("link", { name: /^Short material: Intumescent sealant, 310 ml cartridge · this site short/ }).first().click();
+  await expect(page).toHaveURL(/\/materials\/MAT-SEALANT\?from=pen-b-01#site-site-b$/);
+  await page.getByRole("button", { name: "Escalate Intumescent sealant, 310 ml cartridge at Harbour Point, Levels 3 to 5" }).click();
   const dialog = page.getByRole("dialog");
   await expect(dialog.getByText("This does not release the crew.")).toBeVisible();
   await expect(dialog.getByText("This records your decision here. Nobody is notified automatically yet.")).toBeVisible();
@@ -55,6 +55,9 @@ test("scenario: escalate sealant, propose 0451, then Kingsway still cannot go", 
 
   await expect(page.locator("[data-announcer]")).toHaveText("Escalation recorded");
   await expect(page.getByText("Escalated", { exact: true })).toBeVisible();
+  // Back returns to the penetration that opened the material page, then up to the site.
+  await page.getByRole("link", { name: "Back to L3, Riser 2" }).click();
+  await expect(page).toHaveURL(/\/sites\/site-b\/penetrations\/pen-b-01$/);
   await page.getByRole("link", { name: "Back to Harbour Point, Levels 3 to 5" }).click();
   await expect(page.getByText("Blocked: hold the crew.")).toHaveCount(0);
   await expect(page.locator("a[href$='/penetrations/pen-b-01']")).toContainText("Short material");
@@ -78,7 +81,7 @@ test("scenario: escalate sealant, propose 0451, then Kingsway still cannot go", 
   const usesShort = page.getByRole("article").filter({ has: page.getByRole("heading", { name: "Solution 0451" }) });
   const unmapped = page.getByRole("article").filter({ has: page.getByRole("heading", { name: "Solution 0464" }) });
   await expect(page.getByText("Catalogue match, not verified")).toBeVisible();
-  await expect(usesShort.getByRole("link", { name: "Short material: Intumescent sealant, 310 ml cartridge" })).toBeVisible();
+  await expect(usesShort.getByRole("link", { name: /^Short material: Intumescent sealant, 310 ml cartridge · this site short 2 of 10$/ })).toBeVisible();
   await expect(page.getByText("Materials in stock")).toHaveCount(0);
   const fit = page.getByRole("region", { name: "Nominated solution 0438" }).getByRole("table");
   await expect(fit.getByRole("row", { name: /Integrity/ })).toContainText("60 min required");
@@ -87,9 +90,9 @@ test("scenario: escalate sealant, propose 0451, then Kingsway still cannot go", 
   await expect(substituteTable.getByRole("columnheader", { name: "Solution 0451" })).toBeVisible();
   await expect(substituteTable.getByRole("row", { name: /Supplier ref/ })).toContainText("V21.27-22SFR00053-158-E");
   await expect(usesShort.getByText("on hand")).toHaveCount(0);
-  await page.getByLabel("Solution", { exact: true }).selectOption("0464");
+  await page.getByLabel("Select solution").selectOption("0464");
   await expect(unmapped.getByText("We can't tell if its materials are in stock.")).toBeVisible();
-  await page.getByLabel("Solution", { exact: true }).selectOption("0451");
+  await page.getByLabel("Select solution").selectOption("0451");
 
   await usesShort.getByRole("button", { name: /Propose this/ }).click();
   const propose = page.getByRole("dialog");
@@ -127,6 +130,9 @@ test("scenario: escalate sealant, propose 0451, then Kingsway still cannot go", 
   await expect(log.getByText(/\d{1,2} [A-Z][a-z]{2} \d{4}, \d{2}:\d{2} UTC/).first()).toBeVisible();
 
   await gotoApp(page, "/sites");
+  // A decision records intent; it creates no stock, so both sites are still blocked, for the same reasons.
+  await expect(page.getByRole("listitem").filter({ hasText: "Harbour Point, Levels 3 to 5" }).getByText("Blocked · 2 shortages")).toBeVisible();
+  await expect(page.getByRole("listitem").filter({ hasText: "Kingsway Works, Phase 2" }).getByText("Blocked · 1 shortage, 4 data problems")).toBeVisible();
   await page.getByRole("link", { name: /Kingsway Works/ }).click();
   await expect(page.getByText("Blocked: hold the crew.")).toHaveCount(0);
   await page.getByRole("navigation", { name: "Filter penetrations" }).getByRole("link", { name: "Data problems 4" }).click();

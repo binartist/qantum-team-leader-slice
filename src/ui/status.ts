@@ -43,26 +43,6 @@ export function siteChip(status: string, shortageCount: number, dataProblemCount
   return crewStatus("unavailable");
 }
 
-const usableMinutes = (value: number) => Number.isFinite(value) && value >= 0;
-
-// Same rule as the domain's fit check: a negative or non-finite number never meets anything.
-function minuteMeets(candidate: number | null, required: number | null): boolean {
-  if (required === null) return true;
-  if (candidate === null || !usableMinutes(candidate) || !usableMinutes(required)) return false;
-  return candidate >= required;
-}
-
-export function ratingComparison(
-  candidateIntegrity: number | null,
-  candidateInsulation: number | null,
-  requiredIntegrity: number | null,
-  requiredInsulation: number | null,
-): StatusView {
-  const meets = minuteMeets(candidateIntegrity, requiredIntegrity) && minuteMeets(candidateInsulation, requiredInsulation);
-  if (meets) return { label: "Meets the required rating", tone: "success", icon: "check" };
-  return { label: "Below the required rating", tone: "warning", icon: "warning" };
-}
-
 export function shortageState(state: string): StatusView {
   switch (state) {
     case "open":

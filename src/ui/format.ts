@@ -38,14 +38,6 @@ export function formatUnit(quantity: number, unit: string): string {
   return UNIT_PLURAL[unit] ?? `${unit}s`;
 }
 
-export function formatNeed(required: number, onHand: number | null, shortfall: number | null, unit: string): string {
-  if (onHand === null || shortfall === null) return `Need ${formatQuantity(required)}, stock unknown`;
-  // The unit is printed once, beside the shortfall, so plural follows that number.
-  const unitWord = formatUnit(shortfall, unit);
-  const amounts = `Need ${formatQuantity(required)}, have ${formatQuantity(onHand)}, short ${formatQuantity(shortfall)}`;
-  return unitWord.length > 0 ? `${amounts} ${unitWord}` : amounts;
-}
-
 function utcStamp(iso: string): string | null {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return null;
@@ -99,18 +91,6 @@ export function formatRecordedAt(iso: string): string {
   return utcStamp(iso) ?? "Time unknown";
 }
 
-export function formatMaterialSummary(
-  lines: readonly { readonly materialId: string; readonly requiredQty: number; readonly onHandQty: number | null }[],
-  materials: Readonly<Record<string, { readonly name: string }>>,
-): string {
-  return lines
-    .map((line) => {
-      const name = materials[line.materialId]?.name ?? line.materialId;
-      return `${name} x${formatQuantity(line.requiredQty)}`;
-    })
-    .join(", ");
-}
-
 export function characterCountLabel(value: string): string {
   return `${value.trim().length} of 500 characters`;
 }
@@ -123,16 +103,6 @@ function ratingPart(minutes: number | null, kind: "integrity" | "insulation"): s
 /** "90 min integrity, 60 min insulation", for a labelled field. */
 export function ratingValue(integrity: number | null, insulation: number | null): string {
   return `${ratingPart(integrity, "integrity")}, ${ratingPart(insulation, "insulation")}`;
-}
-
-export function formatRating(integrity: number | null, insulation: number | null): string {
-  return `Fire rating: ${ratingValue(integrity, insulation)}`;
-}
-
-export function supplierRefLine(code: string): string | null {
-  const trimmed = code.trim();
-  if (trimmed.length === 0) return null;
-  return `Supplier ref ${trimmed}`;
 }
 
 export interface PenetrationRow {
@@ -169,52 +139,56 @@ export function penetrationsByPlace<T extends PenetrationRow & { readonly id: st
   );
 }
 
-export function penetrationGroups<T extends { readonly nominatedCode: string }>(
-  places: readonly T[],
-): { heading: string; places: T[] }[] {
-  const groups: { code: string; places: T[] }[] = [];
-  const index = new Map<string, { code: string; places: T[] }>();
-  for (const place of places) {
-    const existing = index.get(place.nominatedCode);
-    if (existing) {
-      existing.places.push(place);
-      continue;
-    }
-    const created = { code: place.nominatedCode, places: [place] };
-    index.set(place.nominatedCode, created);
-    groups.push(created);
-  }
-  return groups.map((group) => ({
-    heading: `Solution ${group.code} · ${group.places.length}`,
-    places: group.places,
-  }));
-}
-
-export function affectedCount(count: number): string {
-  return count === 1 ? "Affects 1 penetration" : `Affects ${count} penetrations`;
-}
-
-function penetrationCount(count: number): string {
-  return count === 1 ? "1 penetration" : `${count} penetrations`;
-}
-
-/** The material page's heading: the places are this site's, even though the stock is shared. */
-export function plannedAt(siteName: string, count: number): string {
-  return `Planned at ${siteName}: ${penetrationCount(count)}`;
-}
-
 /** A wait or escalate on a shortage covers every penetration that needs the material at this site. */
 export function decisionScope(count: number): string {
   return count === 1 ? "For the 1 penetration at this site" : `For all ${count} penetrations at this site`;
 }
 
-/** The material page's amounts: the need is this site's, the stock on hand is shared with other sites. */
-export function siteNeedLine(siteName: string, required: number, onHand: number | null, shortfall: number | null, unit: string): string {
-  const need = `${siteName} needs ${formatQuantity(required)}`;
-  if (onHand === null || shortfall === null) return `${need}, stock unknown`;
-  const unitWord = formatUnit(shortfall, unit);
-  const short = unitWord.length > 0 ? `short ${formatQuantity(shortfall)} ${unitWord}` : `short ${formatQuantity(shortfall)}`;
-  return `${need}, on hand ${formatQuantity(onHand)} (shared with other sites), ${short}`;
+function amount(quantity: number, unit: string): string {
+  const unitWord = formatUnit(quantity, unit);
+  return unitWord.length > 0 ? `${formatQuantity(quantity)} ${unitWord}` : formatQuantity(quantity);
+}
+
+/** One site's part on a material page. Not short is only ever "for this site alone": stock is shared. */
+export function siteMaterialLine(
+  required: number,
+  shortage: { readonly kind: "short" | "unknown"; readonly shortfallQty: number | null } | null,
+  unit: string,
+): string {
+  const need = `Needs ${formatQuantity(required)}`;
+  if (shortage === null) return `${need}, not short for this site alone`;
+  if (shortage.kind === "unknown" || shortage.shortfallQty === null) return `${need}, stock unknown`;
+  return `${need}, short ${amount(shortage.shortfallQty, unit)}`;
+}
+
+/** A penetration's shortage line: the material and this site's figures, inline. */
+export function shortageBrief(
+  name: string,
+  shortage: { readonly kind: "short" | "unknown"; readonly requiredQty: number; readonly shortfallQty: number | null },
+): string {
+  if (shortage.kind === "unknown" || shortage.shortfallQty === null) {
+    return `Stock unknown: ${name} · this site needs ${formatQuantity(shortage.requiredQty)}`;
+  }
+  return `Short material: ${name} · this site short ${formatQuantity(shortage.shortfallQty)} of ${formatQuantity(shortage.requiredQty)}`;
+}
+
+/** Every site's need added up; empty when a site could not be checked, so no total is claimed. */
+export function plannedAcrossLine(planned: number | null, unit: string): string {
+  return planned === null ? "" : `Planned across sites ${amount(planned, unit)}`;
+}
+
+/** The shared stock against the across-sites need. The total is left out when a site could not be checked. */
+export function materialStockLine(onHand: number | null, planned: number | null, unit: string): string {
+  const stock = onHand === null ? "Stock unknown" : `On hand ${amount(onHand, unit)}`;
+  return planned === null ? stock : `${stock} · planned across sites ${amount(planned, unit)}`;
+}
+
+export function shortSiteCount(count: number): string {
+  return count === 1 ? "Short at 1 site" : `Short at ${count} sites`;
+}
+
+export function uncheckedSiteCount(count: number): string {
+  return count === 1 ? "1 site couldn't be checked" : `${count} sites couldn't be checked`;
 }
 
 /** Identical place lines collapse into one, "×N" when repeated, in the order first seen. */
@@ -228,26 +202,27 @@ export function sitePath(siteId: string): string {
   return `/sites/${encodeURIComponent(siteId)}`;
 }
 
-export function penetrationsPath(siteId: string, materialId?: string): string {
-  const base = `/sites/${encodeURIComponent(siteId)}/penetrations`;
-  return materialId === undefined ? base : `${base}?material=${encodeURIComponent(materialId)}`;
-}
-
 /** The site screen filtered to the penetrations that use one material. */
 export function siteMaterialPath(siteId: string, materialId: string): string {
   return `${sitePath(siteId)}?material=${encodeURIComponent(materialId)}`;
 }
 
-export function materialPath(siteId: string, materialId: string): string {
-  return `/sites/${encodeURIComponent(siteId)}/materials/${encodeURIComponent(materialId)}`;
+export const MATERIALS_PATH = "/materials";
+
+/** The anchor of one site's section on a material page. */
+export function siteAnchor(siteId: string): string {
+  return `site-${siteId}`;
 }
 
-export function dataProblemsPath(siteId: string): string {
-  return `/sites/${encodeURIComponent(siteId)}/data-problems`;
-}
-
-export function actionsPath(siteId: string): string {
-  return `/sites/${encodeURIComponent(siteId)}/actions`;
+/**
+ * A material page. From a penetration, `from` lets the back control return there, and the anchor scrolls
+ * to that site's section; the page itself always shows every site.
+ */
+export function materialPagePath(materialId: string, from?: { readonly siteId: string; readonly penetrationId?: string }): string {
+  const base = `${MATERIALS_PATH}/${encodeURIComponent(materialId)}`;
+  if (!from) return base;
+  const query = from.penetrationId === undefined ? "" : `?from=${encodeURIComponent(from.penetrationId)}`;
+  return `${base}${query}#${encodeURIComponent(siteAnchor(from.siteId))}`;
 }
 
 export function penetrationPath(siteId: string, penetrationId: string): string {

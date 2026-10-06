@@ -11,6 +11,7 @@ export {
   NotACandidateError,
   PayloadTooLargeError,
   PenetrationNotFoundError,
+  MaterialNotFoundError,
   ShortageNotFoundError,
   SiteNotFoundError,
   StaleNominationError,

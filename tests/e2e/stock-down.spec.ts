@@ -22,3 +22,16 @@ test("stock down shows can't check and never crew can go", async ({ page }) => {
   await expect(log.getByText("Can't check this site right now. Don't assume it's clear. Try again.")).toBeVisible();
   await expect(page.getByText("Crew can go")).toHaveCount(0);
 });
+
+test("AC 38, AC 39: with the stock down, the materials pages say they can't check, never zero or not short", async ({ page }) => {
+  await gotoApp(page, "/materials");
+  await expect(page.getByText("Can't check stock right now. Don't assume any material is in stock. Try again.")).toBeVisible();
+  await expect(page.locator("main a[href^='/materials/']")).toHaveCount(0);
+  await expect(page.getByText(/On hand \d|Not short/)).toHaveCount(0);
+
+  await gotoApp(page, "/materials/MAT-SEALANT");
+  await expect(page.getByRole("heading", { level: 1, name: "Material" })).toBeVisible();
+  await expect(page.getByText("Can't check stock right now. Don't assume any material is in stock. Try again.")).toBeVisible();
+  await expect(page.getByRole("button", { name: /Wait|Escalate/ })).toHaveCount(0);
+  await expect(page.getByText(/Needs \d/)).toHaveCount(0);
+});

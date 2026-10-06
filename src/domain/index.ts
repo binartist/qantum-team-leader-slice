@@ -23,7 +23,7 @@ export type {
 
 export { isIncompleteSubstrate, normaliseText } from "./normalise";
 export { buildCatalogue, type RawCatalogueRow } from "./catalogue";
-export { computeSiteReadiness, type ReadinessInput } from "./readiness";
+export { computeSiteReadiness, onHandByMaterial, siteMaterialNeeds, type MaterialNeed, type ReadinessInput } from "./readiness";
 export {
   classifyActionsForList,
   deriveShortageState,

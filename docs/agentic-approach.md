@@ -15,7 +15,7 @@ I made the product and scope decisions: which slice, shared versus reserved stoc
 
 ## How the work was planned and directed
 
-1. **Docs before code.** The business path, glossary, iteration plan, specification (16 requirements, 32 numbered acceptance criteria, 34 after the post-delivery walkthrough, 36 after the solution-fit change), technical design and test strategy were written and reviewed first. Code was then measured against them; when they disagreed, the spec was fixed first.
+1. **Docs before code.** The business path, glossary, iteration plan, specification (16 requirements, 32 numbered acceptance criteria, 34 after the post-delivery walkthrough, 36 after the solution-fit change, 42 after the materials pages), technical design and test strategy were written and reviewed first. Code was then measured against them; when they disagreed, the spec was fixed first.
 2. **Risk tiers.** Each change was classified by blast radius. Contract and storage changes (the HTTP API, the move to Postgres) were Tier 3 and needed my written approval of a spec with a contract diff and rollback plan.
 3. **Orchestrator and worker.** Claude wrote a self-contained brief for each piece of work, as a file in the repo: role, facts, decisions not to relitigate, files the worker may touch, test-first method, verification commands and honesty rules ("do not claim a command passed unless you ran it"). Grok carried it out. Briefs were cheap to write and saved rounds of rework; the expensive model spent its tokens on decisions and checking, not on typing code.
 4. **Small rounds.** Domain core, API, UI, navigation, usability, then storage and delivery. Each round ended accepted and committed before the next began.

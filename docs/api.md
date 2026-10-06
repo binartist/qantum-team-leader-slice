@@ -79,7 +79,7 @@ Blocker reasons: `unknown_solution_code`, `solution_mismatch`, `no_material_mapp
 
 A line's `status` is `short` when one install needs more than is on hand, or when this site is already short of that material. It is `unknown` when there is no stock record, or when the site's stock for that material is unknown.
 
-`penetration` is the summary the penetration page shows above its substitutes. (The page's side-by-side comparison comes from a page-only use case, `describePenetration`, with no API route.) `id` and `nominatedCode` repeat the top-level fields. It carries no substrate, orientation or stock.
+`penetration` is the summary the penetration page shows above its substitutes. (The page's side-by-side comparison comes from a page-only use case, `describePenetration`, with no API route.) The materials pages likewise use page-only use cases (`listMaterialStock`, `describeMaterialStock`); decisions made there still go through the shortage `wait` and `escalate` routes above. Their `material_not_found` (404) is page-only too: no API route returns it. `id` and `nominatedCode` repeat the top-level fields. It carries no substrate, orientation or stock.
 
 Candidate lines are one per material (quantities summed per material). The notice is present whatever the status. The API never says "compatible" or "approved".
 

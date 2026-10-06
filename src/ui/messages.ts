@@ -10,8 +10,6 @@ export const MANAGER_CHECK = "A manager has to verify this catalogue match.";
 export const EMPTY = {
   sites: "No sites to show.",
   actions: "Nothing recorded for this site yet.",
-  shortages: "No shortages.",
-  dataProblems: "No data problems.",
   penetrations: "No penetrations planned for this site.",
 } as const;
 
@@ -20,7 +18,26 @@ export const PENETRATION_FILTER = {
   unknown: "That material is not a shortage on this site. Showing all penetrations.",
 } as const;
 
-export const NOT_A_SHORTAGE = "That material is not a shortage on this site.";
+/** The drawer side menu (AC 37). */
+export const NAV = {
+  open: "Open menu",
+  close: "Close menu",
+  title: "Team leader",
+  label: "Main",
+  sites: "Sites",
+  materials: "Materials",
+  about: "About this demo",
+} as const;
+
+export const MATERIALS = {
+  title: "Materials",
+  detailTitle: "Material",
+  empty: "No materials planned at any site.",
+  emptyChecked: "No materials planned at the sites that could be checked.",
+  unavailable: "Can't check stock right now. Don't assume any material is in stock. Try again.",
+  notShortAnywhere: "Not short at any site",
+  siteUnavailable: "Can't check this site right now. Don't assume it has enough.",
+} as const;
 
 export const NO_FILTER_MATCH = "No penetrations match these filters.";
 
@@ -35,8 +52,6 @@ export const FILTERS = {
   acted: "Acted",
   actions: "Actions log",
 } as const;
-
-export const SHOW_ON_SITE_LIST = "Show these on the site list";
 
 export const SITES_UNAVAILABLE = "Can't check the sites right now. Don't assume any site is clear. Try again.";
 

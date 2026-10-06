@@ -53,6 +53,12 @@ Boundary rule enforced by lint: the domain core may not import Next.js, React, t
 | 34 | Unit, E2E | A blocked site has no summary banner. Chips filter the rows and count penetrations. A clear site still says Crew can go |
 | 35 | Unit, API | Each fit rule, normalisation, a cut-off substrate on either side never fits (even identical text), blank text never matches, fail-closed requirements, order of blocker checks, no added need; wait 422 and escalate 201 on the new blocker |
 | 36 | Unit, E2E | Side-by-side rows for penetration and nominated solution; a field that does not fit marked with an icon and text |
+| 37 | Unit, E2E | Menu control on Sites and Materials only (source check); drawer opens from the keyboard, sits on the left, marks the current entry, passes axe open, keeps tabbing off the page behind; Escape, the close control and the backdrop close it and return focus; a link closes it as it navigates; lists have no back control and inner screens lead with back |
+| 38 | Unit, E2E | `listMaterialStock`: planned materials by name, on hand or unknown, across-sites total, short sites, one stock read per page; an unavailable or missing site is unchecked, gives no total and never "not short"; no stock read when nothing is planned; stock down, malformed or a failed page read is unavailable. `materialState`: short, unknown, unchecked and "sites together need more" before "not short". Rows at 375px with targets, icons and no overflow; stock-down and stock-malformed servers show can't-check on both pages |
+| 39 | Unit, E2E | `siteMaterialNeeds` (rounded once per site, blockers add no need); `describeMaterialStock` per-site sections, stock-unknown shortage, unchecked site last, not found vs unavailable; Wait and Escalate only where short |
+| 40 | Unit, E2E | `shortageBrief` wording; penetration facts link to `/materials/<id>?from=<pid>#site-<id>`; a substitute's line links only when the site is already short of that material |
+| 41 | E2E | `/sites/<id>/materials/<mid>` redirects to the material page at that site's section |
+| 42 | Unit, E2E | `describeMaterialStock` returns to a penetration of a planning site (including a substitute's) and never for another site, an unknown id, an object key (`constructor`) or an unchecked site; `materialBack` wording. E2E: back to the penetration, and to Materials for foreign, malformed and repeated `from` |
 
 A script lists every AC number and fails CI if one has no test referencing it.
 
