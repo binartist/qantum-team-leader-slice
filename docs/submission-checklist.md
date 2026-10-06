@@ -2,7 +2,7 @@
 
 Living checklist against the "What to submit" and "What we will assess" sections of `docs/passive-fire-exercise.md`. Update it as work lands. Tick only with evidence (file, URL, or CI run), recorded in the Evidence column.
 
-Last updated: 2026-10-06
+Last updated: 2026-10-07
 
 Legend: `[x]` done, `[~]` partial, `[ ]` not started.
 
@@ -19,12 +19,12 @@ Legend: `[x]` done, `[~]` partial, `[ ]` not started.
 | 7 | README: demo scenario | [x] | README "Try it", following spec section 9. |
 | 8 | README: sample data and known limitations | [x] | README "Sample data" and "Known limitations"; `data/sample/README.md` labels the data invented. |
 | 9 | Iteration plan (md) | [x] | `docs/iteration-plan.md`: slice rationale, 6 iterations, uncertainties. Awaiting your review. |
-| 10 | First-slice specification (md) | [x] | `docs/slice-specification.md`: 17 FRs, 42 acceptance criteria, NFRs, assumptions, exclusions. Awaiting your review. |
+| 10 | First-slice specification (md) | [x] | `docs/slice-specification.md`: 17 FRs, 44 acceptance criteria, NFRs, assumptions, exclusions. Awaiting your review. |
 | 11 | Technical design (md) | [x] | `docs/technical-design.md`. Section 11 additions awaiting confirmation. |
-| 12 | Test strategy (md) | [x] | `docs/test-strategy.md`: layers, all 42 ACs mapped, risks, CI gates. Awaiting your review. |
+| 12 | Test strategy (md) | [x] | `docs/test-strategy.md`: layers, all 44 ACs mapped, risks, CI gates. Awaiting your review. |
 | 13 | Agent instructions and context files | [x] | `AGENTS.md` (tool-neutral; `CLAUDE.md` imports it), 11 Skill Forge skills in `.agents/skills` (`skill-forge.json`, lock file), and every brief, review brief, review report and worker note in `docs/agent-work/`. |
-| 14 | Working application code | [x] | Domain core, stubs, Postgres and memory stores, use cases, seven-route API, six screens (landing, sites, materials, material, site, penetration). Live and proven against the real database. |
-| 15 | Automated tests | [x] | 388 unit and API tests, 5 database contract tests on Postgres 17, 29 Playwright tests with axe at 375px; all 42 ACs referenced; all run in CI. |
+| 14 | Working application code | [x] | Domain core, stubs, Postgres and memory stores, use cases, seven-route API, seven screens (landing, sites, materials, material, actions log, site, penetration). Live and proven against the real database. |
+| 15 | Automated tests | [x] | 413 unit and API tests, 5 database contract tests on Postgres 17, 31 Playwright tests with axe at 375px; all 44 ACs referenced; all run in CI. |
 | 16 | CI/CD config | [x] | `.github/workflows/ci.yml`: checks (typecheck, lint, coverage, build, bundle credential scan, audit, gitleaks), db (contract suite on Postgres 17), e2e (Playwright, axe, AC check), and on `main` a Vercel prebuilt deploy plus smoke test. |
 | 17 | Pipeline inspectable, with successful deploy evidence | [x] | Green run with deploy and smoke: https://github.com/binartist/qantum-team-leader-slice/actions/runs/37309054947. Live check 2026-10-06: `x-vercel-id` syd1, smoke ok, an escalation recorded through the live API survived a production redeploy. |
 | 18 | Agentic coding account | [x] | `docs/agentic-approach.md`: tools, planning, verification ladder, corrections, cost. |

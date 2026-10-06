@@ -22,8 +22,7 @@ export const screens = [
   "/sites/site-b/penetrations/pen-b-10",
   "/sites/site-c/penetrations/pen-c-01",
   "/sites/site-c/penetrations/pen-c-03",
-  "/sites/site-b/actions",
-  "/sites/site-d/actions",
+  "/actions",
   "/sites/nope",
 ];
 

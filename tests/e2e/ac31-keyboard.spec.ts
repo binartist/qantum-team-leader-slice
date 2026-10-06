@@ -30,12 +30,31 @@ test("AC 31: escalate with the keyboard only, and targets are at least 44 by 44"
   await page.getByRole("link", { name: "Acted 4" }).click();
   await expect(page).toHaveURL(/show=acted/);
   await expect(page.locator("main a[href*='/penetrations/pen-b-']")).toHaveCount(4);
-  // Each acted row says so, in the escalation colour, after its problem chip.
-  await expect(page.locator("a[href$='/penetrations/pen-b-01']")).toContainText("Escalated");
+  // The decision chip sits on the row, outside the link (AC 44).
+  const riser = page.locator("li").filter({ has: page.locator("a[href$='/penetrations/pen-b-01']") });
+  await expect(riser).toContainText("Escalated");
+  await expect(page.locator("a[href$='/penetrations/pen-b-01'] button")).toHaveCount(0);
+  const chip = riser.getByRole("button", { name: "Escalated, latest decision for L3, Riser 2 · PEX Pipe Ø25mm" });
+  await chip.focus();
+  await page.keyboard.press("Enter");
+  const popover = page.getByRole("dialog", { name: "Escalated, latest decision for L3, Riser 2 · PEX Pipe Ø25mm" });
+  await expect(popover.getByText("Escalated to purchasing: Pipe collar for 25 mm pipe")).toBeVisible();
+  await expect(popover.getByText("Noted from the keyboard")).toBeVisible();
+  await assertTargets(page);
+  await page.keyboard.press("Escape");
+  await expect(popover).toBeHidden();
+  await expect(chip).toBeFocused();
   await expect(page.getByText("Blocked: hold the crew.")).toHaveCount(0);
   await expect(page.getByText("Crew can go")).toHaveCount(0);
   await gotoApp(page, "/sites");
   await expect(page.getByRole("listitem").filter({ hasText: "Harbour Point, Levels 3 to 5" }).getByText("Blocked · 2 shortages")).toBeVisible();
+
+  // AC 43: the logged decision opens the material page at its site, and back returns to the log.
+  await gotoApp(page, "/actions");
+  await page.locator("#site-site-b").getByRole("link", { name: "Escalated to purchasing: Pipe collar for 25 mm pipe" }).click();
+  await expect(page).toHaveURL(/\/materials\/MAT-COLLAR-25\?fromLog=site-b#site-site-b$/);
+  await page.getByRole("link", { name: "Back to Actions log" }).click();
+  await expect(page).toHaveURL(/\/actions(#site-site-b)?$/);
 
   for (const path of screens) {
     await gotoApp(page, path);

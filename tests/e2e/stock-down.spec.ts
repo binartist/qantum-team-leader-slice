@@ -13,13 +13,16 @@ test("stock down shows can't check and never crew can go", async ({ page }) => {
   await expect(page.getByRole("link", { name: "Back to sites" })).toBeVisible();
   await expect(page.getByText("Crew can go")).toHaveCount(0);
 
-  // No filter counts when readiness is unknown. The log needs stock too, so the panel says it cannot be read.
+  // No filter counts when readiness is unknown, and this page has no actions log control.
   await expect(page.getByRole("navigation", { name: "Filter penetrations" })).toHaveCount(0);
-  const logButton = page.getByRole("button", { name: "Actions log", exact: true });
-  await expect(logButton).toBeVisible();
-  await logButton.click();
-  const log = page.getByRole("dialog", { name: "Actions log" });
-  await expect(log.getByText("Can't check this site right now. Don't assume it's clear. Try again.")).toBeVisible();
+  await expect(page.getByRole("button", { name: /^Actions log/ })).toHaveCount(0);
+  await expect(page.getByText("Crew can go")).toHaveCount(0);
+
+  // Stock down makes every site's log unreadable, so the page says it cannot be loaded.
+  await gotoApp(page, "/actions");
+  await expect(page.getByRole("heading", { level: 1, name: "Actions log" })).toBeVisible();
+  await expect(page.getByText("We can't load the actions log right now. Try again shortly.")).toBeVisible();
+  await expect(page.getByText("Nothing recorded")).toHaveCount(0);
   await expect(page.getByText("Crew can go")).toHaveCount(0);
 });
 

@@ -8,11 +8,12 @@ import { getCachedMaterialDetail, getCachedSite } from "../../_lib/cached";
 import { Notice } from "@/ui/Notice";
 import { PenetrationFilters } from "@/ui/PenetrationFilters";
 import { PenetrationGroups, type PenetrationPlace } from "@/ui/PenetrationGroups";
-import { materialPagePath, siteFromMaterialPath, sitePath } from "@/ui/format";
+import { fromLogPath, materialPagePath, siteFromMaterialPath, sitePath } from "@/ui/format";
+import { logBack, logOrigin } from "@/ui/actions-log";
 import { StockFigures } from "@/ui/StockFigures";
 import { EMPTY, filterLine, NO_FILTER_MATCH, PENETRATION_FILTER } from "@/ui/messages";
-import { filterCounts, logIsOpen, matchingPenetrations, materialValues, parseShow, type ShowFilter } from "@/ui/penetration-filters";
-import { filterByMaterial, listFactChips } from "@/ui/penetrations";
+import { filterCounts, matchingPenetrations, materialValues, parseShow, type ShowFilter } from "@/ui/penetration-filters";
+import { decisionChips, filterByMaterial, listFactChips } from "@/ui/penetrations";
 import styles from "@/ui/primitives.module.css";
 import { loadSiteFrame, SiteFrame } from "./site-frame";
 
@@ -20,7 +21,7 @@ export const dynamic = "force-dynamic";
 
 type RouteParams = { params: Promise<{ id: string }> };
 type PageProps = RouteParams & {
-  searchParams: Promise<{ show?: string | string[]; material?: string | string[]; log?: string | string[]; fromMaterial?: string | string[] }>;
+  searchParams: Promise<{ show?: string | string[]; material?: string | string[]; fromMaterial?: string | string[]; fromLog?: string | string[] }>;
 };
 
 export async function generateMetadata({ params }: RouteParams): Promise<Metadata> {
@@ -40,8 +41,10 @@ export default async function SitePage({ params, searchParams }: PageProps) {
   const query = await searchParams;
   const frame = await loadSiteFrame(id);
   const fromMaterial = await materialOrigin(id, query.fromMaterial);
+  // A material page that opened this site wins; else the actions log; else back goes to the sites list.
+  const fromLog = fromMaterial ? undefined : logOrigin(query.fromLog, [id]);
   return (
-    <SiteFrame frame={frame} logOpen={logIsOpen(query.log)} back={fromMaterial?.back}>
+    <SiteFrame frame={frame} back={fromMaterial?.back ?? (fromLog ? logBack(fromLog) : undefined)}>
       {frame.status === "ready" && frame.readiness && frame.places ? (
         <SitePenetrations
           siteId={frame.site.id}
@@ -50,6 +53,7 @@ export default async function SitePage({ params, searchParams }: PageProps) {
           selected={parseShow(query.show)}
           material={materialValues(query.material)}
           fromMaterial={fromMaterial?.id}
+          fromLog={fromLog}
         />
       ) : null}
     </SiteFrame>
@@ -78,6 +82,7 @@ function SitePenetrations({
   selected,
   material,
   fromMaterial,
+  fromLog,
 }: {
   siteId: string;
   readiness: SiteReadinessView;
@@ -85,6 +90,7 @@ function SitePenetrations({
   selected: readonly ShowFilter[];
   material: readonly string[];
   fromMaterial?: string;
+  fromLog?: string;
 }) {
   // A repeated ?material= is not one material. Joining it keeps the unknown-material note and the full list.
   const materialId = material.length === 0 ? undefined : material.length === 1 ? material[0] : material.join(",");
@@ -102,11 +108,11 @@ function SitePenetrations({
           <span>Penetrations</span>
           <span className={styles.tabCount}>{places.length}</span>
         </h2>
-        <PenetrationFilters siteId={siteId} selected={selected} counts={counts} material={material} fromMaterial={fromMaterial} />
+        <PenetrationFilters siteId={siteId} selected={selected} counts={counts} material={material} fromMaterial={fromMaterial} fromLog={fromLog} />
         {filtered.filter ? (
           <p className={styles.filterRow}>
             <span>{filterLine(filtered.filter.materialName, shown.length, filtered.filter.total)}</span>
-            <Link className={styles.plannedWorkLink} href={fromMaterial ? siteFromMaterialPath(siteId, fromMaterial) : sitePath(siteId)}>
+            <Link className={styles.plannedWorkLink} href={fromMaterial ? siteFromMaterialPath(siteId, fromMaterial) : fromLog ? fromLogPath(sitePath(siteId), fromLog) : sitePath(siteId)}>
               {PENETRATION_FILTER.showAll}
             </Link>
           </p>
@@ -119,6 +125,13 @@ function SitePenetrations({
             siteId={siteId}
             places={shown}
             chips={(penetrationId) => listFactChips(penetrationId, readiness.shortages, readiness.blockers)}
+            decisions={(penetrationId) =>
+              decisionChips(penetrationId, readiness.shortages, readiness.blockers, {
+                siteId,
+                materials: readiness.materials,
+                penetrations: readiness.penetrations,
+              })
+            }
           />
         ) : null}
       </section>

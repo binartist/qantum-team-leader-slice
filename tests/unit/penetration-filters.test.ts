@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
   filterCounts,
-  logIsOpen,
   matchingPenetrations,
   materialValues,
   parseShow,
@@ -30,14 +29,10 @@ describe("penetration filters", () => {
     expect(parseShow("clear")).toEqual([]);
   });
 
-  it("reads material values and whether the log should open", () => {
+  it("reads material values", () => {
     expect(materialValues(undefined)).toEqual([]);
     expect(materialValues("MAT-SEALANT")).toEqual(["MAT-SEALANT"]);
     expect(materialValues(["MAT-A", "MAT-B"])).toEqual(["MAT-A", "MAT-B"]);
-    expect(logIsOpen(undefined)).toBe(false);
-    expect(logIsOpen("open")).toBe(true);
-    expect(logIsOpen("closed")).toBe(false);
-    expect(logIsOpen(["closed", "open"])).toBe(true);
   });
 
   it("matches shortages, including unknown stock, and data problems", () => {
@@ -91,5 +86,7 @@ describe("penetration filters", () => {
     expect(showFilterHref("site-b", [], "shortages", ["MAT-COLLAR-25"], "MAT-COLLAR-25")).toBe(
       "/sites/site-b?show=shortages&material=MAT-COLLAR-25&fromMaterial=MAT-COLLAR-25",
     );
+    // AC 43: opened from the actions log, the chips keep that origin so back still returns to the log.
+    expect(showFilterHref("site-b", [], "acted", [], undefined, "site-b")).toBe("/sites/site-b?show=acted&fromLog=site-b");
   });
 });

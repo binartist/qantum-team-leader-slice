@@ -14,6 +14,7 @@ import { UnavailablePanel } from "@/ui/UnavailablePanel";
 import { EscalateDialog } from "@/ui/decisions/EscalateDialog";
 import { WaitDialog } from "@/ui/decisions/WaitDialog";
 import { MATERIALS_PATH, decisionScope, groupPlaces, materialStockLine, penetrationLine, siteAnchor, siteFromMaterialPath, siteMaterialLine } from "@/ui/format";
+import { logBack, logOrigin } from "@/ui/actions-log";
 import { materialBack } from "@/ui/materials";
 import { MATERIALS, NAV } from "@/ui/messages";
 import { earlierDecision, hasEarlierDecision, shortageState } from "@/ui/status";
@@ -24,7 +25,7 @@ import { loadPage } from "../../_lib/load";
 export const dynamic = "force-dynamic";
 
 type RouteParams = { params: Promise<{ materialId: string }> };
-type PageProps = RouteParams & { searchParams: Promise<{ from?: string | string[] }> };
+type PageProps = RouteParams & { searchParams: Promise<{ from?: string | string[]; fromLog?: string | string[] }> };
 
 export async function generateMetadata({ params }: RouteParams): Promise<Metadata> {
   await connection();
@@ -41,7 +42,7 @@ export async function generateMetadata({ params }: RouteParams): Promise<Metadat
 /** One material across sites (AC 39): the shared stock once, then each site that plans it. */
 export default async function MaterialPage({ params, searchParams }: PageProps) {
   const { materialId } = await params;
-  const { from } = await searchParams;
+  const { from, fromLog } = await searchParams;
   if (!IdSchema.safeParse(materialId).success) notFound();
   // Only a well-formed id is passed on; the use case accepts it only if it is a penetration using this material.
   const fromId = typeof from === "string" && IdSchema.safeParse(from).success ? from : undefined;
@@ -60,7 +61,9 @@ export default async function MaterialPage({ params, searchParams }: PageProps) 
   }
 
   const detail = loaded.value;
-  const back = materialBack(detail.back);
+  // Back to the penetration that opened this page, else to the actions log it was opened from, else Materials.
+  const logSite = logOrigin(fromLog, detail.sites.map((site) => site.siteId));
+  const back = detail.back || logSite === undefined ? materialBack(detail.back) : logBack(logSite);
   return (
     <>
       <AppBar backHref={back.href} backName={back.name} />

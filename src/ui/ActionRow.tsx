@@ -23,7 +23,7 @@ export function ActionRow({
   decision: "wait" | "escalate";
 }) {
   return (
-    <Card title={sentence} heading="h3" mark={decisionMark(decision)} titleHref={href ?? undefined}>
+    <Card title={sentence} heading="h4" mark={decisionMark(decision)} titleHref={href ?? undefined}>
       <p>{formatRecordedAt(recordedAt)}</p>
       <p className={styles.muted}>{`By ${createdBy}`}</p>
       {note ? <p>{note}</p> : null}
@@ -51,7 +51,7 @@ export function ProposalRow({
   createdBy: string;
 }) {
   return (
-    <Card title={proposalSentence(fromCode, toCode, place)} heading="h3" kind="decision" titleHref={href}>
+    <Card title={proposalSentence(fromCode, toCode, place)} heading="h4" kind="decision" titleHref={href}>
       <p>{reason.trim()}</p>
       <p>{formatRecordedAt(recordedAt)}</p>
       <p className={styles.muted}>{`By ${createdBy}`}</p>

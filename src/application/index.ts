@@ -1,4 +1,4 @@
-export { listActions, type ListedShortageAction, type SiteActions } from "./actions";
+export { listActions, listAllActions, type AllActions, type ListedShortageAction, type SiteActions, type SiteActionsSection } from "./actions";
 export { CANDIDATE_NOTICE, describePenetration, listCandidates, proposeSubstitution, type CandidateList, type CandidateView, type PenetrationDetail, type PenetrationSummary, type ProposeSubstitutionInput } from "./candidates";
 export {
   describeMaterialStock,

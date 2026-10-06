@@ -4,22 +4,22 @@ import Link from "next/link";
 import { Drawer } from "./Drawer";
 import { Icon } from "./Icon";
 import { KindIcon, type EntityKind } from "./KindIcon";
-import { MATERIALS_PATH } from "./format";
+import { ACTIONS_PATH, MATERIALS_PATH } from "./format";
 import { NAV } from "./messages";
 import styles from "./primitives.module.css";
 
-export type NavSection = "sites" | "materials" | "about";
+export type NavSection = "sites" | "materials" | "actions" | "about";
 
 const ITEMS: readonly { section: NavSection; href: string; label: string; kind: EntityKind }[] = [
   { section: "sites", href: "/sites", label: NAV.sites, kind: "site" },
   { section: "materials", href: MATERIALS_PATH, label: NAV.materials, kind: "material" },
+  { section: "actions", href: ACTIONS_PATH, label: NAV.actions, kind: "decision" },
 ];
 
 /** The menu control for a top-level screen and the left drawer it opens (AC 37). */
 export function NavDrawer({ current }: { current: NavSection }) {
   return (
     <Drawer
-      side="left"
       title={NAV.title}
       closeLabel={NAV.close}
       trigger={{

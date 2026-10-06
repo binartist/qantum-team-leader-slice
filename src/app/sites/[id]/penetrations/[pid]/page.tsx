@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import type { ReactNode } from "react";
 import { unstable_rethrow } from "next/navigation";
 import { connection } from "next/server";
 import type { CandidateList, SiteReadinessView } from "@/application";
@@ -9,9 +8,8 @@ import { fitRows } from "@/ui/fit";
 import { SiteNotFoundError } from "@/ports";
 import { getCachedCandidates, getCachedPenetrationDetail, getCachedReadiness, getCachedSite } from "../../../../_lib/cached";
 import { KindIcon } from "@/ui/KindIcon";
+import { logBack, logOrigin } from "@/ui/actions-log";
 import { AppBar } from "@/ui/AppBar";
-import { logIsOpen } from "@/ui/penetration-filters";
-import { SiteActionsButton } from "../../site-actions";
 import { UnavailablePanel } from "@/ui/UnavailablePanel";
 import { EscalateDialog } from "@/ui/decisions/EscalateDialog";
 import { ratingValue, sitePath, serviceLine } from "@/ui/format";
@@ -27,7 +25,7 @@ import { loadPage } from "../../../../_lib/load";
 export const dynamic = "force-dynamic";
 
 type RouteParams = { params: Promise<{ id: string; pid: string }> };
-type PageProps = RouteParams & { searchParams: Promise<{ log?: string | string[] }> };
+type PageProps = RouteParams & { searchParams: Promise<{ fromLog?: string | string[] }> };
 
 export async function generateMetadata({ params }: RouteParams): Promise<Metadata> {
   await connection();
@@ -43,21 +41,22 @@ export async function generateMetadata({ params }: RouteParams): Promise<Metadat
 
 export default async function PenetrationPage({ params, searchParams }: PageProps) {
   const { id, pid } = await params;
-  const { log } = await searchParams;
+  const { fromLog } = await searchParams;
   const siteLoad = await loadPage(async () => {
     const site = await getCachedSite(id);
     if (!site) throw new SiteNotFoundError();
     return site;
   });
   if (siteLoad.status === "unavailable") return unavailable("This site", "/sites", "Sites");
-  const actions = <SiteActionsButton siteId={siteLoad.value.id} initialOpen={logIsOpen(log)} />;
+  // Back to the actions log when it opened this page, else up to the site.
+  const back = logOrigin(fromLog, [id]) ? logBack(id) : { href: sitePath(id), name: siteLoad.value.name };
 
   const listedLoad = await loadPage(() => getCachedCandidates(id, pid));
-  if (listedLoad.status === "unavailable") return unavailable(siteLoad.value.name, sitePath(id), siteLoad.value.name, actions);
+  if (listedLoad.status === "unavailable") return unavailable(siteLoad.value.name, back.href, back.name);
   const readinessLoad = await loadPage(() => getCachedReadiness(id));
-  if (readinessLoad.status === "unavailable") return unavailable(siteLoad.value.name, sitePath(id), siteLoad.value.name, actions);
+  if (readinessLoad.status === "unavailable") return unavailable(siteLoad.value.name, back.href, back.name);
   const detailLoad = await loadPage(() => getCachedPenetrationDetail(id, pid));
-  if (detailLoad.status === "unavailable") return unavailable(siteLoad.value.name, sitePath(id), siteLoad.value.name, actions);
+  if (detailLoad.status === "unavailable") return unavailable(siteLoad.value.name, back.href, back.name);
   const detail = detailLoad.value;
 
   const listed = listedLoad.value;
@@ -72,7 +71,7 @@ export default async function PenetrationPage({ params, searchParams }: PageProp
 
   return (
     <>
-      <AppBar backHref={sitePath(id)} backName={siteLoad.value.name} end={actions} />
+      <AppBar backHref={back.href} backName={back.name} />
       <main>
         <h1>{`${detail.penetration.floor}, ${detail.penetration.location}`}</h1>
 
@@ -151,10 +150,10 @@ function emptyState(status: CandidateList["status"], hasRelated: boolean): Statu
   return { label: emptyCatalogueLabel(hasRelated), tone: "neutral", icon: "dashed-circle" };
 }
 
-function unavailable(title: string, backHref: string, backName: string, end?: ReactNode) {
+function unavailable(title: string, backHref: string, backName: string) {
   return (
     <>
-      <AppBar backHref={backHref} backName={backName} end={end} />
+      <AppBar backHref={backHref} backName={backName} />
       <main>
         <h1>{title}</h1>
         <UnavailablePanel status={readinessBanner("unavailable")} />

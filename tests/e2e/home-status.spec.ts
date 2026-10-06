@@ -24,6 +24,18 @@ test("landing page explains the demo, no screen carries a Demo tag, and there is
   await expect(page.getByRole("link", { name: /^Demo/ })).toHaveCount(0);
   await expect(page.getByRole("contentinfo")).toHaveCount(0);
   await expect(page.getByRole("link", { name: "Open sites" })).toHaveCount(0);
+  // The text links to the pages it names, matching the menu and the walkthrough.
+  const main = page.getByRole("main");
+  for (const [name, href] of [
+    ["Sites", "/sites"],
+    ["Harbour Point", "/sites/site-b"],
+    ["L3, Riser 2", "/sites/site-b/penetrations/pen-b-01"],
+    ["Kingsway Works", "/sites/site-c?show=data-problems"],
+  ] as const) {
+    await expect(main.getByRole("link", { name, exact: true })).toHaveAttribute("href", href);
+  }
+  await expect(main.getByRole("link", { name: "Materials", exact: true })).toHaveCount(2);
+  await expect(main.getByRole("link", { name: "Actions log", exact: true }).first()).toHaveAttribute("href", "/actions");
   await expect(page.getByRole("banner").getByRole("link", { name: /^Back to / })).toHaveCount(0);
   await page.getByRole("button", { name: "Open menu" }).click();
   await page.getByRole("dialog", { name: "Team leader" }).getByRole("link", { name: "Sites" }).click();

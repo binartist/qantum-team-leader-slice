@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { penetrationLine, penetrationsByPlace } from "@/ui/format";
-import { candidateFacts, filterByMaterial, listFactChips, penetrationFacts } from "@/ui/penetrations";
+import { candidateFacts, decisionChipName, decisionChips, filterByMaterial, listFactChips, penetrationFacts } from "@/ui/penetrations";
 
 const materials = {
   "MAT-SEALANT": { name: "Intumescent sealant, 310 ml cartridge" },
@@ -154,23 +154,221 @@ describe("compact chips on the site list", () => {
     expect(listFactChips("p4", shortages, [])).toEqual([]);
   });
 
-  it("AC 34: marks a penetration acted on, after its problems, in the decision colours", () => {
+  it("AC 34: names the kind of problem, and leaves the decision off this chip", () => {
     const shortages = [
       { kind: "short" as const, penetrationIds: ["p1", "p2"], state: "escalated" },
       { kind: "short" as const, penetrationIds: ["p1"], state: "waiting" },
       { kind: "short" as const, penetrationIds: ["p1", "p3"], state: "escalated" },
     ];
     const blockers = [{ penetrationId: "p4", reason: "unknown_solution_code" as const, state: "waiting" }];
-    // One chip per decision kind, escalated first, however many shortages share it.
-    expect(listFactChips("p1", shortages, [])).toEqual([
-      { label: "Short material × 3", tone: "danger", icon: "stop" },
-      { label: "Escalated", tone: "escalation", icon: "arrow-up" },
-      { label: "Waiting", tone: "info", icon: "clock" },
-    ]);
-    expect(labels(listFactChips("p2", shortages, []))).toEqual(["Short material", "Escalated"]);
-    expect(labels(listFactChips("p4", [], blockers))).toEqual(["Unknown solution", "Waiting"]);
-    // An open problem is not acted on.
+    expect(listFactChips("p1", shortages, [])).toEqual([{ label: "Short material × 3", tone: "danger", icon: "stop" }]);
+    expect(labels(listFactChips("p2", shortages, []))).toEqual(["Short material"]);
+    expect(labels(listFactChips("p4", [], blockers))).toEqual(["Unknown solution"]);
     expect(labels(listFactChips("p5", [{ kind: "short" as const, penetrationIds: ["p5"], state: "open" }], []))).toEqual(["Short material"]);
+  });
+});
+
+describe("AC 44: a decision chip carries the latest decision of its kind that still applies", () => {
+  const names = {
+    siteId: "site-b",
+    materials: {
+      "MAT-OLD": { name: "Older collar" },
+      "MAT-NEW": { name: "Newer collar" },
+    },
+    penetrations: { "pen-c-03": { floor: "L1", location: "Riser 1" } },
+  };
+
+  function recorded(
+    createdAt: string,
+    overrides: {
+      kind?: "wait" | "escalate";
+      escalateTo?: "purchasing" | "warehouse" | null;
+      note?: string | null;
+      current?: boolean;
+      createdBy?: string;
+    } = {},
+  ) {
+    return {
+      kind: overrides.kind ?? "escalate",
+      escalateTo: overrides.escalateTo === undefined ? "purchasing" : overrides.escalateTo,
+      note: overrides.note === undefined ? null : overrides.note,
+      createdBy: overrides.createdBy ?? "demo-leader",
+      createdAt,
+      current: overrides.current ?? true,
+    };
+  }
+
+  it("lets the newer escalation win and skips an action that no longer applies", () => {
+    const chips = decisionChips(
+      "p1",
+      [
+        {
+          id: "site-b:MAT-OLD",
+          penetrationIds: ["p1", "p2"],
+          state: "escalated",
+          actions: [
+            recorded("2026-10-04T00:00:00.000Z", { note: "later but no longer current", current: false }),
+            recorded("2026-10-03T00:00:00.000Z", { note: "current, then an older one loses" }),
+            recorded("2026-10-01T00:00:00.000Z", { note: "older current" }),
+          ],
+        },
+        {
+          id: "site-b:MAT-NEW",
+          penetrationIds: ["p1"],
+          state: "escalated",
+          actions: [recorded("2026-10-02T00:00:00.000Z", { note: "newer current" })],
+        },
+      ],
+      [],
+      names,
+    );
+    expect(chips).toEqual([
+      {
+        state: "escalated",
+        chip: { label: "Escalated", tone: "escalation", icon: "arrow-up" },
+        latest: {
+          sentence: "Escalated to purchasing: Older collar",
+          recordedAt: "2026-10-03T00:00:00.000Z",
+          createdBy: "demo-leader",
+          note: "current, then an older one loses",
+        },
+      },
+    ]);
+  });
+
+  it("uses a blocker decision, named by its place", () => {
+    const chips = decisionChips(
+      "pen-c-03",
+      [],
+      [
+        {
+          id: "site-c:blocker.pen-c-03",
+          penetrationId: "pen-c-03",
+          state: "escalated",
+          actions: [recorded("2026-10-02T00:00:00.000Z", { escalateTo: "warehouse", note: "catalogue gap" })],
+        },
+      ],
+      { siteId: "site-c", materials: {}, penetrations: names.penetrations },
+    );
+    expect(chips).toEqual([
+      {
+        state: "escalated",
+        chip: { label: "Escalated", tone: "escalation", icon: "arrow-up" },
+        latest: {
+          sentence: "Escalated to warehouse: L1, Riser 1",
+          recordedAt: "2026-10-02T00:00:00.000Z",
+          createdBy: "demo-leader",
+          note: "catalogue gap",
+        },
+      },
+    ]);
+  });
+
+  it("shows no chip for an open problem, or for a penetration the shortage does not list", () => {
+    const open = [{ id: "site-b:MAT-NEW", penetrationIds: ["p5"], state: "open", actions: [recorded("2026-10-02T00:00:00.000Z")] }];
+    expect(decisionChips("p5", open, [], names)).toEqual([]);
+    expect(decisionChips("p9", open, [], names)).toEqual([]);
+  });
+
+  it("lists escalated before waiting", () => {
+    const chips = decisionChips(
+      "p1",
+      [
+        {
+          id: "site-b:MAT-NEW",
+          penetrationIds: ["p1"],
+          state: "waiting",
+          actions: [recorded("2026-10-02T00:00:00.000Z", { kind: "wait", escalateTo: null, note: "hold" })],
+        },
+        {
+          id: "site-b:MAT-OLD",
+          penetrationIds: ["p1"],
+          state: "escalated",
+          actions: [recorded("2026-10-01T00:00:00.000Z", { note: null })],
+        },
+      ],
+      [],
+      names,
+    );
+    expect(chips.map((chip) => chip.state)).toEqual(["escalated", "waiting"]);
+    expect(chips[1]?.latest.sentence).toBe("Wait: Newer collar");
+    expect(chips[0]?.latest.note).toBeNull();
+  });
+
+  it("omits the chip when no current action of that kind exists", () => {
+    const chips = decisionChips(
+      "p1",
+      [
+        {
+          id: "site-b:MAT-OLD",
+          penetrationIds: ["p1"],
+          state: "escalated",
+          actions: [
+            recorded("2026-10-04T00:00:00.000Z", { current: false }),
+            recorded("2026-10-03T00:00:00.000Z", { kind: "wait", escalateTo: null, current: true }),
+          ],
+        },
+      ],
+      [],
+      names,
+    );
+    expect(chips).toEqual([]);
+  });
+
+  it("keeps the first action when the dates tie or cannot be read", () => {
+    const tied = decisionChips(
+      "p1",
+      [
+        {
+          id: "site-b:MAT-OLD",
+          penetrationIds: ["p1"],
+          state: "escalated",
+          actions: [
+            recorded("2026-10-02T00:00:00.000Z", { note: "first" }),
+            recorded("2026-10-02T00:00:00.000Z", { note: "same time" }),
+          ],
+        },
+      ],
+      [],
+      names,
+    );
+    expect(tied[0]?.latest.note).toBe("first");
+
+    const unreadableFirst = decisionChips(
+      "p1",
+      [
+        {
+          id: "site-b:MAT-OLD",
+          penetrationIds: ["p1"],
+          state: "escalated",
+          actions: [recorded("not-a-date", { note: "unreadable" }), recorded("2026-10-05T00:00:00.000Z", { note: "later but the first cannot be compared" })],
+        },
+      ],
+      [],
+      names,
+    );
+    expect(unreadableFirst[0]?.latest.note).toBe("unreadable");
+
+    const unreadableSecond = decisionChips(
+      "p1",
+      [
+        {
+          id: "site-b:MAT-OLD",
+          penetrationIds: ["p1"],
+          state: "escalated",
+          actions: [recorded("2026-10-02T00:00:00.000Z", { note: "readable" }), recorded("still-not-a-date", { note: "ignored" })],
+        },
+      ],
+      [],
+      names,
+    );
+    expect(unreadableSecond[0]?.latest.note).toBe("readable");
+  });
+
+  it("names the chip with the place", () => {
+    expect(decisionChipName("Escalated", "L3, Riser 2 · PEX Pipe Ø25mm")).toBe(
+      "Escalated, latest decision for L3, Riser 2 · PEX Pipe Ø25mm",
+    );
   });
 });
 

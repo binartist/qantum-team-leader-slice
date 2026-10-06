@@ -207,12 +207,9 @@ export function siteFromMaterialPath(siteId: string, materialId: string): string
   return `${sitePath(siteId)}?fromMaterial=${encodeURIComponent(materialId)}`;
 }
 
-/** The site screen filtered to the penetrations that use one material. */
-export function siteMaterialPath(siteId: string, materialId: string): string {
-  return `${sitePath(siteId)}?material=${encodeURIComponent(materialId)}`;
-}
-
 export const MATERIALS_PATH = "/materials";
+
+export const ACTIONS_PATH = "/actions";
 
 /** The anchor of one site's section on a material page. */
 export function siteAnchor(siteId: string): string {
@@ -268,15 +265,27 @@ export function proposalSentence(fromCode: string, toCode: string, place?: strin
 }
 
 /**
- * Where a logged decision leads: a data problem to its penetration, a material shortage to the site list
- * filtered to that material. A resolved shortage has nothing to filter, so it has no link.
+ * A page opened from the actions log: `fromLog` names the site whose section it was opened from, so the
+ * page's back control can return there. Added after any query and before any anchor.
+ */
+export function fromLogPath(path: string, siteId: string): string {
+  const hashAt = path.indexOf("#");
+  const base = hashAt === -1 ? path : path.slice(0, hashAt);
+  const hash = hashAt === -1 ? "" : path.slice(hashAt);
+  return `${base}${base.includes("?") ? "&" : "?"}fromLog=${encodeURIComponent(siteId)}${hash}`;
+}
+
+/**
+ * Where a logged decision leads: a data problem to its penetration, a material shortage to the material
+ * page at that site's section, where it was decided. A resolved shortage has nothing to open. Either page
+ * returns to the log.
  */
 export function actionLink(siteId: string, shortageId: string, status: "current" | "earlier" | "resolved"): string | null {
   const prefix = `${siteId}:`;
   const rest = shortageId.startsWith(prefix) ? shortageId.slice(prefix.length) : shortageId;
   if (rest.startsWith("blocker.")) {
     const penetrationId = rest.slice("blocker.".length);
-    return penetrationId.length === 0 ? null : penetrationPath(siteId, penetrationId);
+    return penetrationId.length === 0 ? null : fromLogPath(penetrationPath(siteId, penetrationId), siteId);
   }
-  return status === "resolved" ? null : siteMaterialPath(siteId, rest);
+  return status === "resolved" ? null : fromLogPath(materialPagePath(rest, { siteId }), siteId);
 }

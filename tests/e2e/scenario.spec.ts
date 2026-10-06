@@ -17,7 +17,7 @@ test("scenario: escalate sealant, propose 0451, then Kingsway still cannot go", 
 
   await gotoApp(page, "/");
   await page.getByRole("button", { name: "Open menu" }).click();
-  await page.getByRole("link", { name: "Sites" }).click();
+  await page.getByRole("dialog", { name: "Team leader" }).getByRole("link", { name: "Sites" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Sites" })).toBeVisible();
   await page.getByRole("link", { name: /Harbour Point/ }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Harbour Point, Levels 3 to 5" })).toBeVisible();
@@ -111,20 +111,23 @@ test("scenario: escalate sealant, propose 0451, then Kingsway still cannot go", 
   await propose.getByRole("button", { name: "Send proposal" }).click();
   await expect(page.locator("[data-announcer]")).toHaveText("Proposal recorded");
 
-  // The actions log opens from the header on this page.
-  await page.getByRole("button", { name: /^Actions log/ }).click();
-  const log = page.getByRole("dialog", { name: "Actions log" });
-  // Each entry links back to the work it is about, and a proposal names its place.
+  // The actions log is a top-level page. This screen has no menu, so open it from the sites list.
+  await gotoApp(page, "/sites");
+  await page.getByRole("button", { name: "Open menu" }).click();
+  await page.getByRole("dialog", { name: "Team leader" }).getByRole("link", { name: "Actions log" }).click();
+  await expect(page).toHaveURL(/\/actions$/);
+  const log = page.locator("#site-site-b");
+  // Each entry links to the work it is about, marked so its back control returns here, and a proposal names its place.
   await expect(log.getByRole("heading", { name: "Proposed substitute for L3, Riser 2: 0438 to 0451" })).toBeVisible();
   await expect(log.getByRole("link", { name: "Proposed substitute for L3, Riser 2: 0438 to 0451" })).toHaveAttribute(
     "href",
-    "/sites/site-b/penetrations/pen-b-01",
+    "/sites/site-b/penetrations/pen-b-01?fromLog=site-b",
   );
   await expect(log.getByText("Materials for this one are in stock")).toBeVisible();
   await expect(log.getByRole("heading", { name: "Escalated to purchasing: Intumescent sealant, 310 ml cartridge" })).toBeVisible();
   await expect(log.getByRole("link", { name: "Escalated to purchasing: Intumescent sealant, 310 ml cartridge" })).toHaveAttribute(
     "href",
-    "/sites/site-b?material=MAT-SEALANT",
+    "/materials/MAT-SEALANT?fromLog=site-b#site-site-b",
   );
   await expect(log.getByText("By demo-leader").first()).toBeVisible();
   await expect(log.getByText(/\d{1,2} [A-Z][a-z]{2} \d{4}, \d{2}:\d{2} UTC/).first()).toBeVisible();
