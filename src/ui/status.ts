@@ -62,6 +62,11 @@ export function decisionMark(kind: "wait" | "escalate"): { tone: Tone; icon: Ico
   return { tone: view.tone, icon: view.icon };
 }
 
+/** A proposed substitute's mark, on its log entry and on the row that counts it. */
+export function proposalMark(): { tone: Tone; icon: IconName } {
+  return { tone: "neutral", icon: "swap" };
+}
+
 export function earlierDecision(): StatusView {
   return { label: "Earlier decision, shortfall has grown", tone: "warning", icon: "warning" };
 }

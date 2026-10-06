@@ -24,7 +24,7 @@ Legend: `[x]` done, `[~]` partial, `[ ]` not started.
 | 12 | Test strategy (md) | [x] | `docs/test-strategy.md`: layers, all 46 ACs mapped, risks, CI gates. Awaiting your review. |
 | 13 | Agent instructions and context files | [x] | `AGENTS.md` (tool-neutral; `CLAUDE.md` imports it), 11 Skill Forge skills in `.agents/skills` (`skill-forge.json`, lock file), and every brief, review brief, review report and worker note in `docs/agent-work/`. |
 | 14 | Working application code | [x] | Domain core, stubs, Postgres and memory stores, use cases, seven-route API, seven screens (landing, sites, materials, material, actions log, site, penetration). Live and proven against the real database. |
-| 15 | Automated tests | [x] | 419 unit and API tests, 5 database contract tests on Postgres 17, 33 Playwright tests with axe at 375px; all 45 ACs referenced; all run in CI. |
+| 15 | Automated tests | [x] | 426 unit and API tests, 5 database contract tests on Postgres 17, 34 Playwright tests with axe at 375px; all 46 ACs referenced; all run in CI. |
 | 16 | CI/CD config | [x] | `.github/workflows/ci.yml`: checks (typecheck, lint, coverage, build, bundle credential scan, audit, gitleaks), db (contract suite on Postgres 17), e2e (Playwright, axe, AC check), and on `main` a Vercel prebuilt deploy plus smoke test. |
 | 17 | Pipeline inspectable, with successful deploy evidence | [x] | Green run with deploy and smoke: https://github.com/binartist/qantum-team-leader-slice/actions/runs/37309054947. Live check 2026-10-06: `x-vercel-id` syd1, smoke ok, an escalation recorded through the live API survived a production redeploy. |
 | 18 | Agentic coding account | [x] | `docs/agentic-approach.md`: tools, planning, verification ladder, corrections, cost. |

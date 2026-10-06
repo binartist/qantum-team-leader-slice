@@ -1,7 +1,7 @@
 import { Card } from "./Card";
 import { formatRecordedAt, proposalSentence } from "./format";
 import { StatusChip } from "./StatusChip";
-import { actionStatus, decisionMark, type ActionChip } from "./status";
+import { actionStatus, decisionMark, proposalMark, type ActionChip } from "./status";
 import styles from "./primitives.module.css";
 
 export function ActionRow({
@@ -60,7 +60,7 @@ export function ProposalRow({
   heading?: "h3" | "h4";
 }) {
   return (
-    <Card title={proposalSentence(fromCode, toCode, place)} heading={heading} kind="decision" titleHref={href ?? undefined}>
+    <Card title={proposalSentence(fromCode, toCode, place)} heading={heading} mark={proposalMark()} titleHref={href ?? undefined}>
       <p>{reason.trim()}</p>
       <p>{formatRecordedAt(recordedAt)}</p>
       <p className={styles.muted}>{`By ${createdBy}`}</p>

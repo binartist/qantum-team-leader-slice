@@ -11,6 +11,7 @@ import {
   crewStatus,
   earlierDecision,
   hasEarlierDecision,
+  proposalMark,
   shortageState,
   siteChip,
   type StatusView,
@@ -210,6 +211,13 @@ describe("decision icons", () => {
     expect(escalate).toContain('<Icon name="arrow-up" />');
     // A logged wait or escalation shows the same mark.
     expect(readFileSync("src/ui/ActionRow.tsx", "utf8")).toContain("mark={decisionMark(decision)}");
+  });
+
+  it("AC 44: a logged proposal carries the same swap mark as the row's proposal count", async () => {
+    const { readFileSync } = await import("node:fs");
+    expect(proposalMark()).toEqual({ tone: "neutral", icon: "swap" });
+    expect(readFileSync("src/ui/ActionRow.tsx", "utf8")).toContain("mark={proposalMark()}");
+    expect(readFileSync("src/ui/penetrations.ts", "utf8")).toContain("proposalMark()");
   });
 });
 
