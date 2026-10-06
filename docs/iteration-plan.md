@@ -35,7 +35,7 @@ The slice reads from upstream systems and owns only the decisions. That keeps it
 
 - **Scope:** per `slice-specification.md`. Sample data for upstream systems, real catalogue, Supabase for actions.
 - **Value:** closes the leader's loop and proves the decision data model.
-- **Exit criteria:** acceptance criteria 1 to 44 pass in CI. Deployed at a public URL. Demonstration scenario runs from a clean browser.
+- **Exit criteria:** acceptance criteria 1 to 45 pass in CI. Deployed at a public URL. Demonstration scenario runs from a clean browser.
 - **Leaves untested:** real upstream latency and data quality, real users, real approval.
 
 ### Iteration 2: real upstream data

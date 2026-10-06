@@ -34,7 +34,7 @@ export default function LandingPage() {
             </li>
             <li>Every other page starts with a back control. It names where it goes: the page you came from, or else the page above.</li>
             <li>
-              On a site, chips filter the list. An Escalated or Waiting chip on a row shows the latest decision.
+              On a site, chips filter the list and icons on each row mark its problems and decisions. A penetration&apos;s own decisions are on its Actions log tab.
             </li>
           </ul>
         </section>
@@ -54,7 +54,7 @@ export default function LandingPage() {
               </p>
             </li>
             <li>On the same penetration, select candidate 0451 and propose it.</li>
-            <li>Back on Harbour Point, tap Escalated on that row to see the decision.</li>
+            <li>Open that penetration&apos;s Actions log tab to see the escalation and the proposal.</li>
             <li>
               <p>
                 Open <Link href={`${sitePath("site-c")}?show=data-problems`}>Kingsway Works</Link>, filtered to data problems.

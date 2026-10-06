@@ -15,6 +15,7 @@ export const screens = [
   "/sites/site-c/penetrations",
   "/sites/site-a/penetrations/pen-a-01",
   "/sites/site-b/penetrations/pen-b-01",
+  "/sites/site-b/penetrations/pen-b-01?tab=log",
   "/materials",
   "/materials/MAT-COLLAR-25",
   "/materials/MAT-SEALANT?from=pen-b-01",

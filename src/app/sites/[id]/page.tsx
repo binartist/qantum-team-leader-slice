@@ -13,7 +13,7 @@ import { logBack, logOrigin } from "@/ui/actions-log";
 import { StockFigures } from "@/ui/StockFigures";
 import { EMPTY, filterLine, NO_FILTER_MATCH, PENETRATION_FILTER } from "@/ui/messages";
 import { filterCounts, matchingPenetrations, materialValues, parseShow, type ShowFilter } from "@/ui/penetration-filters";
-import { decisionChips, filterByMaterial, listFactChips } from "@/ui/penetrations";
+import { filterByMaterial, rowMarks } from "@/ui/penetrations";
 import styles from "@/ui/primitives.module.css";
 import { loadSiteFrame, SiteFrame } from "./site-frame";
 
@@ -124,14 +124,7 @@ function SitePenetrations({
           <PenetrationGroups
             siteId={siteId}
             places={shown}
-            chips={(penetrationId) => listFactChips(penetrationId, readiness.shortages, readiness.blockers)}
-            decisions={(penetrationId) =>
-              decisionChips(penetrationId, readiness.shortages, readiness.blockers, {
-                siteId,
-                materials: readiness.materials,
-                penetrations: readiness.penetrations,
-              })
-            }
+            marks={(penetrationId) => rowMarks(penetrationId, readiness.shortages, readiness.blockers)}
           />
         ) : null}
       </section>

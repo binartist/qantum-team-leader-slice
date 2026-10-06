@@ -30,15 +30,28 @@ export const NAV = {
   about: "About this demo",
 } as const;
 
+export const THEME = {
+  legend: "Theme",
+  system: "System",
+  light: "Light",
+  dark: "Dark",
+} as const;
+
 export const ACTIONS_LOG = {
   unavailable: "We can't load the actions log right now. Try again shortly.",
   siteUnavailable: "We can't check this site's actions right now.",
   empty: "No sites to show.",
 } as const;
 
-export const DECISION = {
-  latestFor: "latest decision for",
+export const PENETRATION_LOG = {
+  unavailable: "We can't load this penetration's actions right now. Try again shortly.",
+  empty: "Nothing recorded for this penetration yet.",
 } as const;
+
+/** How widely a material decision on one penetration still applies. */
+export function appliesToPenetrations(count: number): string {
+  return `Applies to all ${count} penetrations at this site`;
+}
 
 export const MATERIALS = {
   title: "Materials",

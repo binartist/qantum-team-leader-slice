@@ -30,22 +30,26 @@ test("AC 31: escalate with the keyboard only, and targets are at least 44 by 44"
   await page.getByRole("link", { name: "Acted 4" }).click();
   await expect(page).toHaveURL(/show=acted/);
   await expect(page.locator("main a[href*='/penetrations/pen-b-']")).toHaveCount(4);
-  // The decision chip sits on the row, outside the link (AC 44).
-  const riser = page.locator("li").filter({ has: page.locator("a[href$='/penetrations/pen-b-01']") });
-  await expect(riser).toContainText("Escalated");
-  await expect(page.locator("a[href$='/penetrations/pen-b-01'] button")).toHaveCount(0);
-  const chip = riser.getByRole("button", { name: "Escalated, latest decision for L3, Riser 2 · PEX Pipe Ø25mm" });
-  await chip.focus();
-  await page.keyboard.press("Enter");
-  const popover = page.getByRole("dialog", { name: "Escalated, latest decision for L3, Riser 2 · PEX Pipe Ø25mm" });
-  await expect(popover.getByText("Escalated to purchasing: Pipe collar for 25 mm pipe")).toBeVisible();
-  await expect(popover.getByText("Noted from the keyboard")).toBeVisible();
-  await assertTargets(page);
-  await page.keyboard.press("Escape");
-  await expect(popover).toBeHidden();
-  await expect(chip).toBeFocused();
+  // The decision is an icon inside the row link (AC 44). The full wording is a hidden label.
+  const row = page.locator("a[href$='/penetrations/pen-b-01']");
+  await expect(row).toContainText("Escalated");
+  await expect(row.locator("svg").first()).toBeVisible();
+  await expect(row.locator("button")).toHaveCount(0);
   await expect(page.getByText("Blocked: hold the crew.")).toHaveCount(0);
   await expect(page.getByText("Crew can go")).toHaveCount(0);
+  await gotoApp(page, "/sites/site-b/penetrations/pen-b-01?tab=log");
+  const tabs = page.getByRole("navigation", { name: "Penetration" });
+  const logTab = tabs.getByRole("link", { name: /Actions log/ });
+  await expect(logTab).toHaveAttribute("aria-current", "page");
+  await expect(logTab).toContainText(/\d+/);
+  await expect(page.getByText("Escalated to purchasing: Pipe collar for 25 mm pipe")).toBeVisible();
+  await expect(page.getByText("Noted from the keyboard")).toBeVisible();
+  await expect(page.getByText("Applies to all 4 penetrations at this site")).toBeVisible();
+  await page.getByRole("link", { name: "Escalated to purchasing: Pipe collar for 25 mm pipe" }).click();
+  await expect(page).toHaveURL(/\/materials\/MAT-COLLAR-25\?from=pen-b-01#site-site-b$/);
+  await page.getByRole("link", { name: "Back to L3, Riser 2" }).click();
+  await expect(page).toHaveURL(/\/sites\/site-b\/penetrations\/pen-b-01\?tab=log$/);
+  await assertTargets(page);
   await gotoApp(page, "/sites");
   await expect(page.getByRole("listitem").filter({ hasText: "Harbour Point, Levels 3 to 5" }).getByText("Blocked · 2 shortages")).toBeVisible();
 

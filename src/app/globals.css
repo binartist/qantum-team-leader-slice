@@ -31,8 +31,10 @@
   color-scheme: light;
 }
 
+/* Dark follows the device unless Light is chosen in the menu, and always applies when Dark is chosen.
+   The two blocks must stay identical. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --text: #ececec;
     --text-secondary: #c4c8ce;
     --bg: #121316;
@@ -59,6 +61,34 @@
     --shadow: 0 8px 24px rgb(0 0 0 / 45%);
     color-scheme: dark;
   }
+}
+
+:root[data-theme="dark"] {
+  --text: #ececec;
+  --text-secondary: #c4c8ce;
+  --bg: #121316;
+  --surface: #1b1d21;
+  --border: #34383e;
+  --input-border: #8b939e;
+  --focus: #8ab4f8;
+  --link: #8ab4f8;
+  --button-bg: #8ab4f8;
+  --button-text: #121316;
+  --success-bg: #12351e;
+  --success-text: #8fe0a5;
+  --danger-bg: #3b1512;
+  --danger-text: #ffb3ab;
+  --warning-bg: #3d2e08;
+  --warning-text: #ffd98a;
+  --neutral-bg: #24272c;
+  --neutral-text: #c4c8ce;
+  --info-bg: #102a4c;
+  --info-text: #9ec5ff;
+  --escalation-bg: #2e1a45;
+  --escalation-text: #d3b4f5;
+  --backdrop: rgb(0 0 0 / 65%);
+  --shadow: 0 8px 24px rgb(0 0 0 / 45%);
+  color-scheme: dark;
 }
 
 *,

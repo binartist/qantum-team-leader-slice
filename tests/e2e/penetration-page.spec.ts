@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { assertNoOverflow, assertTargets, gotoApp } from "./support";
+import { assertAxe, assertNoOverflow, assertTargets, gotoApp } from "./support";
 
 // Read-only. Opens penetration pages; does not record an action.
 
@@ -146,6 +146,38 @@ test("a nominated code missing from the catalogue has no comparison, only the pe
   await expect(nominated.getByRole("table")).toHaveCount(0);
   await expect(nominated.getByText("Required rating")).toBeVisible();
   await expect(nominated.getByText("60 min integrity, 60 min insulation")).toBeVisible();
+});
+
+test("AC 45: a penetration page has Solution and Actions log tabs", async ({ page }) => {
+  await gotoApp(page, "/sites/site-c/penetrations/pen-c-03");
+  const tabs = page.getByRole("navigation", { name: "Penetration" });
+  await expect(tabs.getByRole("link", { name: "Solution" })).toHaveAttribute("aria-current", "page");
+  await expect(tabs.getByRole("link", { name: /Actions log/ })).toBeVisible();
+  const nominated = page.getByRole("region", { name: "Nominated solution 9999" });
+  await expect(nominated.getByText("Solution code 9999 isn't in the catalogue")).toBeVisible();
+  await expect(nominated.getByRole("table")).toHaveCount(0);
+  await expect(nominated.getByText("Required rating")).toBeVisible();
+  await expect(nominated.getByText("60 min integrity, 60 min insulation")).toBeVisible();
+
+  await gotoApp(page, "/sites/site-c/penetrations/pen-c-03?tab=log");
+  await expect(page.getByRole("navigation", { name: "Penetration" }).getByRole("link", { name: /Actions log/ })).toHaveAttribute("aria-current", "page");
+  await expect(page.getByText("Nothing recorded for this penetration yet.")).toBeVisible();
+  await expect(page.getByRole("region", { name: "Nominated solution 9999" })).toHaveCount(0);
+
+  await gotoApp(page, "/sites/site-c/penetrations/pen-c-03?tab=junk");
+  await expect(page.getByRole("navigation", { name: "Penetration" }).getByRole("link", { name: "Solution" })).toHaveAttribute("aria-current", "page");
+  await expect(page.getByText("Solution code 9999 isn't in the catalogue")).toBeVisible();
+
+  await gotoApp(page, "/sites/site-c/penetrations/pen-c-03?fromLog=site-c");
+  const kept = page.getByRole("navigation", { name: "Penetration" });
+  await expect(kept.getByRole("link", { name: "Solution" })).toHaveAttribute("href", "/sites/site-c/penetrations/pen-c-03?fromLog=site-c");
+  await expect(kept.getByRole("link", { name: /Actions log/ })).toHaveAttribute("href", "/sites/site-c/penetrations/pen-c-03?tab=log&fromLog=site-c");
+
+  await page.setViewportSize({ width: 375, height: 800 });
+  await gotoApp(page, "/sites/site-c/penetrations/pen-c-03?tab=log");
+  await assertTargets(page);
+  await assertNoOverflow(page);
+  await assertAxe(page);
 });
 
 test("AC 35: a cut-off catalogue substrate never fits, and the page says why", async ({ page }) => {
