@@ -5,7 +5,11 @@ export function Icon({ name }: { name: IconName | "chevron-left" | "chevron-righ
   return (
     <svg className={styles.icon} viewBox="0 0 20 20" width="20" height="20" aria-hidden="true" focusable="false">
       {name === "check" ? <path d="M4 10.5 8.2 14.5 16 6" fill="none" stroke="currentColor" strokeWidth="2" /> : null}
-      {name === "cross" ? <path d="M5 5 15 15 M15 5 5 15" fill="none" stroke="currentColor" strokeWidth="2" /> : null}
+      {name === "stop" ? (
+        // A stop sign: a solid octagon with the bar cut out. Not a cross, which reads as "dismiss", and solid
+        // so its corners show at chip size instead of reading as a circle with a minus.
+        <path d="M6.7 1.8h6.6l4.9 4.9v6.6l-4.9 4.9H6.7l-4.9-4.9V6.7z M5.5 8.8h9v2.4h-9z" fill="currentColor" fillRule="evenodd" />
+      ) : null}
       {name === "dashed-circle" ? (
         <circle cx="10" cy="10" r="6.5" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="3 2" />
       ) : null}

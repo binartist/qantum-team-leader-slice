@@ -12,7 +12,7 @@ A team leader checks a site before the crew leaves, usually on a phone in a van 
 | --- | --- | --- |
 | Visual direction | Plain and utilitarian, neutral surfaces, no brand identity | We have no QAntum brand assets. A tool for the field should not compete with the information |
 | Theme | Light by default, dark follows `prefers-color-scheme` | Both must pass contrast |
-| Status | Icon plus text plus colour, never colour alone. Clear (green, check), Blocked (red, cross), Nothing planned (grey, dashed circle), Unavailable (amber, warning) | AC 30, and glare |
+| Status | Icon plus text plus colour, never colour alone. Clear (green, check), Blocked (red, stop sign: an octagon with a bar), Nothing planned (grey, dashed circle), Unavailable (amber, warning) | AC 30, and glare |
 | Typography | System font stack, 16px base, nothing under 12px | No font download, works offline of the network |
 | Layout | Single column. Max width 720px, centred. Fits 375px with no horizontal scroll | AC 32 |
 | Targets | At least 44px high and wide for anything tappable | AC 31 |
@@ -41,7 +41,7 @@ There is also a not-found page and one error page with a retry link. All data pa
 | Crew status | Banner text | Icon |
 | --- | --- | --- |
 | clear | Crew can go | check |
-| blocked | Blocked: hold the crew. (The tab labels carry the counts of shortages and data problems; the sites list chip names them too.) | cross |
+| blocked | Blocked: hold the crew. (The tab labels carry the counts of shortages and data problems; the sites list chip names them too.) | stop sign |
 | nothing_planned | Nothing planned for this site | dashed circle |
 | API 502 | Can't check this site right now. Don't assume it's clear. Try again. | warning |
 
@@ -175,3 +175,17 @@ Nav header (2026-10-06, user decision): the back control moved from a row below 
 Title and banner (2026-10-06, user decisions): the title moved from the header into the page body as the `h1`, shown in full, and the header became one slim row (back control and Demo tag). With tab counts in place, the site screen's banner became "Blocked: hold the crew."; AC 34 rewritten to match.
 
 Sticky tabs (2026-10-06, user decision): the site tab bar sticks directly below the nav header while scrolling, so the counts stay in view. The header has a fixed height (`--app-bar-height`) for that.
+
+Kind icons (2026-10-06, user decision): small outline icons in the secondary text colour say what a thing is, never its state. They are decorative (`aria-hidden`) and use none of the status shapes (tick, stop sign, triangle, circle) or status colours.
+
+| Kind | Icon | Where |
+| --- | --- | --- |
+| Site | building | sites list cards |
+| Material shortage | box | shortage card titles |
+| Data problem | document with a question mark | data problem card titles |
+| Solution | shield | "Solution 0438 · 4" group headings, "Nominated solution", candidate titles |
+| Decision | clipboard | actions log rows |
+
+Not on penetration rows (too many; the solution heading above carries the shield), the tab bar (width at 375px), or banners and chips (those are status).
+
+Stop icon (2026-10-06, user decision): blocked and short use a stop sign (octagon with a bar) instead of a cross, which read as "dismiss".

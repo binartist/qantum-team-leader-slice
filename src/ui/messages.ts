@@ -74,7 +74,7 @@ export function apiErrorMessage(code: string): string {
 export function readinessBanner(status: string): StatusView {
   switch (status) {
     case "blocked":
-      return { label: "Blocked: hold the crew.", tone: "danger", icon: "cross" };
+      return { label: "Blocked: hold the crew.", tone: "danger", icon: "stop" };
     case "nothing_planned":
       return { label: "Nothing planned for this site", tone: "neutral", icon: "dashed-circle" };
     case "clear":

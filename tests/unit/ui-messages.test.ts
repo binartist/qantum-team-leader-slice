@@ -70,7 +70,7 @@ describe("banners and empty states", () => {
       tone: "neutral",
       icon: "dashed-circle",
     });
-    expect(readinessBanner("blocked")).toEqual({ label: "Blocked: hold the crew.", tone: "danger", icon: "cross" });
+    expect(readinessBanner("blocked")).toEqual({ label: "Blocked: hold the crew.", tone: "danger", icon: "stop" });
     expect(readinessBanner("clear")).toEqual({ label: "Crew can go", tone: "success", icon: "check" });
   });
 

@@ -82,6 +82,24 @@
   margin-top: 0.15rem;
 }
 
+/* Kind icons: outline, secondary text colour, beside the name they mark. Never a status colour. */
+.kindIcon {
+  flex: none;
+  margin-top: 0.2em;
+  color: var(--text-secondary);
+}
+
+.kindTitle {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+/* A title that is a link is a padded 44px target, so centre the icon on it rather than on its top edge. */
+.kindTitle:has(> .blockLink) {
+  align-items: center;
+}
+
 .button {
   display: inline-flex;
   align-items: center;
