@@ -11,7 +11,6 @@ import { formatReference, plannedWorkLine } from "@/ui/format";
 import { readinessBanner } from "@/ui/messages";
 import type { PenetrationPlace } from "@/ui/PenetrationGroups";
 import styles from "@/ui/primitives.module.css";
-import { SiteActionsButton } from "./site-actions";
 
 export type SiteFrameData =
   | { readonly status: "unavailable" }
@@ -53,12 +52,10 @@ export async function loadSiteFrame(id: string): Promise<SiteFrameData> {
 /** The site's header, then the list. A blocked site's rows already say why, so it has no summary banner. */
 export function SiteFrame({
   frame,
-  logOpen,
   back = { href: "/sites", name: "Sites" },
   children,
 }: {
   frame: SiteFrameData;
-  logOpen: boolean;
   /** Where back goes. The sites list, unless this screen was opened from a material page. */
   back?: { readonly href: string; readonly name: string };
   children: ReactNode;
@@ -77,7 +74,7 @@ export function SiteFrame({
   const { site, readiness, plannedWork } = frame;
   return (
     <>
-      <AppBar backHref={back.href} backName={back.name} end={<SiteActionsButton siteId={site.id} initialOpen={logOpen} />} />
+      <AppBar backHref={back.href} backName={back.name} />
       <main>
         <h1>{site.name}</h1>
         <p className={`${styles.muted} ${styles.plannedWork}`}>

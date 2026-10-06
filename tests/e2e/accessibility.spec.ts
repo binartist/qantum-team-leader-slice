@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { assertAxe, gotoApp, screens } from "./support";
 
 test("axe reports no serious or critical violations in light and dark", async ({ page }) => {
-  // Read-only. Dialogs and the disclosure are opened and not submitted.
+  // Read-only. Dialogs are opened and not submitted. The actions log is axed with the other screens.
   // error.tsx and global-error.tsx have no safe route: rendering them needs a thrown error, and this suite does not add one.
   test.setTimeout(600_000);
   for (const scheme of ["light", "dark"] as const) {
@@ -20,8 +20,6 @@ test("axe reports no serious or critical violations in light and dark", async ({
     await openPropose(page);
     await assertAxe(page);
     await page.keyboard.press("Escape");
-    await openDisclosure(page);
-    await assertAxe(page);
   }
 });
 
@@ -43,8 +41,3 @@ async function openPropose(page: Page): Promise<void> {
   await expect(page.getByRole("dialog")).toBeVisible();
 }
 
-async function openDisclosure(page: Page): Promise<void> {
-  await gotoApp(page, "/sites/site-b");
-  await page.getByRole("button", { name: /^Actions log/ }).click();
-  await expect(page.getByRole("dialog", { name: "Actions log" })).toBeVisible();
-}

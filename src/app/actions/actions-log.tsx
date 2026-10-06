@@ -1,6 +1,6 @@
 import type { SiteActions } from "@/application";
 import { ActionRow, ProposalRow } from "@/ui/ActionRow";
-import { actionLink, actionSentence, actionTarget, penetrationPath } from "@/ui/format";
+import { actionLink, actionSentence, actionTarget, fromLogPath, penetrationPath } from "@/ui/format";
 import { EMPTY } from "@/ui/messages";
 import styles from "@/ui/primitives.module.css";
 
@@ -43,7 +43,7 @@ export function ActionsLog({ siteId, listed }: { siteId: string; listed: SiteAct
                   fromCode={proposal.fromInternalCode}
                   toCode={proposal.toInternalCode}
                   place={placeOf(listed, proposal.penetrationId)}
-                  href={penetrationPath(siteId, proposal.penetrationId)}
+                  href={fromLogPath(penetrationPath(siteId, proposal.penetrationId), siteId)}
                   reason={proposal.reason}
                   recordedAt={proposal.createdAt}
                   createdBy={proposal.createdBy}

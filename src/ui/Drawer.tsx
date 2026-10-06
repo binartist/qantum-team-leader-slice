@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useId, useRef, type ReactNode } from "react";
+import { useCallback, useId, useRef, type ReactNode } from "react";
 import { Icon } from "./Icon";
 import styles from "./primitives.module.css";
 
@@ -12,18 +12,14 @@ import styles from "./primitives.module.css";
  * control.
  */
 export function Drawer({
-  side,
   title,
   closeLabel,
   trigger,
-  initialOpen = false,
   children,
 }: {
-  side: "left" | "right";
   title: string;
   closeLabel: string;
   trigger: { readonly className: string | undefined; readonly label?: string; readonly content: ReactNode; readonly popup?: boolean };
-  initialOpen?: boolean;
   children: ReactNode;
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -37,10 +33,6 @@ export function Drawer({
     dialog.showModal();
   }, []);
   const close = useCallback(() => dialogRef.current?.close(), []);
-
-  useEffect(() => {
-    if (initialOpen) open();
-  }, [initialOpen, open]);
 
   return (
     <>
@@ -56,7 +48,7 @@ export function Drawer({
       </button>
       <dialog
         ref={dialogRef}
-        className={`${styles.drawer} ${side === "left" ? styles.drawerLeft : styles.drawerRight}`}
+        className={`${styles.drawer} ${styles.drawerLeft}`}
         aria-labelledby={titleId}
         onClose={() => {
           const opener = openerRef.current;

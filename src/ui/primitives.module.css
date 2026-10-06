@@ -370,6 +370,16 @@
   text-decoration: none;
 }
 
+/* The list row is the card, so the decision chips sit inside the same border as the link. The materials
+   list still uses .penetrationLink on its own, and keeps the border there. */
+.penetrationRow {
+  border-top: 1px solid var(--border);
+}
+
+.penetrationRow .penetrationLink {
+  border-top: 0;
+}
+
 .penetrationLines {
   display: flex;
   flex: 1 1 auto;
@@ -432,6 +442,82 @@
 
 .factChips:empty {
   display: none;
+}
+
+/* Under the place line, left edge aligned with that text (the link's horizontal padding). */
+.decisionChips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0 0.25rem 0.35rem;
+}
+
+.decisionAnchor {
+  display: inline-flex;
+  max-width: 100%;
+}
+
+/* The visible chip stays compact. The button is the 44px target, and it is never inside the row link. */
+.decisionChip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  max-width: 100%;
+  min-width: 44px;
+  min-height: 44px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  line-height: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.decisionSentence {
+  font-weight: 700;
+}
+
+/* Without anchor positioning, the panel sits at the bottom of the viewport. */
+.decisionPopover {
+  position: fixed;
+  inset: auto max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+  width: fit-content;
+  height: fit-content;
+  max-width: min(20rem, calc(100vw - 2rem));
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow);
+  flex-direction: column;
+  gap: 0.35rem;
+  overflow-wrap: anywhere;
+}
+
+/* Author `display` would beat the UA `[popover] { display: none }` and show a closed panel. */
+.decisionPopover:popover-open {
+  display: flex;
+}
+
+@supports (anchor-name: --a) {
+  .decisionChip {
+    anchor-name: var(--decision-anchor);
+  }
+
+  .decisionPopover {
+    position-anchor: var(--decision-anchor);
+    position-try-fallbacks: flip-block;
+    inset: unset;
+    top: anchor(bottom);
+    left: anchor(left);
+    margin: 0;
+  }
 }
 
 /* A short-material line that opens the stock page. The words stay danger-coloured; the chevron is the link colour. */
@@ -500,6 +586,22 @@
 }
 
 /* Sits under the sticky header once the title has scrolled away. The bar covers the row, including the gaps between chips. */
+/* A section heading that stays under the header while its section scrolls (one site of the actions log).
+   Full bleed, like the filter dock, so entries do not show beside it. */
+.stickyHeading {
+  position: sticky;
+  top: var(--app-bar-height);
+  z-index: 1;
+  max-width: none;
+  margin-inline: calc(-1 * var(--space));
+  padding-inline: var(--space);
+  background: var(--bg);
+}
+
+section:has(> .stickyHeading) {
+  scroll-margin-top: var(--app-bar-height);
+}
+
 .filterDock {
   position: sticky;
   top: var(--app-bar-height);
@@ -549,26 +651,6 @@
   font-weight: 600;
 }
 
-/* Header control for the actions panel. It stays one line so the fixed header does not grow. */
-.actionsButton {
-  display: inline-flex;
-  flex: none;
-  align-items: center;
-  gap: 0.375rem;
-  min-width: 44px;
-  min-height: 44px;
-  padding: 0 0.5rem;
-  border: 0;
-  border-radius: var(--radius);
-  background: transparent;
-  color: var(--link);
-  font: inherit;
-  font-size: 0.875rem;
-  line-height: 1.2;
-  white-space: nowrap;
-  cursor: pointer;
-}
-
 /* A side panel. showModal puts the dialog in the top layer, so this fixed box is the viewport's. */
 .drawer {
   position: fixed;
@@ -581,13 +663,6 @@
   border-radius: 0;
   background: var(--bg);
   color: var(--text);
-}
-
-/* The actions log, from the right. */
-.drawerRight {
-  inset: 0 0 0 auto;
-  width: min(100%, 24rem);
-  border-left: 1px solid var(--border);
 }
 
 /* The menu, from the left. */
@@ -648,13 +723,6 @@
 
 .drawerClose .icon {
   margin-top: 0;
-}
-
-.drawerBody {
-  flex: 1;
-  min-height: 0;
-  overflow: auto;
-  padding: var(--space);
 }
 
 .tabCount {
@@ -795,9 +863,4 @@
 .headingLink .kindIcon,
 .headingLink .icon {
   margin-top: 0;
-}
-
-/* With the actions control on the right, the back label leaves it room. */
-.backControlBeside {
-  max-width: calc(100% - 10.5rem);
 }

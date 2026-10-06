@@ -26,7 +26,18 @@ export const NAV = {
   label: "Main",
   sites: "Sites",
   materials: "Materials",
+  actions: "Actions log",
   about: "About this demo",
+} as const;
+
+export const ACTIONS_LOG = {
+  unavailable: "We can't load the actions log right now. Try again shortly.",
+  siteUnavailable: "We can't check this site's actions right now.",
+  empty: "No sites to show.",
+} as const;
+
+export const DECISION = {
+  latestFor: "latest decision for",
 } as const;
 
 export const MATERIALS = {
@@ -50,7 +61,6 @@ export const FILTERS = {
   shortages: "Shortages",
   dataProblems: "Data problems",
   acted: "Acted",
-  actions: "Actions log",
 } as const;
 
 export const SITES_UNAVAILABLE = "Can't check the sites right now. Don't assume any site is clear. Try again.";

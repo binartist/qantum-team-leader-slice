@@ -24,7 +24,7 @@ while (Date.now() <= deadline) {
     const homeText = await homeResponse.text();
     const listResponse = await fetch(new URL("/sites", raw), { cache: "no-store" });
     const listText = await listResponse.text();
-    const pagesOk = homeResponse.status === 200 && homeText.includes("Open sites") && listResponse.status === 200 && listText.includes("Sites");
+    const pagesOk = homeResponse.status === 200 && homeText.includes("Ready to send the crew?") && listResponse.status === 200 && listText.includes("Sites");
     if (sitesResponse.status === 200 && noStore && count === 4 && pagesOk) {
       console.log("smoke ok");
       process.exit(0);

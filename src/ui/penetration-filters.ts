@@ -38,11 +38,6 @@ export function materialValues(value: string | string[] | undefined): string[] {
   return Array.isArray(value) ? value : [value];
 }
 
-export function logIsOpen(value: string | string[] | undefined): boolean {
-  if (value === undefined) return false;
-  return Array.isArray(value) ? value.includes("open") : value === "open";
-}
-
 /**
  * One penetration matches a chip when that fact is true of it. Unknown stock is a shortage. Acted means a
  * wait or an escalation on a shortage that lists it, or on its own data problem. None of these is "ready".
@@ -87,13 +82,17 @@ export function filterCounts(
   return counts;
 }
 
-/** Toggles one chip and keeps the others, plus any material filter and the material page this site was opened from. */
+/**
+ * Toggles one chip and keeps the others, plus any material filter and where this site was opened from (a
+ * material page, or the actions log), so the back control still returns there.
+ */
 export function showFilterHref(
   siteId: string,
   selected: readonly ShowFilter[],
   toggle: ShowFilter,
   material: readonly string[] = [],
   fromMaterial?: string,
+  fromLog?: string,
 ): string {
   const next = new Set(selected);
   if (next.has(toggle)) next.delete(toggle);
@@ -104,6 +103,7 @@ export function showFilterHref(
   }
   for (const value of material) parts.push(`material=${encodeURIComponent(value)}`);
   if (fromMaterial !== undefined && fromMaterial.length > 0) parts.push(`fromMaterial=${encodeURIComponent(fromMaterial)}`);
+  if (fromLog !== undefined && fromLog.length > 0) parts.push(`fromLog=${encodeURIComponent(fromLog)}`);
   const query = parts.join("&");
   return query.length === 0 ? sitePath(siteId) : `${sitePath(siteId)}?${query}`;
 }

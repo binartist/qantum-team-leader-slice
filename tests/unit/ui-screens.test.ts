@@ -77,6 +77,7 @@ const SCREEN_SOURCES = [
   "src/app/sites/[id]/penetrations/[pid]/page.tsx",
   "src/app/materials/page.tsx",
   "src/app/materials/[materialId]/page.tsx",
+  "src/app/actions/page.tsx",
 ];
 
 function linkButtonBlocks(source: string): string[] {
@@ -91,12 +92,12 @@ describe("navigation shell", () => {
   it("each screen has one leading control (back or menu), its h1 in main, and no LinkButton to go back", () => {
     for (const file of SCREEN_SOURCES) {
       const source = readFileSync(file, "utf8");
-      // AC 37: the leading control is the back control or the menu, never both. The landing page, Sites and
-      // Materials carry the menu; inner screens a back control; the error screens have no header.
-      const menu = ["src/app/page.tsx", "src/app/sites/page.tsx", "src/app/materials/page.tsx"];
+      // AC 37: the leading control is the back control or the menu, never both. The landing page, Sites,
+      // Materials and the Actions log carry the menu; inner screens a back control; the error screens have no header.
+      const menu = ["src/app/page.tsx", "src/app/sites/page.tsx", "src/app/materials/page.tsx", "src/app/actions/page.tsx"];
       const noHeader = ["src/app/error.tsx", "src/app/global-error.tsx"];
       if (menu.includes(file)) {
-        expect(source, file).toMatch(/<MenuBar current="(sites|materials|about)" \/>/);
+        expect(source, file).toMatch(/<MenuBar current="(sites|materials|actions|about)" \/>/);
         expect(source, file).not.toContain("<AppBar");
       } else if (noHeader.includes(file)) {
         expect(source, file).not.toContain("<AppBar");

@@ -14,7 +14,7 @@ export function Card({
   children,
 }: {
   title: string;
-  heading?: "h2" | "h3";
+  heading?: "h2" | "h3" | "h4";
   titleHref?: string;
   kind?: EntityKind;
   /** A status icon in its tone's colour, in place of the kind icon (a logged wait or escalation). */

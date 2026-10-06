@@ -18,7 +18,8 @@ test("a penetration page is titled by its place and split into Nominated solutio
   const substitutes = page.getByRole("region", { name: "Substitutes" });
   await expect(substitutes.getByText("No catalogue match for this penetration. Escalate instead.")).toBeVisible();
   await expect(substitutes.getByRole("button", { name: /Escalate/ })).toBeVisible();
-  await expect(page.getByRole("button", { name: /^Actions log/ })).toBeVisible();
+  await expect(page.getByRole("banner").getByRole("link", { name: "Back to Kingsway Works, Phase 2" })).toBeVisible();
+  await expect(page.getByRole("button", { name: /^Actions log/ })).toHaveCount(0);
   await assertTargets(page);
   await assertNoOverflow(page);
 

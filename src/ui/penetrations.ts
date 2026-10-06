@@ -1,4 +1,5 @@
-import { materialPagePath, shortageBrief } from "./format";
+import { actionSentence, actionTarget, materialPagePath, shortageBrief } from "./format";
+import { DECISION } from "./messages";
 import { availabilityStatus, blockerReason, shortageState, type AvailabilityChip, type BlockerCode, type FitFieldCode, type StatusView } from "./status";
 
 /** A per-penetration fact. On the penetration page a shortage links to its material page. */
@@ -85,7 +86,7 @@ const LIST_BLOCKER: Record<BlockerCode, string> = {
   invalid_quantity: "Invalid quantity",
 };
 
-/** Compact chips for the site list: the kind of each problem, then any decision on it. Names and figures stay on the penetration page. */
+/** Compact chips for the site list: the kind of each problem. A decision is its own chip. Names and figures stay on the penetration page. */
 export function listFactChips(
   penetrationId: string,
   shortages: readonly { readonly kind: "short" | "unknown"; readonly penetrationIds: readonly string[]; readonly state: string }[],
@@ -108,14 +109,110 @@ export function listFactChips(
   else if (short > 1) chips.push({ label: `Short material × ${short}`, tone: "danger", icon: "stop" });
   if (unknown === 1) chips.push({ label: "Stock unknown", tone: "warning", icon: "warning" });
   else if (unknown > 1) chips.push({ label: `Stock unknown × ${unknown}`, tone: "warning", icon: "warning" });
-  // Acted (the filter's rule): a wait or escalation on a shortage that lists this penetration, or on its own
-  // data problem. One chip per kind of decision; the problem chips above still say what is wrong.
-  const states = new Set([
-    ...shortages.filter((shortage) => shortage.penetrationIds.includes(penetrationId)).map((shortage) => shortage.state),
-    ...blockers.filter((blocker) => blocker.penetrationId === penetrationId).map((blocker) => blocker.state),
-  ]);
-  for (const state of ["escalated", "waiting"]) {
-    if (states.has(state)) chips.push(shortageState(state));
+  return chips;
+}
+
+export interface DecisionLatest {
+  readonly sentence: string;
+  readonly recordedAt: string;
+  readonly createdBy: string;
+  readonly note: string | null;
+}
+
+export interface DecisionChip {
+  readonly state: "escalated" | "waiting";
+  readonly chip: StatusView;
+  readonly latest: DecisionLatest;
+}
+
+interface DecisionAction {
+  readonly kind: "wait" | "escalate";
+  readonly escalateTo: "purchasing" | "warehouse" | null;
+  readonly note: string | null;
+  readonly createdBy: string;
+  readonly createdAt: string;
+  readonly current: boolean;
+}
+
+interface DecisionShortage {
+  readonly id: string;
+  readonly penetrationIds: readonly string[];
+  readonly state: string;
+  readonly actions: readonly DecisionAction[];
+}
+
+interface DecisionBlocker {
+  readonly id: string;
+  readonly penetrationId: string;
+  readonly state: string;
+  readonly actions: readonly DecisionAction[];
+}
+
+interface DecisionNames {
+  readonly siteId: string;
+  readonly materials: Readonly<Record<string, { readonly name: string }>>;
+  readonly penetrations: Readonly<Record<string, { readonly floor: string; readonly location: string }>>;
+}
+
+const DECISION_STATES = ["escalated", "waiting"] as const;
+
+/** "Escalated, latest decision for L3, Riser 2 · PEX Pipe Ø25mm". The visible label comes first. */
+export function decisionChipName(label: string, place: string): string {
+  return `${label}, ${DECISION.latestFor} ${place}`;
+}
+
+/** On a tie, or when either date cannot be read, the one already found stays. */
+function isNewer(candidate: string, current: string): boolean {
+  const candidateMs = Date.parse(candidate);
+  const currentMs = Date.parse(current);
+  if (Number.isNaN(candidateMs) || Number.isNaN(currentMs) || candidateMs === currentMs) return false;
+  return candidateMs > currentMs;
+}
+
+function latestOf(
+  items: readonly { readonly id: string; readonly actions: readonly DecisionAction[] }[],
+  kind: "wait" | "escalate",
+  names: DecisionNames,
+): DecisionLatest | null {
+  let best: { readonly id: string; readonly action: DecisionAction } | null = null;
+  for (const item of items) {
+    for (const action of item.actions) {
+      if (!action.current || action.kind !== kind) continue;
+      if (best !== null && !isNewer(action.createdAt, best.action.createdAt)) continue;
+      best = { id: item.id, action };
+    }
+  }
+  if (best === null) return null;
+  return {
+    sentence: actionSentence(kind, best.action.escalateTo, actionTarget(names.siteId, best.id, names.materials, names.penetrations)),
+    recordedAt: best.action.createdAt,
+    createdBy: best.action.createdBy,
+    note: best.action.note,
+  };
+}
+
+/**
+ * At most one chip per decision, escalated first. Which ones appear is the Acted filter's rule: a shortage
+ * that lists this penetration, or this penetration's own blocker, in that state. The popover carries the
+ * newest decision of that kind that still applies. No current action means no chip, never an empty popover.
+ */
+export function decisionChips(
+  penetrationId: string,
+  shortages: readonly DecisionShortage[],
+  blockers: readonly DecisionBlocker[],
+  names: DecisionNames,
+): DecisionChip[] {
+  const covering = [
+    ...shortages.filter((shortage) => shortage.penetrationIds.includes(penetrationId)),
+    ...blockers.filter((blocker) => blocker.penetrationId === penetrationId),
+  ];
+  const chips: DecisionChip[] = [];
+  for (const state of DECISION_STATES) {
+    const inState = covering.filter((item) => item.state === state);
+    if (inState.length === 0) continue;
+    const latest = latestOf(inState, state === "escalated" ? "escalate" : "wait", names);
+    if (latest === null) continue;
+    chips.push({ state, chip: shortageState(state), latest });
   }
   return chips;
 }

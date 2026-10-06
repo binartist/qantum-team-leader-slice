@@ -6,7 +6,6 @@ import {
   decisionScope,
   groupPlaces,
   siteFromMaterialPath,
-  siteMaterialPath,
   materialPagePath,
   siteMaterialLine,
   shortageBrief,
@@ -15,6 +14,7 @@ import {
   shortSiteCount,
   uncheckedSiteCount,
   siteAnchor,
+  ACTIONS_PATH,
   MATERIALS_PATH,
   formatQuantity,
   ratingValue,
@@ -26,6 +26,7 @@ import {
   penetrationPath,
   proposalSentence,
   actionLink,
+  fromLogPath,
   sitePath,
   stockFiguresLine,
   stockIsStale,
@@ -190,6 +191,7 @@ describe("ratings, counts, and paths", () => {
     expect(penetrationPath("a/b", "c d")).toBe("/sites/a%2Fb/penetrations/c%20d");
     expect(sitePath("a/b")).toBe("/sites/a%2Fb");
     expect(MATERIALS_PATH).toBe("/materials");
+    expect(ACTIONS_PATH).toBe("/actions");
     expect(siteAnchor("site-b")).toBe("site-site-b");
     expect(materialPagePath("MAT-SEALANT")).toBe("/materials/MAT-SEALANT");
     expect(materialPagePath("c d", { siteId: "site-b" })).toBe("/materials/c%20d#site-site-b");
@@ -198,8 +200,6 @@ describe("ratings, counts, and paths", () => {
     );
     expect(siteFromMaterialPath("site-b", "MAT-COLLAR-25")).toBe("/sites/site-b?fromMaterial=MAT-COLLAR-25");
     expect(siteFromMaterialPath("a/b", "c d")).toBe("/sites/a%2Fb?fromMaterial=c%20d");
-    expect(siteMaterialPath("site-b", "MAT-COLLAR-25")).toBe("/sites/site-b?material=MAT-COLLAR-25");
-    expect(siteMaterialPath("a/b", "c d")).toBe("/sites/a%2Fb?material=c%20d");
   });
 });
 
@@ -226,15 +226,23 @@ describe("action wording", () => {
     expect(proposalSentence("0438", "0451", "L3, Riser 2")).toBe("Proposed substitute for L3, Riser 2: 0438 to 0451");
   });
 
-  it("links a decision to the work it is about", () => {
-    expect(actionLink("site-b", "site-b:MAT-SEALANT", "current")).toBe("/sites/site-b?material=MAT-SEALANT");
-    expect(actionLink("site-b", "site-b:MAT-SEALANT", "earlier")).toBe("/sites/site-b?material=MAT-SEALANT");
-    // A resolved shortage has no filtered list to show; the entry already says so.
+  it("AC 43: links a decision to the work it is about, marked as opened from the log", () => {
+    // A material decision opens the cross-site material page at that site's section, where it was decided.
+    // `fromLog` lets that page's back control return to the log.
+    expect(actionLink("site-b", "site-b:MAT-SEALANT", "current")).toBe("/materials/MAT-SEALANT?fromLog=site-b#site-site-b");
+    expect(actionLink("site-b", "site-b:MAT-SEALANT", "earlier")).toBe("/materials/MAT-SEALANT?fromLog=site-b#site-site-b");
+    // A resolved shortage has nothing left to open.
     expect(actionLink("site-b", "site-b:MAT-SEALANT", "resolved")).toBeNull();
-    expect(actionLink("site-c", "site-c:blocker.pen-c-03", "current")).toBe("/sites/site-c/penetrations/pen-c-03");
-    expect(actionLink("site-c", "site-c:blocker.pen-c-03", "resolved")).toBe("/sites/site-c/penetrations/pen-c-03");
+    expect(actionLink("site-c", "site-c:blocker.pen-c-03", "current")).toBe("/sites/site-c/penetrations/pen-c-03?fromLog=site-c");
+    expect(actionLink("site-c", "site-c:blocker.pen-c-03", "resolved")).toBe("/sites/site-c/penetrations/pen-c-03?fromLog=site-c");
     expect(actionLink("site-c", "site-c:blocker.", "current")).toBeNull();
-    expect(actionLink("site-c", "other:MAT-X", "current")).toBe("/sites/site-c?material=other%3AMAT-X");
+    expect(actionLink("site-c", "other:MAT-X", "current")).toBe("/materials/other%3AMAT-X?fromLog=site-c#site-site-c");
+  });
+
+  it("AC 43: adds the log origin to a path, before any anchor and after any query", () => {
+    expect(fromLogPath("/sites/site-b", "site-b")).toBe("/sites/site-b?fromLog=site-b");
+    expect(fromLogPath("/materials/M?from=p1#site-site-b", "site-b")).toBe("/materials/M?from=p1&fromLog=site-b#site-site-b");
+    expect(fromLogPath("/sites/a", "a b")).toBe("/sites/a?fromLog=a%20b");
   });
 });
 
