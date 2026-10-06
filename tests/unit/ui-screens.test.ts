@@ -75,7 +75,8 @@ const SCREEN_SOURCES = [
   "src/app/global-error.tsx",
   "src/app/sites/[id]/site-frame.tsx",
   "src/app/sites/[id]/penetrations/[pid]/page.tsx",
-  "src/app/sites/[id]/materials/[materialId]/page.tsx",
+  "src/app/materials/page.tsx",
+  "src/app/materials/[materialId]/page.tsx",
 ];
 
 function linkButtonBlocks(source: string): string[] {
@@ -83,13 +84,23 @@ function linkButtonBlocks(source: string): string[] {
 }
 
 describe("navigation shell", () => {
-  it("every screen but the landing page renders AppBar, every screen has its h1 in main, and none uses LinkButton to go back", () => {
+  it("each screen has one leading control (back or menu), its h1 in main, and no LinkButton to go back", () => {
     for (const file of SCREEN_SOURCES) {
       const source = readFileSync(file, "utf8");
-      // Inner screens have a back control in the header; top-level screens (landing, sites list, loading, errors) have no header.
-      const topLevel = ["src/app/page.tsx", "src/app/sites/page.tsx", "src/app/loading.tsx", "src/app/error.tsx", "src/app/global-error.tsx"];
-      if (topLevel.includes(file)) expect(source, file).not.toContain("<AppBar");
-      else expect(source, file).toMatch(/<AppBar backHref=/);
+      // AC 37: the leading control is the back control or the menu, never both. Sites and Materials carry the
+      // menu; inner screens a back control; the landing page, loading and errors no header.
+      const menu = ["src/app/sites/page.tsx", "src/app/materials/page.tsx"];
+      const noHeader = ["src/app/page.tsx", "src/app/loading.tsx", "src/app/error.tsx", "src/app/global-error.tsx"];
+      if (menu.includes(file)) {
+        expect(source, file).toMatch(/<MenuBar current="(sites|materials)" \/>/);
+        expect(source, file).not.toContain("<AppBar");
+      } else if (noHeader.includes(file)) {
+        expect(source, file).not.toContain("<AppBar");
+        expect(source, file).not.toContain("<MenuBar");
+      } else {
+        expect(source, file).toMatch(/<AppBar backHref=/);
+        expect(source, file).not.toContain("<MenuBar");
+      }
       // The title is the page's own h1 inside main, not part of the header.
       expect(source, file).toMatch(/<main[^>]*>\s*(<title>[^<]*<\/title>\s*)?<h1>/);
       expect(source, file).not.toMatch(/<AppBar[^>]*title=/);

@@ -8,8 +8,8 @@ test("AC 32: a 375px screen does not scroll sideways, including with a dialog op
     await assertNoOverflow(page);
   }
 
-  await gotoApp(page, "/sites/site-b/materials/MAT-COLLAR-25");
-  await page.getByRole("button", { name: "Escalate Pipe collar for 25 mm pipe" }).click();
+  await gotoApp(page, "/materials/MAT-COLLAR-25");
+  await page.getByRole("button", { name: "Escalate Pipe collar for 25 mm pipe at Harbour Point, Levels 3 to 5" }).click();
   await expect(page.getByRole("dialog")).toBeVisible();
   await assertNoOverflow(page);
   await page.keyboard.press("Escape");
@@ -20,8 +20,8 @@ test("AC 32: a 375px screen does not scroll sideways, including with a dialog op
   await assertNoOverflow(page);
   await page.keyboard.press("Escape");
 
-  await gotoApp(page, "/sites/site-c/materials/MAT-MASTIC");
-  await page.getByRole("button", { name: "Wait Fire mastic tube" }).click();
+  await gotoApp(page, "/materials/MAT-MASTIC");
+  await page.getByRole("button", { name: "Wait Fire mastic tube at Kingsway Works, Phase 2" }).click();
   await expect(page.getByRole("dialog")).toBeVisible();
   await assertNoOverflow(page);
   await page.keyboard.press("Escape");

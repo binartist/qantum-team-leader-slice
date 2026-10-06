@@ -4,6 +4,7 @@ import { useId, useState } from "react";
 import { ProposeDialog } from "./decisions/ProposeDialog";
 import { FactLine } from "./FactLine";
 import { FitTable } from "./FitTable";
+import { Icon } from "./Icon";
 import type { FitRow } from "./fit";
 import { KindIcon } from "./KindIcon";
 import type { PenetrationFact } from "./penetrations";
@@ -37,15 +38,20 @@ export function SubstituteSwitcher({
       {choices.length > 1 ? (
         <div className={styles.switchField}>
           <label className={styles.switchLabel} htmlFor={selectId}>
-            Solution
+            Select solution
           </label>
-          <select id={selectId} className={styles.switchControl} value={selected.code} onChange={(event) => setCode(event.target.value)}>
-            {choices.map((choice) => (
-              <option key={choice.code} value={choice.code}>
-                {choice.code}
-              </option>
-            ))}
-          </select>
+          <span className={styles.switchSelect}>
+            <select id={selectId} className={styles.switchControl} value={selected.code} onChange={(event) => setCode(event.target.value)}>
+              {choices.map((choice) => (
+                <option key={choice.code} value={choice.code}>
+                  {`Solution ${choice.code}`}
+                </option>
+              ))}
+            </select>
+            <span className={styles.switchChevron}>
+              <Icon name="chevron-right" />
+            </span>
+          </span>
         </div>
       ) : null}
       <article>

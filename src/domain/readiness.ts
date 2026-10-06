@@ -40,7 +40,7 @@ function materialsByCode(rows: readonly SolutionMaterial[]): Map<string, Solutio
 }
 
 /** null means the material has rows, but a row or the sum is not a usable quantity. */
-function stockOnHand(rows: readonly StockBalance[]): Map<string, number | null> {
+export function onHandByMaterial(rows: readonly StockBalance[]): Map<string, number | null> {
   const grouped = new Map<string, number[]>();
   for (const row of rows) {
     const list = grouped.get(row.materialId);
@@ -178,7 +178,7 @@ export function computeSiteReadiness(input: ReadinessInput): SiteReadiness {
     materialsByCode(input.solutionMaterials),
     siteActions,
   );
-  const onHand = stockOnHand(input.stock);
+  const onHand = onHandByMaterial(input.stock);
   const shortages = [...requirements.entries()]
     .sort(([left], [right]) => (left < right ? -1 : 1))
     .flatMap(([materialId, requirement]) => {
@@ -188,4 +188,35 @@ export function computeSiteReadiness(input: ReadinessInput): SiteReadiness {
 
   const crewStatus = shortages.length > 0 || blockers.length > 0 ? "blocked" : "clear";
   return { siteId: input.siteId, crewStatus, shortages, blockers, asOf: input.asOf };
+}
+
+/** One material this site needs: the site total, rounded up once, and the penetrations that use it. */
+export interface MaterialNeed {
+  readonly materialId: string;
+  readonly requiredQty: number;
+  readonly penetrationIds: readonly string[];
+}
+
+/**
+ * Every material this site's planned work needs, short or not, by the same rules as readiness: a
+ * penetration that is a data problem adds no need, and the total is rounded up once per site.
+ */
+export function siteMaterialNeeds(
+  input: Pick<ReadinessInput, "siteId" | "penetrations" | "catalogue" | "solutionMaterials">,
+): MaterialNeed[] {
+  const penetrations = input.penetrations.filter((penetration) => penetration.siteId === input.siteId);
+  const { requirements } = blockersAndRequirements(
+    input.siteId,
+    penetrations,
+    input.catalogue,
+    materialsByCode(input.solutionMaterials),
+    new Map(),
+  );
+  return [...requirements.entries()]
+    .sort(([left], [right]) => (left < right ? -1 : 1))
+    .map(([materialId, requirement]) => ({
+      materialId,
+      requiredQty: roundUpQuantity(requirement.sum),
+      penetrationIds: [...requirement.penetrationIds],
+    }));
 }

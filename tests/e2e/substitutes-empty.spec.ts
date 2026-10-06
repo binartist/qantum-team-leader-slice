@@ -14,7 +14,7 @@ test("empty substitutes name the reason, and only a related decision offers esca
   await expect(page.getByText("Catalogue match, not verified")).toHaveCount(0);
   // The shortage is decided on the material page, so this penetration does not repeat Escalate.
   await expect(page.getByRole("button", { name: /Escalate/ })).toHaveCount(0);
-  await expect(page.getByRole("link", { name: "Short material: Intumescent sealant, 310 ml cartridge" })).toBeVisible();
+  await expect(page.getByRole("link", { name: /^Short material: Intumescent sealant, 310 ml cartridge · this site short 2 of 10$/ })).toBeVisible();
 
   await gotoApp(page, "/sites/site-c/penetrations/pen-c-01");
   await expect(page.getByText("The catalogue entry for this substrate is incomplete, so we can't suggest substitutes.")).toBeVisible();

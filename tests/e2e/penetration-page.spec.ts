@@ -23,47 +23,7 @@ test("a penetration page is titled by its place and split into Nominated solutio
   await assertNoOverflow(page);
 
   await gotoApp(page, "/sites/site-b/penetrations/pen-b-01");
-  await expect(main.getByRole("heading", { level: 1, name: "L3, Riser 2" })).toBeVisible();
   const nominated0438 = page.getByRole("region", { name: "Nominated solution 0438" });
-  const collar = nominated0438.getByRole("link", { name: "Short material: Pipe collar for 25 mm pipe" });
-  const sealant = nominated0438.getByRole("link", { name: "Short material: Intumescent sealant, 310 ml cartridge" });
-  await expect(collar).toHaveAttribute("href", "/sites/site-b/materials/MAT-COLLAR-25");
-  await expect(sealant).toHaveAttribute("href", "/sites/site-b/materials/MAT-SEALANT");
-  await collar.click();
-  await expect(page).toHaveURL(/\/sites\/site-b\/materials\/MAT-COLLAR-25$/);
-  await expect(page.getByRole("heading", { level: 1, name: "Pipe collar for 25 mm pipe" })).toBeVisible();
-  await expect(page.getByText("On hand, shared, not reserved")).toBeVisible();
-  await expect(page.getByText("Harbour Point, Levels 3 to 5 needs 4, on hand 2 (shared with other sites), short 2")).toBeVisible();
-  await expect(page.getByRole("heading", { level: 2, name: "Planned at Harbour Point, Levels 3 to 5: 4 penetrations" })).toBeVisible();
-  await expect(page.getByRole("link", { name: /L3, Riser 2 · PEX Pipe Ø25mm/ })).toHaveCount(0);
-  await expect(page.getByText("L3, Riser 2 · PEX Pipe Ø25mm ×4", { exact: true })).toBeVisible();
-  // Up to the site list, filtered to the material: not back across to a penetration.
-  await page.getByRole("link", { name: "Show these on the site list" }).click();
-  await expect(page).toHaveURL(/\/sites\/site-b\?material=MAT-COLLAR-25$/);
-  await gotoApp(page, "/sites/site-b/materials/MAT-COLLAR-25");
-  await assertTargets(page);
-  await assertNoOverflow(page);
-  await page.setViewportSize({ width: 1280, height: 800 });
-  await expect(page.getByRole("heading", { level: 1, name: "Pipe collar for 25 mm pipe" })).toBeVisible();
-  await assertNoOverflow(page);
-
-  await gotoApp(page, "/sites/site-b/materials/MAT-SEALANT");
-  await expect(page.getByText("Harbour Point, Levels 3 to 5 needs 10, on hand 8 (shared with other sites), short 2 cartridges")).toBeVisible();
-  await expect(page.getByRole("heading", { level: 2, name: "Planned at Harbour Point, Levels 3 to 5: 12 penetrations" })).toBeVisible();
-
-  await gotoApp(page, "/sites/site-b/materials/MAT-PUTTY");
-  await expect(page.getByText("That material is not a shortage on this site.")).toBeVisible();
-  await expect(page.getByText(/ needs \d/)).toHaveCount(0);
-
-  await gotoApp(page, "/sites/site-c/materials/MAT-MASTIC");
-  await expect(page.getByRole("heading", { level: 1, name: "Fire mastic tube" })).toBeVisible();
-  await expect(page.getByText("Kingsway Works, Phase 2 needs 1, stock unknown")).toBeVisible();
-  await expect(page.getByRole("heading", { level: 2, name: "Planned at Kingsway Works, Phase 2: 1 penetration" })).toBeVisible();
-
-  await gotoApp(page, "/sites/site-b/materials/not%20an%20id");
-  await expect(page.getByRole("heading", { level: 1, name: "Page not found" })).toBeVisible();
-
-  await gotoApp(page, "/sites/site-b/penetrations/pen-b-01");
   // A nominated solution that fits carries no mark anywhere in its comparison.
   const fitting = nominated0438.getByRole("table");
   await expect(fitting.getByText("doesn't fit")).toHaveCount(0);
@@ -73,6 +33,67 @@ test("a penetration page is titled by its place and split into Nominated solutio
   await expect(subs.getByRole("heading", { name: "Solution 0451" })).toBeVisible();
   await expect(subs.getByRole("columnheader", { name: "Solution 0451" })).toBeVisible();
   await expect(subs.getByRole("columnheader", { name: "Penetration" }).first()).toBeVisible();
+});
+
+test("AC 40: a shortage on the penetration page is a line with this site's figures, opening the material page at this site", async ({ page }) => {
+  await gotoApp(page, "/sites/site-b/penetrations/pen-b-01");
+  const nominated = page.getByRole("region", { name: "Nominated solution 0438" });
+  const collar = nominated.getByRole("link", { name: "Short material: Pipe collar for 25 mm pipe · this site short 2 of 4" });
+  const sealant = nominated.getByRole("link", { name: "Short material: Intumescent sealant, 310 ml cartridge · this site short 2 of 10" });
+  await expect(collar).toHaveAttribute("href", "/materials/MAT-COLLAR-25?from=pen-b-01#site-site-b");
+  await expect(sealant).toHaveAttribute("href", "/materials/MAT-SEALANT?from=pen-b-01#site-site-b");
+  // A substitute's line links the same way when the site is already short of that material.
+  const substitute = page.getByRole("region", { name: "Substitutes" });
+  await expect(substitute.getByRole("link", { name: /^Short material: Intumescent sealant, 310 ml cartridge · this site short 2 of 10$/ })).toHaveAttribute(
+    "href",
+    "/materials/MAT-SEALANT?from=pen-b-01#site-site-b",
+  );
+  await collar.click();
+  await expect(page).toHaveURL(/\/materials\/MAT-COLLAR-25\?from=pen-b-01#site-site-b$/);
+  await expect(page.getByRole("heading", { level: 1, name: "Pipe collar for 25 mm pipe" })).toBeVisible();
+  await expect(page.getByText("On hand, shared, not reserved")).toBeVisible();
+  const harbour = page.getByRole("region", { name: "Harbour Point, Levels 3 to 5" });
+  await expect(harbour.getByText("Needs 4, short 2", { exact: true })).toBeVisible();
+  await expect(page.locator("#site-site-b")).toBeInViewport();
+
+  // Stock unknown is a shortage too: briefed, linked, and decided on the material page.
+  await gotoApp(page, "/sites/site-c/penetrations/pen-c-05");
+  const mastic = page.getByRole("link", { name: "Stock unknown: Fire mastic tube · this site needs 1" });
+  await expect(mastic).toHaveAttribute("href", "/materials/MAT-MASTIC?from=pen-c-05#site-site-c");
+});
+
+test("AC 42: a material page returns to the penetration that opened it, and otherwise to Materials", async ({ page }) => {
+  await gotoApp(page, "/materials/MAT-COLLAR-25?from=pen-b-01#site-site-b");
+  await page.getByRole("link", { name: "Back to L3, Riser 2" }).click();
+  await expect(page).toHaveURL(/\/sites\/site-b\/penetrations\/pen-b-01$/);
+
+  await gotoApp(page, "/materials/MAT-MASTIC?from=pen-c-05#site-site-c");
+  await expect(page.getByRole("link", { name: "Back to L2, Plant room" })).toHaveAttribute("href", "/sites/site-c/penetrations/pen-c-05");
+
+  // A penetration of a site that does not plan the material, a made-up id, an object key, a malformed or a
+  // repeated value: all go back to Materials.
+  for (const query of ["?from=pen-c-05", "?from=pen-none", "?from=constructor", "?from=not%20an%20id", "?from=pen-b-01&from=pen-b-02", ""]) {
+    await gotoApp(page, `/materials/MAT-COLLAR-25${query}`);
+    await expect(page.getByRole("link", { name: "Back to Materials" }), query).toHaveAttribute("href", "/materials");
+  }
+  await assertTargets(page);
+  await assertNoOverflow(page);
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await expect(page.getByRole("heading", { level: 1, name: "Pipe collar for 25 mm pipe" })).toBeVisible();
+  await assertNoOverflow(page);
+});
+
+test("AC 41: the old site-scoped material URL opens the material page at that site", async ({ page }) => {
+  await gotoApp(page, "/sites/site-b/materials/MAT-SEALANT");
+  await expect(page).toHaveURL(/\/materials\/MAT-SEALANT#site-site-b$/);
+  await expect(page.getByRole("region", { name: "Harbour Point, Levels 3 to 5" }).getByText("Needs 10, short 2 cartridges", { exact: true })).toBeVisible();
+  await expect(page.locator("#site-site-b")).toBeInViewport();
+
+  // Bad ids, and a material no site plans, are not found.
+  for (const path of ["/sites/not%20an%20id/materials/MAT-SEALANT", "/sites/site-a/materials/MAT-PUTTY", "/materials/MAT-PUTTY", "/materials/not%20an%20id"]) {
+    await gotoApp(page, path);
+    await expect(page.getByRole("heading", { level: 1, name: "Page not found" }), path).toBeVisible();
+  }
 });
 
 test("AC 36: the nominated solution sits side by side with the penetration, and a field that does not fit is marked", async ({ page }) => {

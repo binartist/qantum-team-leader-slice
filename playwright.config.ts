@@ -14,6 +14,7 @@ const readSpecs = [
   "**/substitutes-empty.spec.ts",
   "**/site-tabs.spec.ts",
   "**/penetration-page.spec.ts",
+  "**/navigation-drawer.spec.ts",
 ];
 
 const writeSpecs = ["**/ac31-keyboard.spec.ts", "**/idempotency-key.spec.ts", "**/scenario.spec.ts"];

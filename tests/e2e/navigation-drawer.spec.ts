@@ -1,0 +1,101 @@
+import { expect, test, type Page } from "@playwright/test";
+import { assertAxe, assertNoOverflow, assertTargets, gotoApp, tabTo } from "./support";
+
+// Read-only. Runs before the write project, so no decisions are recorded yet.
+
+function drawerOf(page: Page) {
+  return page.getByRole("dialog", { name: "Team leader" });
+}
+
+test("AC 37: the menu opens a left drawer with Sites and Materials, the current one marked", async ({ page }) => {
+  await gotoApp(page, "/sites");
+  // The leading control on a top-level list is the menu, never a back control.
+  await expect(page.getByRole("banner").getByRole("link", { name: /^Back to / })).toHaveCount(0);
+  const menu = page.getByRole("button", { name: "Open menu" });
+  await tabTo(page, /Open menu/);
+  await page.keyboard.press("Enter");
+  const drawer = drawerOf(page);
+  await expect(drawer).toBeVisible();
+  const nav = drawer.getByRole("navigation", { name: "Main" });
+  await expect(nav.getByRole("link", { name: "Sites" })).toHaveAttribute("aria-current", "page");
+  await expect(nav.getByRole("link", { name: "Materials" })).not.toHaveAttribute("aria-current", "page");
+  await expect(drawer.getByRole("link", { name: "About this demo" })).toHaveAttribute("href", "/");
+  // Left side, once the slide-in has settled.
+  await expect.poll(async () => (await drawer.boundingBox())?.x).toBe(0);
+  await assertTargets(page);
+  await assertAxe(page);
+
+  // The page behind a modal drawer is inert: tabbing never reaches it. (Past the last control the browser
+  // may move focus to its own toolbar, which the page sees as the body.)
+  for (let step = 0; step < 6; step += 1) {
+    await page.keyboard.press("Tab");
+    const outside = await page.evaluate(() => {
+      const el = document.activeElement;
+      return el !== null && el !== document.body && !el.closest("dialog");
+    });
+    expect(outside).toBe(false);
+  }
+  await page.keyboard.press("Escape");
+  await expect(drawer).toBeHidden();
+  await expect(menu).toBeFocused();
+});
+
+test("AC 37: the close control and the backdrop close the drawer and return focus; a link closes it as it navigates", async ({ page }) => {
+  await gotoApp(page, "/sites");
+  const menu = page.getByRole("button", { name: "Open menu" });
+
+  await menu.click();
+  await page.getByRole("button", { name: "Close menu" }).click();
+  await expect(drawerOf(page)).toBeHidden();
+  await expect(menu).toBeFocused();
+
+  // At 375px the drawer is at most 85% wide, so the right edge is backdrop.
+  await menu.click();
+  await expect.poll(async () => (await drawerOf(page).boundingBox())?.x).toBe(0);
+  await page.mouse.click(365, 400);
+  await expect(drawerOf(page)).toBeHidden();
+  await expect(menu).toBeFocused();
+
+  await menu.click();
+  await drawerOf(page).getByRole("link", { name: "Materials" }).click();
+  await expect(page).toHaveURL(/\/materials$/);
+  await expect(page.getByRole("heading", { level: 1, name: "Materials" })).toBeVisible();
+  await expect(drawerOf(page)).toBeHidden();
+  await expect(page.getByRole("banner").getByRole("link", { name: /^Back to / })).toHaveCount(0);
+
+  // Inner screens lead with the back control, never the menu.
+  for (const path of ["/sites/site-b", "/sites/site-b/penetrations/pen-b-01", "/materials/MAT-COLLAR-25"]) {
+    await gotoApp(page, path);
+    await expect(page.getByRole("button", { name: "Open menu" }), path).toHaveCount(0);
+    await expect(page.getByRole("banner").getByRole("link", { name: /^Back to / }), path).toBeVisible();
+  }
+});
+
+test("AC 38: the materials list shows each planned material against the shared stock, across sites", async ({ page }) => {
+  await gotoApp(page, "/materials");
+  await expect(page.getByText("On hand, shared, not reserved")).toBeVisible();
+  const rows = page.locator("main a[href^='/materials/']");
+  await expect(rows).toHaveCount(6);
+  // By name; putty is mapped only to a substitute nobody nominates, so no site plans it.
+  await expect(rows.first()).toContainText("Fire mastic tube");
+  await expect(page.locator("main a[href='/materials/MAT-PUTTY']")).toHaveCount(0);
+
+  const collar = page.locator("main a[href='/materials/MAT-COLLAR-25']");
+  await expect(collar).toContainText("On hand 2 · planned across sites 6");
+  await expect(collar).toContainText("Short at 1 site");
+  const mastic = page.locator("main a[href='/materials/MAT-MASTIC']");
+  await expect(mastic).toContainText("Planned across sites 1 tube");
+  await expect(mastic).toContainText("Stock unknown · needed at 1 site");
+  await expect(mastic).not.toContainText("Not short");
+  // Status chips carry an icon, never colour alone.
+  await expect(mastic.locator("svg[aria-hidden='true']")).not.toHaveCount(0);
+  const wrap = page.locator("main a[href='/materials/MAT-WRAP']");
+  await expect(wrap).toContainText("Not short at any site");
+  await expect(page.getByText(/\bready\b/i)).toHaveCount(0);
+  await assertTargets(page);
+  await assertNoOverflow(page);
+
+  await collar.click();
+  await expect(page).toHaveURL(/\/materials\/MAT-COLLAR-25$/);
+  await expect(page.getByRole("link", { name: "Back to Materials" })).toBeVisible();
+});

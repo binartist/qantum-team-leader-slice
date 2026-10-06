@@ -12,7 +12,7 @@ Before a crew leaves for a site, the team leader needs to know whether the mater
 
 ## 2. Scope
 
-**In:** list sites, compute readiness for a site, show shortages and missing-data blockers, record wait, escalate and substitute-proposal, list recorded actions, suggest catalogue-similar substitutes.
+**In:** list sites, compute readiness for a site, show shortages and missing-data blockers, show each material's shared stock against every site's need, record wait, escalate and substitute-proposal, list recorded actions, suggest catalogue-similar substitutes.
 
 **Out (see section 8):** real auth, real inventory or nomination systems, approving substitutes, stock reservation across sites, crew scheduling, offline use, install, pins and photos.
 
@@ -32,10 +32,11 @@ Before a crew leaves for a site, the team leader needs to know whether the mater
 | FR10 | A recorded action is current only while the shortfall has not grown beyond what it was when recorded. Otherwise it appears as an earlier decision. Actions always show date and author. |
 | FR11 | For a penetration, the app suggests substitutes from the catalogue using the matching rules in `technical-design.md` section 6. Each suggestion is labelled "catalogue match, not verified" and shows whether its materials are in stock. A material this site is already short of, or has no stock record for, never counts as in stock. |
 | FR12 | A leader can record a **proposed substitute** for a penetration, choosing only from the suggested candidates and giving a reason. Status is always proposed. The nomination is not changed. |
-| FR13 | When there are no candidates, the app says so and offers escalate. When the substrate is incomplete in the catalogue, it says that. |
+| FR13 | When there are no candidates, the app says so. It offers escalate only when the penetration has a data problem; a material shortage is waited on or escalated on its material page. When the substrate is incomplete in the catalogue, it says that. |
 | FR14 | A leader can list all recorded actions for a site, newest first. |
 | FR15 | Every screen has a defined state for loading, empty, error and upstream-unavailable. Upstream failure never shows crew as clear. |
 | FR16 | Every write requires an idempotency key, and a repeat records once. A repeat for the same target returns the original even if the shortage has since resolved. A repeat for a different target is rejected with 409. |
+| FR17 | A drawer side menu gives the two top-level views, Sites and Materials. Materials shows each material a site plans to use against the one shared stock, across sites, and is where a site's shortage is waited on or escalated. |
 
 ## 4. Acceptance criteria
 
@@ -65,7 +66,7 @@ Numbered for use as test names. Sample data is defined in section 7.
 **Substitution**
 18. For penetration with nominated `0438` (PEX Ø25mm, wall, 60/30), candidates are `0451` and `0464`.
 19. For `0789`, candidates are `0790` and `0791`. For `0434`, the candidate is `0435`.
-20. For `0344`, there are no candidates and the empty state offers escalate.
+20. For `0344`, there are no candidates and the empty state says so. It offers escalate only when the penetration has a data problem; the sealant shortage it uses is decided on the sealant's material page.
 21. For a solution whose substrate is incomplete (`0943`), there are no candidates and the message says the catalogue substrate is incomplete.
 22. A candidate whose insulation is not claimed is never offered for a stated insulation requirement.
 23. Proposing a `to` code that is not a current candidate returns 422. A `from` code that is not the penetration's current nomination returns 409.
@@ -86,6 +87,12 @@ Numbered for use as test names. Sample data is defined in section 7.
 34. On the site screen, a blocked site has no summary banner. Filter chips for shortages, data problems and recorded actions count the penetrations and narrow the list, and each row still shows its own line. A clear site's banner still reads "Crew can go." The sites list chip still names the shortage and data-problem counts.
 35. A penetration whose nominated solution differs on orientation, normalised substrate, normalised service type or normalised size, or falls short of a stated integrity or insulation requirement, gets a `solution_mismatch` blocker listing the failing fields. The crew is blocked, wait is rejected with 422, escalate is accepted, and the penetration adds no material need. Text that differs only by spacing or capitals is not a mismatch. A substrate cut off after the family name, on either side, never fits, even against identical cut-off text. Blank text, or a requirement or rating that is not a usable number, never fits.
 36. The penetration page shows each field side by side for the penetration and its nominated solution, and marks every field that does not fit with an icon and text, never colour alone.
+37. On the sites and materials lists, the leading header control opens a left drawer listing Sites and Materials, with the current one marked, and a link to the landing page at its foot. Escape, the backdrop, the close control and choosing a link close it, and focus returns to the menu control when the drawer closes without navigating. Inner screens lead with the back control instead, never both.
+38. The materials list shows each material any site plans to use, by name, with on hand (or stock unknown), every site's need added up, and how many sites are short. A site that could not be checked is never counted as not short, and the total is then left out. When no site is short alone but the sites together need more than is on hand, the row says so instead of "not short" (stock is shared and not reserved).
+39. A material page shows the shared stock and its age once, then one section per site that plans the material: that site's need, short by (or "not short for this site alone"), its places with identical ones grouped, and, only where it is short, the decision scope, state, Wait and Escalate. A site that could not be checked says so and is never shown as enough.
+40. On the penetration page, a shortage of the nominated solution (and of a substitute, when the site is already short of that material) is a line with this site's figures ("this site short 2 of 4", or "this site needs 1" when stock is unknown) that links to the material page at this site's section.
+41. The former site-scoped material URL redirects to the material page at that site's section.
+42. A material page opened from a penetration's shortage line has a back control that returns to that penetration. Opened any other way, or with a `from` that is not a penetration using the material, it returns to Materials.
 
 ## 5. Non-functional requirements
 
@@ -95,7 +102,7 @@ Numbered for use as test names. Sample data is defined in section 7.
 | Safety | Fail closed: missing or unavailable data never produces a clear status. |
 | Security | The app connects as a database role that can only read and insert the two action tables (append-only enforced by the database). Server-side credentials only, TLS in production. Author set on the server. Input validated at the boundary with a schema. Errors return `{code, message}` only. |
 | Privacy | Logs contain ids and codes, not notes or reasons. |
-| Accessibility | Meets WCAG 2.2 AA for the three screens: contrast, focus order, labels, status not by colour alone. |
+| Accessibility | Meets WCAG 2.2 AA for every screen: contrast, focus order, labels, status not by colour alone. |
 | Maintainability | Domain core has no framework or I/O imports. Each upstream sits behind one port. |
 | Auditability | Actions are append-only with actor and timestamp. |
 | Delivery | CI runs typecheck, lint, unit, API, database and end-to-end tests. Deploy follows a green run. |
@@ -132,10 +139,10 @@ Real authentication, a real inventory or nomination service, approval of substit
 
 1. Open the app. The landing page says it is a demo with invented data. Open sites: site B is blocked.
 2. Open site B. The page lists the penetrations. There is no blocked banner. Filter chips count the penetrations, and the stock figures are labelled shared and not reserved.
-3. Open the sealant and escalate it to purchasing with a note. State shows escalated. Crew is still blocked, and the screen says why.
-4. From the penetrations that use the sealant, pick one nominating `0438`. See candidates `0451` and `0464` labelled not verified. `0451` uses sealant, which this site is short of, and says so. Propose `0451` with a reason. It is listed as proposed and nothing else changes.
-5. Open the penetration nominating `0344`. See "no catalogue match". The shortage itself is decided on the sealant's page.
-6. Open site C. Filter to data problems and see four, with reasons, including two nominated solutions that do not fit (L1, Stair core: 0943's substrate is cut off in the catalogue; L1, Riser 1: needs 90 min insulation, 0435 claims 60), and one stock-unknown shortage, never a clear status.
+3. Open a penetration nominating `0438` (L3, Riser 2). Its sealant line reads "this site short 2 of 10" and opens the sealant's page at site B's section. Escalate it to purchasing with a note. State shows escalated. Back returns to the penetration. On the sites list, site B is still blocked: a decision does not create stock.
+4. On that penetration, see candidates `0451` and `0464` labelled not verified. `0451` uses sealant, which this site is short of, and says so. Propose `0451` with a reason. It is listed as proposed and nothing else changes.
+5. Open the penetration nominating `0344` (L5, Plant room). See "no catalogue match"; its sealant shortage is decided on the sealant's page. Go back to the sites list, open the menu and choose Materials: the pipe collar is on hand 2 against 6 planned across sites, short at site B, while site A on its own is not short.
+6. Open site C. The Data problems chip counts four. The rows name the kind; each penetration page gives the reason, including two nominated solutions that do not fit (L1, Stair core: 0943's substrate is cut off in the catalogue; L1, Riser 1: needs 90 min insulation, 0435 claims 60). The Shortages chip shows the one stock-unknown penetration, never a clear status.
 7. Open the actions log from the header. See your recorded decisions with date and author.
 
 ## 10. Production gaps (carried to README)

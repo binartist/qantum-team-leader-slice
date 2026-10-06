@@ -11,11 +11,12 @@ The live demo uses invented sample data and has no login. Decisions are stored i
 
 1. **Sites** ("Open sites" on the first page, or `/sites`). Harbour Point and Kingsway Works are blocked, and the chip says why. Riverside Plaza can go. Old Mill Annex has nothing planned.
 2. **Harbour Point.** The page lists 12 penetrations across 5 solutions. There is no blocked banner. The Shortages chip counts penetrations (12 here, because every opening uses the short sealant), which is not the same unit as the sites-list chip ("2 shortages"). Each of those openings also says so on its row. Stock figures are labelled "on hand, shared, not reserved", with their age and a warning when they are more than a day old.
-3. **Open the sealant** from a red "Short material" line and escalate it to Purchasing with a note. The page shows Escalated. Back on the site, the crew is still blocked: a decision records intent, it does not create stock.
-4. **Filter to the sealant** (`?material=`) or pick an `L3, Riser 2` row (solution `0438`) from the list. Candidates `0451` and `0464` are shown with their fire rating, whether they meet the required rating, and stock. Every candidate is "Catalogue match, not verified", and `0451` warns that it uses sealant, which this site is already short of. **Propose `0451`** with a reason anyway: a manager decides.
+3. **Open the sealant.** Open an `L3, Riser 2` row and tap its line "Short material: Intumescent sealant … · this site short 2 of 10". The sealant's page opens at Harbour Point's section. Escalate it to Purchasing with a note. The section shows Escalated. Back returns to the penetration. On the Sites list Harbour Point is still Blocked, because a decision records intent, it does not create stock.
+4. **On that `L3, Riser 2` penetration** (solution `0438`), candidates `0451` and `0464` are shown with their fire rating, whether they meet the required rating, and stock. Every candidate is "Catalogue match, not verified", and `0451` warns that it uses sealant, which this site is already short of. **Propose `0451`** with a reason anyway: a manager decides.
 5. **Back on Harbour Point**, open the `L5, Plant room` row (solution `0344`): no catalogue match. The shortage is decided on the sealant's page.
 6. **Kingsway Works.** One penetration has no stock record ("stock unknown", at L2, Plant room). The Data problems chip counts 4: a solution code missing from the catalogue, a solution with no materials recorded, and two nominated solutions that do not fit (L1, Stair core: substrate cut off in the catalogue; L1, Riser 1: insulation too low). Open either to see the side-by-side comparison, and escalate a data problem from that penetration.
-7. **Actions log**, the header button on any of these pages: your decisions with time and author, and whether each still applies.
+7. **Actions log**, the header button on a site or penetration page: your decisions with time and author, and whether each still applies.
+8. **Materials**, from the menu on the Sites list. Each material against the one shared stock, across sites. The pipe collar shows 2 on hand against 6 planned across sites, short at one site: Riverside Plaza on its own is not short, but the sites together need more than there is.
 
 ## Run locally
 
@@ -81,7 +82,7 @@ Next.js 16 server components and route handlers on Vercel, a pure TypeScript dom
 | Document | What it covers |
 | --- | --- |
 | `docs/iteration-plan.md` | Why this slice, and the iterations after it |
-| `docs/slice-specification.md` | Requirements, 36 acceptance criteria, assumptions, exclusions |
+| `docs/slice-specification.md` | Requirements, 42 acceptance criteria, assumptions, exclusions |
 | `docs/technical-design.md` | Architecture, domain rules, data model, trade-offs |
 | `docs/ui-design.md` | Screens, copy, states and accessibility |
 | `docs/api.md` | HTTP API, errors, idempotency, configuration |

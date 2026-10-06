@@ -3,9 +3,9 @@ import { assertTargets, gotoApp, screens, tabTo } from "./support";
 
 test("AC 31: escalate with the keyboard only, and targets are at least 44 by 44", async ({ page }) => {
   // Writes the collar shortage (site-b:MAT-COLLAR-25) only. Sealant stays for the scenario spec.
-  await gotoApp(page, "/sites/site-b/materials/MAT-COLLAR-25");
-  await expect(page.getByRole("button", { name: "Escalate Pipe collar for 25 mm pipe" })).toBeVisible();
-  await tabTo(page, /Escalate Pipe collar for 25 mm pipe/);
+  await gotoApp(page, "/materials/MAT-COLLAR-25");
+  await expect(page.getByRole("button", { name: "Escalate Pipe collar for 25 mm pipe at Harbour Point, Levels 3 to 5" })).toBeVisible();
+  await tabTo(page, /Escalate Pipe collar for 25 mm pipe at Harbour Point/);
   await page.keyboard.press("Enter");
   const dialog = page.getByRole("dialog");
   await expect(dialog.getByText("This does not release the crew.")).toBeVisible();
@@ -30,8 +30,12 @@ test("AC 31: escalate with the keyboard only, and targets are at least 44 by 44"
   await page.getByRole("link", { name: "Acted 4" }).click();
   await expect(page).toHaveURL(/show=acted/);
   await expect(page.locator("main a[href*='/penetrations/pen-b-']")).toHaveCount(4);
+  // Each acted row says so, in the escalation colour, after its problem chip.
+  await expect(page.locator("a[href$='/penetrations/pen-b-01']")).toContainText("Escalated");
   await expect(page.getByText("Blocked: hold the crew.")).toHaveCount(0);
   await expect(page.getByText("Crew can go")).toHaveCount(0);
+  await gotoApp(page, "/sites");
+  await expect(page.getByRole("listitem").filter({ hasText: "Harbour Point, Levels 3 to 5" }).getByText("Blocked · 2 shortages")).toBeVisible();
 
   for (const path of screens) {
     await gotoApp(page, path);
@@ -39,8 +43,8 @@ test("AC 31: escalate with the keyboard only, and targets are at least 44 by 44"
   }
 
   // Opens the Wait dialog for measurement and does not send.
-  await gotoApp(page, "/sites/site-c/materials/MAT-MASTIC");
-  await page.getByRole("button", { name: "Wait Fire mastic tube" }).click();
+  await gotoApp(page, "/materials/MAT-MASTIC");
+  await page.getByRole("button", { name: "Wait Fire mastic tube at Kingsway Works, Phase 2" }).click();
   await expect(page.getByRole("dialog")).toBeVisible();
   await assertTargets(page);
   await page.keyboard.press("Escape");
