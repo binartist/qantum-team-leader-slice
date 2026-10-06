@@ -21,13 +21,15 @@ test("scenario: escalate sealant, propose 0451, then Kingsway still cannot go", 
   await page.getByRole("link", { name: /Harbour Point/ }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Harbour Point, Levels 3 to 5" })).toBeVisible();
   await expect(page.getByText("On hand, shared, not reserved")).toBeVisible();
-  await expect(page.getByText(/Blocked:/)).toBeVisible();
+  await expect(page.getByText("Blocked: hold the crew.")).toHaveCount(0);
+  await expect(page.locator("a[href$='/penetrations/pen-b-01']")).toContainText("Short material");
   await expect(page.getByText("Crew can go")).toHaveCount(0);
 
-  const sealant = page.getByRole("article").filter({
-    has: page.getByRole("heading", { name: "Intumescent sealant, 310 ml cartridge" }),
-  });
-  await sealant.getByRole("button", { name: /Escalate/ }).click();
+  // Row chips only name the problem; the material link is on the penetration page.
+  await page.locator("a[href$='/penetrations/pen-b-01']").click();
+  await page.getByRole("link", { name: "Short material: Intumescent sealant, 310 ml cartridge" }).first().click();
+  await expect(page).toHaveURL(/\/sites\/site-b\/materials\/MAT-SEALANT$/);
+  await page.getByRole("button", { name: "Escalate Intumescent sealant, 310 ml cartridge" }).click();
   const dialog = page.getByRole("dialog");
   await expect(dialog.getByText("This does not release the crew.")).toBeVisible();
   await expect(dialog.getByText("This records your decision here. Nobody is notified automatically yet.")).toBeVisible();
@@ -52,8 +54,10 @@ test("scenario: escalate sealant, propose 0451, then Kingsway still cannot go", 
   expect(key).toBeTruthy();
 
   await expect(page.locator("[data-announcer]")).toHaveText("Escalation recorded");
-  await expect(sealant.getByText("Escalated")).toBeVisible();
-  await expect(page.getByText(/Blocked:/)).toBeVisible();
+  await expect(page.getByText("Escalated", { exact: true })).toBeVisible();
+  await page.getByRole("link", { name: "Back to Harbour Point, Levels 3 to 5" }).click();
+  await expect(page.getByText("Blocked: hold the crew.")).toHaveCount(0);
+  await expect(page.locator("a[href$='/penetrations/pen-b-01']")).toContainText("Short material");
   await expect(page.getByText("Crew can go")).toHaveCount(0);
 
   await page.evaluate(
@@ -68,23 +72,24 @@ test("scenario: escalate sealant, propose 0451, then Kingsway still cannot go", 
   );
   await expect(page.locator("[data-announcer]")).toHaveText("Already recorded");
 
-  await sealant.getByRole("link", { name: "Affects 12 penetrations" }).click();
+  await gotoApp(page, "/sites/site-b?material=MAT-SEALANT");
   await expect(page.getByText("Using Intumescent sealant, 310 ml cartridge · 12 of 12")).toBeVisible();
   await page.locator("a[href$='/penetrations/pen-b-01']").click();
-  const usesShort = page.getByRole("article").filter({ has: page.getByRole("heading", { name: "0451" }) });
-  const unmapped = page.getByRole("article").filter({ has: page.getByRole("heading", { name: "0464" }) });
+  const usesShort = page.getByRole("article").filter({ has: page.getByRole("heading", { name: "Solution 0451" }) });
+  const unmapped = page.getByRole("article").filter({ has: page.getByRole("heading", { name: "Solution 0464" }) });
   await expect(page.getByText("Catalogue match, not verified")).toBeVisible();
-  await expect(usesShort.getByText("Uses a material this site is short of.")).toBeVisible();
+  await expect(usesShort.getByRole("link", { name: "Short material: Intumescent sealant, 310 ml cartridge" })).toBeVisible();
   await expect(page.getByText("Materials in stock")).toHaveCount(0);
   const fit = page.getByRole("region", { name: "Nominated solution 0438" }).getByRole("table");
   await expect(fit.getByRole("row", { name: /Integrity/ })).toContainText("60 min required");
   await expect(fit.getByRole("row", { name: /Insulation/ })).toContainText("30 min required");
-  await expect(usesShort.getByText("Fire rating: 60 min integrity, 60 min insulation")).toBeVisible();
-  await expect(usesShort.getByText("Meets the required rating")).toBeVisible();
-  await expect(usesShort.getByText("Supplier ref V21.27-22SFR00053-158-E")).toBeVisible();
-  await expect(usesShort.getByText("Fire putty pad x1")).toBeVisible();
+  const substituteTable = usesShort.getByRole("table");
+  await expect(substituteTable.getByRole("columnheader", { name: "Solution 0451" })).toBeVisible();
+  await expect(substituteTable.getByRole("row", { name: /Supplier ref/ })).toContainText("V21.27-22SFR00053-158-E");
   await expect(usesShort.getByText("on hand")).toHaveCount(0);
+  await page.getByLabel("Solution", { exact: true }).selectOption("0464");
   await expect(unmapped.getByText("We can't tell if its materials are in stock.")).toBeVisible();
+  await page.getByLabel("Solution", { exact: true }).selectOption("0451");
 
   await usesShort.getByRole("button", { name: /Propose this/ }).click();
   const propose = page.getByRole("dialog");
@@ -103,31 +108,30 @@ test("scenario: escalate sealant, propose 0451, then Kingsway still cannot go", 
   await propose.getByRole("button", { name: "Send proposal" }).click();
   await expect(page.locator("[data-announcer]")).toHaveText("Proposal recorded");
 
-  // The actions log is a tab on the site screen; the substitutes page has no button for it.
-  await expect(page.getByRole("link", { name: "Actions log" })).toHaveCount(0);
-  await page.getByRole("link", { name: "Back to Harbour Point, Levels 3 to 5" }).click();
-  await page.getByRole("navigation", { name: "Site sections" }).getByRole("link", { name: /^Actions log/ }).click();
+  // The actions log opens from the header on this page.
+  await page.getByRole("button", { name: /^Actions log/ }).click();
+  const log = page.getByRole("dialog", { name: "Actions log" });
   // Each entry links back to the work it is about, and a proposal names its place.
-  await expect(page.getByRole("heading", { name: "Proposed substitute for L3, Riser 2: 0438 to 0451" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Proposed substitute for L3, Riser 2: 0438 to 0451" })).toHaveAttribute(
+  await expect(log.getByRole("heading", { name: "Proposed substitute for L3, Riser 2: 0438 to 0451" })).toBeVisible();
+  await expect(log.getByRole("link", { name: "Proposed substitute for L3, Riser 2: 0438 to 0451" })).toHaveAttribute(
     "href",
     "/sites/site-b/penetrations/pen-b-01",
   );
-  await expect(page.getByText("Materials for this one are in stock")).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Escalated to purchasing: Intumescent sealant, 310 ml cartridge" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Escalated to purchasing: Intumescent sealant, 310 ml cartridge" })).toHaveAttribute(
+  await expect(log.getByText("Materials for this one are in stock")).toBeVisible();
+  await expect(log.getByRole("heading", { name: "Escalated to purchasing: Intumescent sealant, 310 ml cartridge" })).toBeVisible();
+  await expect(log.getByRole("link", { name: "Escalated to purchasing: Intumescent sealant, 310 ml cartridge" })).toHaveAttribute(
     "href",
-    "/sites/site-b/penetrations?material=MAT-SEALANT",
+    "/sites/site-b?material=MAT-SEALANT",
   );
-  await expect(page.getByText("By demo-leader").first()).toBeVisible();
-  await expect(page.getByText(/\d{1,2} [A-Z][a-z]{2} \d{4}, \d{2}:\d{2} UTC/).first()).toBeVisible();
+  await expect(log.getByText("By demo-leader").first()).toBeVisible();
+  await expect(log.getByText(/\d{1,2} [A-Z][a-z]{2} \d{4}, \d{2}:\d{2} UTC/).first()).toBeVisible();
 
   await gotoApp(page, "/sites");
   await page.getByRole("link", { name: /Kingsway Works/ }).click();
-  await expect(page.getByText("Blocked: hold the crew.")).toBeVisible();
-  await page.getByRole("navigation", { name: "Site sections" }).getByRole("link", { name: "Data problems 4" }).click();
-  await expect(page.getByRole("heading", { name: "Data problems" })).toBeAttached();
-  await expect(page.getByText("Solution code 9999 isn't in the catalogue")).toBeVisible();
-  await expect(page.getByText("No materials recorded for solution 0393")).toBeVisible();
+  await expect(page.getByText("Blocked: hold the crew.")).toHaveCount(0);
+  await page.getByRole("navigation", { name: "Filter penetrations" }).getByRole("link", { name: "Data problems 4" }).click();
+  await expect(page).toHaveURL(/show=data-problems/);
+  await expect(page.locator("a[href$='/penetrations/pen-c-03']")).toContainText("Unknown solution");
+  await expect(page.locator("a[href$='/penetrations/pen-c-04']")).toContainText("No materials");
   await expect(page.getByText("Crew can go")).toHaveCount(0);
 });

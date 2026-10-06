@@ -152,9 +152,21 @@ export function serviceLine(place: Pick<PenetrationRow, "serviceType" | "service
   return `${tidy(place.serviceType)}, ${tidy(place.serviceSize)}`;
 }
 
-// The solution code is the group heading, so a row names only the place and the service.
+/** The site list is one row per penetration, named by its place and service. */
 export function penetrationLine(place: PenetrationRow): string {
   return `${place.floor}, ${place.location} · ${tidy(place.serviceType)} ${tidy(place.serviceSize)}`;
+}
+
+/** Site-list order: floor, then location, then the service, so one place stays together. */
+export function penetrationsByPlace<T extends PenetrationRow & { readonly id: string }>(places: readonly T[]): T[] {
+  return [...places].sort(
+    (a, b) =>
+      a.floor.localeCompare(b.floor, undefined, { numeric: true }) ||
+      a.location.localeCompare(b.location) ||
+      a.serviceType.localeCompare(b.serviceType) ||
+      a.serviceSize.localeCompare(b.serviceSize) ||
+      a.id.localeCompare(b.id),
+  );
 }
 
 export function penetrationGroups<T extends { readonly nominatedCode: string }>(
@@ -182,6 +194,36 @@ export function affectedCount(count: number): string {
   return count === 1 ? "Affects 1 penetration" : `Affects ${count} penetrations`;
 }
 
+function penetrationCount(count: number): string {
+  return count === 1 ? "1 penetration" : `${count} penetrations`;
+}
+
+/** The material page's heading: the places are this site's, even though the stock is shared. */
+export function plannedAt(siteName: string, count: number): string {
+  return `Planned at ${siteName}: ${penetrationCount(count)}`;
+}
+
+/** A wait or escalate on a shortage covers every penetration that needs the material at this site. */
+export function decisionScope(count: number): string {
+  return count === 1 ? "For the 1 penetration at this site" : `For all ${count} penetrations at this site`;
+}
+
+/** The material page's amounts: the need is this site's, the stock on hand is shared with other sites. */
+export function siteNeedLine(siteName: string, required: number, onHand: number | null, shortfall: number | null, unit: string): string {
+  const need = `${siteName} needs ${formatQuantity(required)}`;
+  if (onHand === null || shortfall === null) return `${need}, stock unknown`;
+  const unitWord = formatUnit(shortfall, unit);
+  const short = unitWord.length > 0 ? `short ${formatQuantity(shortfall)} ${unitWord}` : `short ${formatQuantity(shortfall)}`;
+  return `${need}, on hand ${formatQuantity(onHand)} (shared with other sites), ${short}`;
+}
+
+/** Identical place lines collapse into one, "×N" when repeated, in the order first seen. */
+export function groupPlaces(labels: readonly string[]): string[] {
+  const counts = new Map<string, number>();
+  for (const label of labels) counts.set(label, (counts.get(label) ?? 0) + 1);
+  return [...counts].map(([label, count]) => (count === 1 ? label : `${label} ×${count}`));
+}
+
 export function sitePath(siteId: string): string {
   return `/sites/${encodeURIComponent(siteId)}`;
 }
@@ -189,6 +231,15 @@ export function sitePath(siteId: string): string {
 export function penetrationsPath(siteId: string, materialId?: string): string {
   const base = `/sites/${encodeURIComponent(siteId)}/penetrations`;
   return materialId === undefined ? base : `${base}?material=${encodeURIComponent(materialId)}`;
+}
+
+/** The site screen filtered to the penetrations that use one material. */
+export function siteMaterialPath(siteId: string, materialId: string): string {
+  return `${sitePath(siteId)}?material=${encodeURIComponent(materialId)}`;
+}
+
+export function materialPath(siteId: string, materialId: string): string {
+  return `/sites/${encodeURIComponent(siteId)}/materials/${encodeURIComponent(materialId)}`;
 }
 
 export function dataProblemsPath(siteId: string): string {
@@ -237,8 +288,8 @@ export function proposalSentence(fromCode: string, toCode: string, place?: strin
 }
 
 /**
- * Where a logged decision leads: a data problem to its penetration, a material shortage to the Penetrations
- * list filtered to that material. A resolved shortage has nothing to filter, so it has no link.
+ * Where a logged decision leads: a data problem to its penetration, a material shortage to the site list
+ * filtered to that material. A resolved shortage has nothing to filter, so it has no link.
  */
 export function actionLink(siteId: string, shortageId: string, status: "current" | "earlier" | "resolved"): string | null {
   const prefix = `${siteId}:`;
@@ -247,5 +298,5 @@ export function actionLink(siteId: string, shortageId: string, status: "current"
     const penetrationId = rest.slice("blocker.".length);
     return penetrationId.length === 0 ? null : penetrationPath(siteId, penetrationId);
   }
-  return status === "resolved" ? null : penetrationsPath(siteId, rest);
+  return status === "resolved" ? null : siteMaterialPath(siteId, rest);
 }

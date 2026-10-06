@@ -34,7 +34,18 @@ describe("AC 36: side-by-side rows for the penetration and its nominated solutio
       { label: "Integrity", penetration: "60 min required", solution: "60 min", fits: true },
       { label: "Insulation", penetration: "90 min required", solution: "60 min", fits: false },
       { label: "Supplier ref", penetration: "—", solution: "V21.11-PF 19061-81-D", fits: true },
+      { label: "Material", penetration: "—", solution: "none recorded", fits: true },
     ]);
+  });
+
+  it("names the solution's materials and leaves the opening blank", () => {
+    const rows = fitRows(penetration, { ...solution, materialNames: ["Pipe collar for 25 mm pipe", "Intumescent sealant, 310 ml cartridge"] }, []);
+    expect(rows.find((row) => row.label === "Material")).toEqual({
+      label: "Material",
+      penetration: "—",
+      solution: "Pipe collar for 25 mm pipe, Intumescent sealant, 310 ml cartridge",
+      fits: true,
+    });
   });
 
   it("says when nothing is required or nothing is claimed", () => {

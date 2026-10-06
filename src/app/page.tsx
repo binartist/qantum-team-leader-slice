@@ -24,11 +24,11 @@ export default function LandingPage() {
         <section aria-labelledby="try-heading">
           <h2 id="try-heading">Try it in two minutes</h2>
           <ol>
-            <li>Open Harbour Point. Two shortages block the crew.</li>
-            <li>Escalate the sealant. The crew stays blocked until stock arrives.</li>
-            <li>Under the sealant, open L3, Riser 2 and propose 0451.</li>
-            <li>Open Kingsway Works. Data problems block it too.</li>
-            <li>See what you recorded in the Actions log.</li>
+            <li>Open Harbour Point. Shortages block the crew.</li>
+            <li>Open the sealant and escalate it. The crew stays blocked until stock arrives.</li>
+            <li>Open L3, Riser 2 and propose 0451.</li>
+            <li>Open Kingsway Works and filter to data problems.</li>
+            <li>Open the Actions log in the header.</li>
           </ol>
         </section>
       </main>

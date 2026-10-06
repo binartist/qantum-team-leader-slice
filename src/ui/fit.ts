@@ -39,6 +39,8 @@ export function fitRows(
     readonly integrityMinutes: number;
     readonly insulationMinutes: number | null;
     readonly supplierRefCode: string;
+    /** Product names this solution needs. The opening itself has none. */
+    readonly materialNames?: readonly string[];
   },
   mismatches: readonly FitFieldCode[],
 ): FitRow[] {
@@ -67,5 +69,12 @@ export function fitRows(
     },
     // The penetration has no supplier ref; the dash says "not applicable" rather than leaving a blank cell.
     { label: "Supplier ref", penetration: "—", solution: tidy(solution.supplierRefCode), fits: true },
+    // Products belong to the solution. An opening does not list them, so its cell is a dash.
+    {
+      label: "Material",
+      penetration: "—",
+      solution: solution.materialNames && solution.materialNames.length > 0 ? solution.materialNames.join(", ") : "none recorded",
+      fits: true,
+    },
   ];
 }

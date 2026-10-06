@@ -32,6 +32,7 @@ describe("AC 36: penetration detail compares the penetration with its nominated 
     const detail = await describePenetration(testDependencies(), "site-b", "pen-b-01");
     expect(detail.nominated?.internalCode).toBe("0438");
     expect(detail.mismatches).toEqual([]);
+    expect(detail.materialNames).toEqual(["Pipe collar for 25 mm pipe", "Intumescent sealant, 310 ml cartridge"]);
   });
 
   it("an unknown nominated code has no catalogue side to compare", async () => {

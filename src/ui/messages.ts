@@ -20,16 +20,23 @@ export const PENETRATION_FILTER = {
   unknown: "That material is not a shortage on this site. Showing all penetrations.",
 } as const;
 
+export const NOT_A_SHORTAGE = "That material is not a shortage on this site.";
+
+export const NO_FILTER_MATCH = "No penetrations match these filters.";
+
 export function filterLine(materialName: string, shown: number, total: number): string {
   return `Using ${materialName} · ${shown} of ${total}`;
 }
 
-export const TABS = {
-  label: "Site sections",
+export const FILTERS = {
+  label: "Filter penetrations",
   shortages: "Shortages",
   dataProblems: "Data problems",
+  acted: "Acted",
   actions: "Actions log",
 } as const;
+
+export const SHOW_ON_SITE_LIST = "Show these on the site list";
 
 export const SITES_UNAVAILABLE = "Can't check the sites right now. Don't assume any site is clear. Try again.";
 
@@ -76,7 +83,7 @@ export function apiErrorMessage(code: string): string {
   return ERRORS[code] ?? FALLBACK;
 }
 
-/** The site screen's banner. It only says whether the crew can go: the tab labels carry the counts (AC 34). */
+/** Banner for a clear site, or for nothing planned. A blocked site has no banner: the rows say why (AC 34). */
 export function readinessBanner(status: string): StatusView {
   switch (status) {
     case "blocked":

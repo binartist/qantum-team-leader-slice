@@ -18,22 +18,61 @@ test("a penetration page is titled by its place and split into Nominated solutio
   const substitutes = page.getByRole("region", { name: "Substitutes" });
   await expect(substitutes.getByText("No catalogue match for this penetration. Escalate instead.")).toBeVisible();
   await expect(substitutes.getByRole("button", { name: /Escalate/ })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Actions log" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /^Actions log/ })).toBeVisible();
   await assertTargets(page);
   await assertNoOverflow(page);
 
   await gotoApp(page, "/sites/site-b/penetrations/pen-b-01");
   await expect(main.getByRole("heading", { level: 1, name: "L3, Riser 2" })).toBeVisible();
   const nominated0438 = page.getByRole("region", { name: "Nominated solution 0438" });
-  await expect(nominated0438.getByText("Uses short material: Pipe collar for 25 mm pipe")).toBeVisible();
-  await expect(nominated0438.getByText("Uses short material: Intumescent sealant, 310 ml cartridge")).toBeVisible();
+  const collar = nominated0438.getByRole("link", { name: "Short material: Pipe collar for 25 mm pipe" });
+  const sealant = nominated0438.getByRole("link", { name: "Short material: Intumescent sealant, 310 ml cartridge" });
+  await expect(collar).toHaveAttribute("href", "/sites/site-b/materials/MAT-COLLAR-25");
+  await expect(sealant).toHaveAttribute("href", "/sites/site-b/materials/MAT-SEALANT");
+  await collar.click();
+  await expect(page).toHaveURL(/\/sites\/site-b\/materials\/MAT-COLLAR-25$/);
+  await expect(page.getByRole("heading", { level: 1, name: "Pipe collar for 25 mm pipe" })).toBeVisible();
+  await expect(page.getByText("On hand, shared, not reserved")).toBeVisible();
+  await expect(page.getByText("Harbour Point, Levels 3 to 5 needs 4, on hand 2 (shared with other sites), short 2")).toBeVisible();
+  await expect(page.getByRole("heading", { level: 2, name: "Planned at Harbour Point, Levels 3 to 5: 4 penetrations" })).toBeVisible();
+  await expect(page.getByRole("link", { name: /L3, Riser 2 · PEX Pipe Ø25mm/ })).toHaveCount(0);
+  await expect(page.getByText("L3, Riser 2 · PEX Pipe Ø25mm ×4", { exact: true })).toBeVisible();
+  // Up to the site list, filtered to the material: not back across to a penetration.
+  await page.getByRole("link", { name: "Show these on the site list" }).click();
+  await expect(page).toHaveURL(/\/sites\/site-b\?material=MAT-COLLAR-25$/);
+  await gotoApp(page, "/sites/site-b/materials/MAT-COLLAR-25");
+  await assertTargets(page);
+  await assertNoOverflow(page);
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await expect(page.getByRole("heading", { level: 1, name: "Pipe collar for 25 mm pipe" })).toBeVisible();
+  await assertNoOverflow(page);
+
+  await gotoApp(page, "/sites/site-b/materials/MAT-SEALANT");
+  await expect(page.getByText("Harbour Point, Levels 3 to 5 needs 10, on hand 8 (shared with other sites), short 2 cartridges")).toBeVisible();
+  await expect(page.getByRole("heading", { level: 2, name: "Planned at Harbour Point, Levels 3 to 5: 12 penetrations" })).toBeVisible();
+
+  await gotoApp(page, "/sites/site-b/materials/MAT-PUTTY");
+  await expect(page.getByText("That material is not a shortage on this site.")).toBeVisible();
+  await expect(page.getByText(/ needs \d/)).toHaveCount(0);
+
+  await gotoApp(page, "/sites/site-c/materials/MAT-MASTIC");
+  await expect(page.getByRole("heading", { level: 1, name: "Fire mastic tube" })).toBeVisible();
+  await expect(page.getByText("Kingsway Works, Phase 2 needs 1, stock unknown")).toBeVisible();
+  await expect(page.getByRole("heading", { level: 2, name: "Planned at Kingsway Works, Phase 2: 1 penetration" })).toBeVisible();
+
+  await gotoApp(page, "/sites/site-b/materials/not%20an%20id");
+  await expect(page.getByRole("heading", { level: 1, name: "Page not found" })).toBeVisible();
+
+  await gotoApp(page, "/sites/site-b/penetrations/pen-b-01");
   // A nominated solution that fits carries no mark anywhere in its comparison.
   const fitting = nominated0438.getByRole("table");
   await expect(fitting.getByText("doesn't fit")).toHaveCount(0);
   await expect(fitting.locator("svg")).toHaveCount(0);
   const subs = page.getByRole("region", { name: "Substitutes" });
   await expect(subs.getByText("Catalogue match, not verified")).toBeVisible();
-  await expect(subs.getByRole("heading", { name: "0451" })).toBeVisible();
+  await expect(subs.getByRole("heading", { name: "Solution 0451" })).toBeVisible();
+  await expect(subs.getByRole("columnheader", { name: "Solution 0451" })).toBeVisible();
+  await expect(subs.getByRole("columnheader", { name: "Penetration" }).first()).toBeVisible();
 });
 
 test("AC 36: the nominated solution sits side by side with the penetration, and a field that does not fit is marked", async ({ page }) => {
@@ -63,11 +102,15 @@ test("AC 36: the nominated solution sits side by side with the penetration, and 
 
 test("AC 35: a nominated solution that does not fit is a data problem on the site", async ({ page }) => {
   await gotoApp(page, "/sites/site-c/data-problems");
-  const card = page.getByRole("article").filter({ has: page.getByRole("heading", { name: "L1, Riser 1" }) });
-  await expect(card.getByText("Solution 0435 doesn't fit this penetration: insulation")).toBeVisible();
-  await expect(card.getByRole("button", { name: /Escalate/ })).toBeVisible();
-  await expect(card.getByRole("button", { name: /Wait/ })).toHaveCount(0);
-  await expect(page.getByText("Blocked: hold the crew.")).toBeVisible();
+  await expect(page).toHaveURL(/show=data-problems/);
+  // The row chip names the kind of problem; the penetration page carries the full reason.
+  const riser = page.locator("a[href$='/penetrations/pen-c-02']");
+  await expect(riser).toContainText("Doesn't fit");
+  await expect(page.getByText("Blocked: hold the crew.")).toHaveCount(0);
+  await riser.click();
+  await expect(page.getByText("Solution 0435 doesn't fit this penetration: insulation")).toBeVisible();
+  await expect(page.getByRole("button", { name: /Escalate/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Wait/ })).toHaveCount(0);
 });
 
 test("a nominated code missing from the catalogue has no comparison, only the penetration's own fields", async ({ page }) => {

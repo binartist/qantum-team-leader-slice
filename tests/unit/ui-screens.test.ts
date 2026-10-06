@@ -75,10 +75,8 @@ const SCREEN_SOURCES = [
   "src/app/global-error.tsx",
   "src/app/sites/[id]/site-frame.tsx",
   "src/app/sites/[id]/penetrations/[pid]/page.tsx",
-  "src/app/sites/[id]/penetrations/page.tsx",
+  "src/app/sites/[id]/materials/[materialId]/page.tsx",
 ];
-
-const SITE_TABS = ["src/app/sites/[id]/page.tsx", "src/app/sites/[id]/data-problems/page.tsx", "src/app/sites/[id]/actions/page.tsx"];
 
 function linkButtonBlocks(source: string): string[] {
   return source.match(/<LinkButton\b[\s\S]*?<\/LinkButton>/g) ?? [];
@@ -151,10 +149,12 @@ describe("input contrast", () => {
     expect(landing).not.toContain("<AppBar");
   });
 
-  it("every site tab renders inside SiteFrame, which puts the readiness banner above the tabs", () => {
-    for (const file of SITE_TABS) expect(readFileSync(file, "utf8"), file).toContain("<SiteFrame");
+  it("the site screen lists penetrations under filter chips, with no blocked banner", () => {
+    const page = readFileSync("src/app/sites/[id]/page.tsx", "utf8");
+    expect(page).toContain("<SiteFrame");
+    expect(page).toContain("<PenetrationFilters");
     const frame = readFileSync("src/app/sites/[id]/site-frame.tsx", "utf8");
-    expect(frame.indexOf("<Banner")).toBeGreaterThan(-1);
-    expect(frame.indexOf("<Banner")).toBeLessThan(frame.indexOf("<SiteTabs"));
+    expect(frame).toContain('crewStatus !== "blocked"');
+    expect(frame.indexOf("<Banner")).toBeLessThan(frame.indexOf("{children}"));
   });
 });

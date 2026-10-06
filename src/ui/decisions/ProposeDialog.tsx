@@ -54,7 +54,12 @@ export function ProposeDialog({
 
   return (
     <>
-      <Button type="button" aria-label={`${BUTTONS.propose} ${toCode}`} onClick={open}>
+      <Button
+        type="button"
+        className={`${styles.primary} ${styles.fullWidth}`}
+        aria-label={`${BUTTONS.propose} ${toCode}`}
+        onClick={open}
+      >
         {BUTTONS.propose}
       </Button>
       <Dialog

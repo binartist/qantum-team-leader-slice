@@ -79,11 +79,11 @@ Numbered for use as test names. Sample data is defined in section 7.
 29. Readiness and actions responses carry `Cache-Control: no-store`.
 
 **Experience**
-30. Every shortage row shows material, required, on hand, short by, affected penetrations and state without relying on colour alone.
+30. Every shortage shows its material, required, on hand, short by, the penetrations it is planned on, and its state, without relying on colour alone.
 31. All controls are keyboard operable, and interactive targets are at least 44px.
 32. On a 375px wide screen, nothing needs horizontal scrolling.
 33. A candidate that uses a material the site is already short of has availability `short`, even when one install fits in the stock on hand. A material whose site stock is unknown makes the candidate `unknown`. Shortages of other materials leave a candidate that fits on hand `in_stock`.
-34. On the site screen, a blocked site's banner reads "Blocked: hold the crew." on every tab, above the tabs. The tab labels carry the number of shortages and data problems, so the banner never needs to and no tab can hide them. The sites list chip still names the counts.
+34. On the site screen, a blocked site has no summary banner. Filter chips for shortages, data problems and recorded actions count the penetrations and narrow the list, and each row still shows its own line. A clear site's banner still reads "Crew can go." The sites list chip still names the shortage and data-problem counts.
 35. A penetration whose nominated solution differs on orientation, normalised substrate, normalised service type or normalised size, or falls short of a stated integrity or insulation requirement, gets a `solution_mismatch` blocker listing the failing fields. The crew is blocked, wait is rejected with 422, escalate is accepted, and the penetration adds no material need. Text that differs only by spacing or capitals is not a mismatch. A substrate cut off after the family name, on either side, never fits, even against identical cut-off text. Blank text, or a requirement or rating that is not a usable number, never fits.
 36. The penetration page shows each field side by side for the penetration and its nominated solution, and marks every field that does not fit with an icon and text, never colour alone.
 
@@ -131,12 +131,12 @@ Real authentication, a real inventory or nomination service, approval of substit
 ## 9. Demonstration scenario
 
 1. Open the app. The landing page says it is a demo with invented data. Open sites: site B is blocked.
-2. Open site B. The banner says blocked, the tabs show N shortages, and the stock figures are labelled shared and not reserved.
-3. Escalate the sealant shortage to purchasing with a note. State shows escalated. Crew is still blocked, and the screen says why.
-4. From the sealant shortage, open the penetrations that use it and pick one nominating `0438`. See candidates `0451` and `0464` labelled not verified. `0451` uses sealant, which this site is short of, and says so. Propose `0451` with a reason. It is listed as proposed and nothing else changes.
-5. Open the penetration nominating `0344`. See "no catalogue match, escalate instead".
-6. Open site C. See four data problems with reasons, including two nominated solutions that do not fit (L1, Stair core: 0943's substrate is cut off in the catalogue; L1, Riser 1: needs 90 min insulation, 0435 claims 60), and one stock-unknown shortage, never a clear status.
-7. Open the actions log. See your recorded decisions with date and author.
+2. Open site B. The page lists the penetrations. There is no blocked banner. Filter chips count the penetrations, and the stock figures are labelled shared and not reserved.
+3. Open the sealant and escalate it to purchasing with a note. State shows escalated. Crew is still blocked, and the screen says why.
+4. From the penetrations that use the sealant, pick one nominating `0438`. See candidates `0451` and `0464` labelled not verified. `0451` uses sealant, which this site is short of, and says so. Propose `0451` with a reason. It is listed as proposed and nothing else changes.
+5. Open the penetration nominating `0344`. See "no catalogue match". The shortage itself is decided on the sealant's page.
+6. Open site C. Filter to data problems and see four, with reasons, including two nominated solutions that do not fit (L1, Stair core: 0943's substrate is cut off in the catalogue; L1, Riser 1: needs 90 min insulation, 0435 claims 60), and one stock-unknown shortage, never a clear status.
+7. Open the actions log from the header. See your recorded decisions with date and author.
 
 ## 10. Production gaps (carried to README)
 
