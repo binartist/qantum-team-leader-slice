@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { gotoApp } from "./support";
 
-test("malformed stock shows can't check and never crew can go", async ({ page }) => {
+test("AC 9: malformed stock shows can't check and never crew can go", async ({ page }) => {
   // Runs on the malformed-stock server (STUB_STOCK_MODE=malformed), not the main server.
   await gotoApp(page, "/sites");
   await expect(page.getByText("Can't check")).toHaveCount(4);

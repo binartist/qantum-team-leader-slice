@@ -40,7 +40,9 @@ Boundary rule enforced by lint: the domain core may not import Next.js, React, t
 | 14, 15 | Unit | Escalate then wait keeps escalated. Grown shortfall marks action earlier |
 | 16 | API, Database | Repeat returns original with one row. Missing key is 400. Per-user unique constraint |
 | 17 | API | Over-long note is 422 |
-| 18, 19, 20, 21, 22 | Unit, E2E | Demo codes give the stated candidates. Empty and incomplete states. Null insulation never offered |
+| 18 | Unit, E2E | `0438` gives `0451` and `0464`, in the domain and on the penetration screen |
+| 19, 22 | Unit | `0789` and `0434` give the stated candidates. Null insulation never offered |
+| 20, 21 | Unit, API | Empty and incomplete-substrate states, and an unknown code |
 | 23 | API | 422 for non-candidate target, 409 for stale source |
 | 24 | API, Database | Proposed status only. Nomination and shortage unchanged |
 | 25 | Unit | Exactly 20 of 148 have a candidate |
@@ -63,6 +65,7 @@ Boundary rule enforced by lint: the domain core may not import Next.js, React, t
 | 44 | Unit, E2E | `rowMarks`: problem kinds with a count when repeated, then escalations, waits and proposals always counted, from `logCounts(penetrationLog(...))` so they match the tab; no mark at 0; unreadable log shows problems only. `penetrationMaterialIds` on site data. E2E: after an escalation the row link carries the hidden "Escalated" label with count 1; after a proposal, a "Proposed substitute" mark; no button inside |
 | 45 | Unit, E2E | `penetrationLog`: shortage decisions for the nominated solution's materials (resolved kept), its own data-problem decisions and its proposals, newest first, others excluded; tab hrefs keep `fromLog`. E2E: both tabs with Solution current, `?tab=log` empty before writes, junk tab falls back, entry opens the material page with `?from=` and back pops to the tab, axe, targets and no overflow at 375px; stock down shows the site-unavailable screen, never 0 or nothing recorded |
 | 46 | Unit, E2E | `materialLog`: this material's shortage decisions at every site, newest first, other materials and blockers excluded, unreadable sites named; `materialTabHref` keeps `from` and `fromLog`; site-count wording. E2E: Stock current, `?tab=log` empty with 0 before writes, junk tab falls back, `from` kept with back to the penetration on both tabs, axe, targets and no overflow at 375px; after an escalation the log names the site and the Stock section has no state label (AC 39); stock down never shows 0 or nothing recorded |
+| 47 | Unit, E2E | `navSectionForPath` (`/about-this-demo` is About, `/` and look-alike paths are none, sites and materials subpaths mark their section); `parseSidebar`, `applySidebar` (blocked storage still applies), the combined pre-paint script; `next.config` redirects `/` to `ABOUT_PATH`, not permanently; the root layout renders the side menu. E2E at 1280px: one Main navigation with the section marked on top-level and inner pages, no banner on `/sites`, back control kept on inner pages, collapse to a named rail survives a reload and Expand clears it, the `/actions` site heading sticks at the top; axe, 44px targets and no overflow at 1280 and 1024px, expanded and collapsed. `/` lands on `/about-this-demo` (home-status) |
 
 A script lists every AC number and fails CI if one has no test referencing it.
 
@@ -146,7 +149,7 @@ On every push and pull request, in order:
 6. Secret scan and dependency audit.
 7. Playwright end-to-end and axe on a dev server (four projects: reads, writes, and two stock-failure servers started with `STUB_STOCK_MODE=down` and `malformed`, each with its own build directory).
 8. AC coverage script.
-9. On `main` only, after all of the above: deploy to Vercel (`vercel pull`, `build --prod`, `deploy --prebuilt --prod`), then `scripts/smoke.mjs` against the production URL (`/api/sites` is 200, `no-store`, four sites; `/` renders "Sites").
+9. On `main` only, after all of the above: deploy to Vercel (`vercel pull`, `build --prod`, `deploy --prebuilt --prod`), then `scripts/smoke.mjs` against the production URL (`/api/sites` is 200, `no-store`, four sites; `/` redirects to `/about-this-demo` and renders "Ready to send the crew?", `/sites` renders "Sites").
 
 Merge to the default branch is blocked on any failure. Deployment to Vercel runs only from a green default branch. After deploy, a smoke run of the end-to-end scenario against the public URL is the evidence of a working deployment.
 

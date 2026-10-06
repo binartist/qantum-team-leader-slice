@@ -21,6 +21,12 @@ export default function LandingPage() {
             <li>Sample sites and stock. The fire-stopping catalogue is real.</li>
             <li>No login. Everyone with the link shares the same decisions.</li>
             <li>Nothing is sent or ordered. A substitute is a suggestion for a manager to check.</li>
+            <li>
+              <p>
+                Source code, specs and how it was built with AI agents: the{" "}
+                <a href="https://github.com/binartist/qantum-team-leader-slice">GitHub repository</a>.
+              </p>
+            </li>
           </ul>
         </section>
         <section aria-labelledby="way-heading">
@@ -28,7 +34,7 @@ export default function LandingPage() {
           <ul>
             <li>
               <p>
-                The menu, top left, opens <Link href="/sites">Sites</Link>, <Link href={MATERIALS_PATH}>Materials</Link>, the{" "}
+                The menu (beside the page on a wide screen, top left on a phone) opens <Link href="/sites">Sites</Link>, <Link href={MATERIALS_PATH}>Materials</Link>, the{" "}
                 <Link href={ACTIONS_PATH}>Actions log</Link> and this page.
               </p>
             </li>

@@ -9,13 +9,14 @@ How coding agents were used on this slice, how they were directed and checked, a
 | Orchestrator | Claude Code (Claude Sonnet 5.5, later Opus 5.5) | Requirements, specs, briefs, triage, every gate run, docs, git, deployment setup |
 | Worker | Grok Build CLI (`grok-4.7-build`; the fast variant for three runs, on request) | Implementation, and independent review sessions |
 | Design reviewer | A Claude Opus subagent | One review of the technical design before any code |
+| Helpers (from 2026-10-06) | Claude Code subagents: `validator` and `reviewer` on Sonnet, `Explore`, `bulk-worker` on Haiku | Gate runs, one review lens each, code search and mechanical edits, so the orchestrator's context went on decisions; the submission readiness check ran this way |
 | Guidance | `AGENTS.md` (tool-neutral repo rules), 11 Skill Forge skills in `.agents/skills/` (coding discipline, security, testing, frontend, delegation, Vercel, Supabase Postgres, data migration) | Loaded by both agents |
 
 I made the product and scope decisions: which slice, shared versus reserved stock, how substitutes are worded, UI defaults, which database and Vercel project, and every approval to commit, push or merge.
 
 ## How the work was planned and directed
 
-1. **Docs before code.** The business path, glossary, iteration plan, specification (16 requirements, 32 numbered acceptance criteria, 34 after the post-delivery walkthrough, 36 after the solution-fit change, 42 after the materials pages, 44 after the actions log moved to the menu, 45 after the penetration tabs, 46 after the material tabs), technical design and test strategy were written and reviewed first. Code was then measured against them; when they disagreed, the spec was fixed first.
+1. **Docs before code.** The business path, glossary, iteration plan, specification (16 requirements, 17 once the side menu and materials pages were added; 32 numbered acceptance criteria, 34 after the post-delivery walkthrough, 36 after the solution-fit change, 42 after the materials pages, 44 after the actions log moved to the menu, 45 after the penetration tabs, 46 after the material tabs, 47 after the responsive side menu), technical design and test strategy were written and reviewed first. Code was then measured against them; when they disagreed, the spec was fixed first.
 2. **Risk tiers.** Each change was classified by blast radius. Contract and storage changes (the HTTP API, the move to Postgres) were Tier 3 and needed my written approval of a spec with a contract diff and rollback plan.
 3. **Orchestrator and worker.** Claude wrote a self-contained brief for each piece of work, as a file in the repo: role, facts, decisions not to relitigate, files the worker may touch, test-first method, verification commands and honesty rules ("do not claim a command passed unless you ran it"). Grok carried it out. Briefs were cheap to write and saved rounds of rework; the expensive model spent its tokens on decisions and checking, not on typing code.
 4. **Small rounds.** Domain core, API, UI, navigation, usability, then storage and delivery. Each round ended accepted and committed before the next began.
@@ -41,6 +42,7 @@ Each worker run went through the same ladder, cheapest checks first:
 - **A layout departure reversed.** A worker made the page body an inner scroller, claiming a sticky footer could not stay in view. Measured in a browser, it could; the inner scroller would have broken scroll position on "back", so it was reverted.
 - **Usability that tests could not see.** After every gate and review passed, walking the screens against the brief's question ("can a team leader understand the information and act?") found identical penetration rows, substitution buried two levels down, unexplained "Rating 60/30", and two-day-old stock with no warning. Fixed in a dedicated round.
 - **A spec gap found after delivery.** Walking the live demo again showed substitute `0451` as "Materials in stock" although it uses sealant, the very material that site is short of. The spec only said "shows whether its materials are in stock", and the code checked one install against raw stock. The spec was clarified first (AC 33), then the code.
+- **Our own process slips.** The orchestrator edited docs inside a running worker's worktree, and the worker reverted them as unexplained changes. It also pushed to a pull request that had merged minutes before. Both are now rules in `tasks/lessons.md`: never write into a worker's tree, and check a PR's state before pushing to it.
 - **Suggestions declined, with reasons.** A module-relative CSV path (breaks once bundled), adding `server-only` (a new dependency, logged for production), a shared dialog form shell and refresh on tab focus (real, but outside the slice).
 
 ## Where I overruled or redirected the AI
@@ -54,10 +56,11 @@ The agents proposed; I decided. Each case is logged with the reason in `docs/sub
 - **Shared stock on a material page.** I questioned why Wait and Escalate sit on the material page when work is done per penetration, and why its list named no site when stock is shared. The AI's point held for the buttons (a shortage is per site and material, so one escalation covers every penetration), so they stayed with their scope stated; the site is now named in the need line and the heading. When the AI proposed linking each place back to its penetration, I rejected it as circular: the places stay text, grouped, with one link up to the site list.
 
 - **Actions log.** I took the actions log out of the header, because it did not say which work it belonged to, moved it into the side menu and asked for the latest decision in a popover on each acted row. After the first build I asked for the entity icons, a sticky site title, and back controls that return to the log rather than to each page's parent. Then I cut the row chips to icons, dropped the popover, and moved a penetration's decisions onto its own page as an Actions log tab. Since decisions are made on materials and solutions, I asked for the same tabs on the material page, dropped the state labels for one design across pages, and asked rows to count decisions, proposals included, with Acted covering proposals too.
+- **Responsive menu.** The drawer was off-canvas at every width. I asked for the drawer on phones and a side menu shown by default on wider windows, collapsible. Then I moved the About page off the root to `/about-this-demo`, with `/` redirecting to it, and added a link from it to this repository.
 
 ## Cost
 
-Worker runs totalled about $38 across twelve implementation runs and nine review sessions. Per-run figures are in `docs/agent-work/README.md`.
+Worker runs totalled about $39 across thirteen implementation runs and nine review sessions. Per-run figures are in `docs/agent-work/README.md`.
 
 ## What I would do differently
 

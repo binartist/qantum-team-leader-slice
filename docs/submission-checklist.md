@@ -19,14 +19,14 @@ Legend: `[x]` done, `[~]` partial, `[ ]` not started.
 | 7 | README: demo scenario | [x] | README "Try it", following spec section 9. |
 | 8 | README: sample data and known limitations | [x] | README "Sample data" and "Known limitations"; `data/sample/README.md` labels the data invented. |
 | 9 | Iteration plan (md) | [x] | `docs/iteration-plan.md`: slice rationale, 6 iterations, uncertainties. Awaiting your review. |
-| 10 | First-slice specification (md) | [x] | `docs/slice-specification.md`: 17 FRs, 46 acceptance criteria, NFRs, assumptions, exclusions. Awaiting your review. |
+| 10 | First-slice specification (md) | [x] | `docs/slice-specification.md`: 17 FRs, 47 acceptance criteria, NFRs, assumptions, exclusions. Awaiting your review. |
 | 11 | Technical design (md) | [x] | `docs/technical-design.md`. Section 11 additions awaiting confirmation. |
-| 12 | Test strategy (md) | [x] | `docs/test-strategy.md`: layers, all 46 ACs mapped, risks, CI gates. Awaiting your review. |
+| 12 | Test strategy (md) | [x] | `docs/test-strategy.md`: layers, all 47 ACs mapped, risks, CI gates. Awaiting your review. |
 | 13 | Agent instructions and context files | [x] | `AGENTS.md` (tool-neutral; `CLAUDE.md` imports it), 11 Skill Forge skills in `.agents/skills` (`skill-forge.json`, lock file), and every brief, review brief, review report and worker note in `docs/agent-work/`. |
 | 14 | Working application code | [x] | Domain core, stubs, Postgres and memory stores, use cases, seven-route API, seven screens (landing, sites, materials, material, actions log, site, penetration). Live and proven against the real database. |
-| 15 | Automated tests | [x] | 426 unit and API tests, 5 database contract tests on Postgres 17, 34 Playwright tests with axe at 375px; all 46 ACs referenced; all run in CI. |
+| 15 | Automated tests | [x] | 434 unit and API tests, 5 database contract tests on Postgres 17, 40 Playwright tests with axe at 375px (and at 1024 and 1280px for the side menu); all 47 ACs referenced; all run in CI. |
 | 16 | CI/CD config | [x] | `.github/workflows/ci.yml`: checks (typecheck, lint, coverage, build, bundle credential scan, audit, gitleaks), db (contract suite on Postgres 17), e2e (Playwright, axe, AC check), and on `main` a Vercel prebuilt deploy plus smoke test. |
-| 17 | Pipeline inspectable, with successful deploy evidence | [x] | Green run with deploy and smoke: https://github.com/binartist/qantum-team-leader-slice/actions/runs/37309054947. Live check 2026-10-06: `x-vercel-id` syd1, smoke ok, an escalation recorded through the live API survived a production redeploy. |
+| 17 | Pipeline inspectable, with successful deploy evidence | [x] | Latest green run on `main` with deploy and smoke (PR #3): https://github.com/binartist/qantum-team-leader-slice/actions/runs/37528327015. First: https://github.com/binartist/qantum-team-leader-slice/actions/runs/37309054947. Live check 2026-10-06: `x-vercel-id` syd1, smoke ok, an escalation recorded through the live API survived a production redeploy. |
 | 18 | Agentic coding account | [x] | `docs/agentic-approach.md`: tools, planning, verification ladder, corrections, cost. |
 
 ## 2. Assessment criteria
@@ -35,11 +35,11 @@ Legend: `[x]` done, `[~]` partial, `[ ]` not started.
 | --- | --- | --- |
 | Business understanding | [x] | Path, gaps and assumptions in `business-path-data.md`, `glossary.md` and the iteration plan. |
 | Slicing | [x] | Slice chosen against alternatives, boundary stated, six iterations in `iteration-plan.md`. |
-| Specification and agent guidance | [ ] | Spec with testable acceptance criteria. Agent instruction files. |
+| Specification and agent guidance | [x] | Spec with testable acceptance criteria. Agent instruction files. Evidence: 17 FRs and 47 ACs, every AC referenced by a test (`check:ac`); `AGENTS.md`, 11 skills, briefs and review reports in `docs/agent-work/`. |
 | Technical judgement | [x] | Design with trade-offs and production-vs-exercise table. |
-| User experience | [ ] | Working screens covering missing data and blocked states. |
-| Engineering quality | [ ] | Deployed slice, tests, pipeline. |
-| Ownership | [ ] | Be able to trace a user action end to end and explain limits. |
+| User experience | [x] | Working screens covering missing data and blocked states. Evidence: live demo walked 2026-10-07 (blocked, stock unknown, four data-problem kinds, stale stock, stock-down and malformed servers in e2e); axe in light and dark at 375px; two usability rounds (`docs/agent-work/18`, section 3 log). |
+| Engineering quality | [x] | Deployed slice, tests, pipeline. Evidence: items 2 and 15 to 17; section 5 readiness check. |
+| Ownership | [x] | Be able to trace a user action end to end and explain limits. Confirmed by the author, 2026-10-07. Trace for the walkthrough (for example Escalate on the sealant: material page, `POST .../escalate`, `src/server/http.ts`, use case, domain lifecycle, Postgres repository, back to the row marks) and the README limits. |
 
 ## 3. Agentic coding account (collect as we go)
 
@@ -112,11 +112,14 @@ Human decisions that differed from the AI's suggestion or default (log each as i
 | 2026-10-07 | Row decision marks without numbers, and Acted counting waits and escalations only | Show numbers for decisions, proposals included; Acted includes proposals. Outcome: escalations, waits and proposals always counted, matching the penetration's log tab; a swap icon for proposals | A row should say how much has been decided, and the filter should agree with it |
 | 2026-10-07 | Proposal entries in the actions logs led with the clipboard "decision" kind icon, while rows counted proposals with a swap mark | Use the same icon for a proposal in the log as on the row. Outcome: one `proposalMark()` (neutral swap) for both, like the wait and escalation marks; the clipboard stays only on the menu's Actions log item | One decision, one mark, wherever it appears |
 | 2026-10-07 | Menu foot with the Theme choice as a labelled full-width control above "About this demo", whose page icon looked like the Actions log's clipboard | Put About above Theme and slim the Theme section; then give About a distinct icon and move it into the entry area, apart from the main entries. Outcome: About under a divider below Sites, Materials and Actions log, with an "i" in a rounded square (the kind-icon rule rules out a circle); the foot holds only Theme, one row with compact 32px pills and 44px tap areas | About is not part of the work, and its icon must not read as another log |
+| 2026-10-07 | The menu as an off-canvas drawer at every width | Make it responsive: the drawer on phones, a side menu shown by default on wider windows, collapsible. Outcome (AC 47): from 1024px a 15rem side menu beside every page, collapsing to a remembered icon rail; built by Grok | A wide screen has room to keep the way around in view |
+| 2026-10-07 | About this demo served at `/` | Use `/about-this-demo` for the page, and redirect `/` to it. Outcome: a temporary (307) redirect in `next.config.ts`, so the root can change later | The page has its own name, and the root stays free |
+| 2026-10-07 | No route from the live demo to the source | Point the About page at the GitHub repository; also considered linking the Skill Forge repo. AI agreed with the repo link and suggested Skill Forge belongs in the README and agentic account, and only if public. Outcome: one plain link in the About list; Skill Forge deferred | A reviewer who opens the live URL first should reach the specs and agent work |
 
-- [ ] Tools used (Claude Code, which models, which skills or subagents).
-- [ ] How work was planned and directed (spec first, tiering, approval points).
-- [ ] How outputs were verified (gates, tests, review lenses).
-- [ ] Examples where an agent suggestion was corrected or rejected. Log each one below.
+- [x] Tools used (Claude Code, which models, which skills or subagents). `docs/agentic-approach.md` "Tools".
+- [x] How work was planned and directed (spec first, tiering, approval points). `docs/agentic-approach.md` "How the work was planned and directed".
+- [x] How outputs were verified (gates, tests, review lenses). `docs/agentic-approach.md` "How outputs were verified".
+- [x] Examples where an agent suggestion was corrected or rejected. Log each one below. Summarised in `docs/agentic-approach.md` "Where agent work was corrected or rejected".
 
 Corrections log:
 
@@ -135,6 +138,9 @@ Corrections log:
 | 2026-10-05 | Navigation worker was dispatched on the fast model by default | The user wanted non-fast | Run stopped after 84 events with no files changed and re-dispatched on the default model |
 | 2026-10-06 | Substitutes screen showed `0451` as "Materials in stock" (built from the spec's FR11 wording) | Found by walking the demo after delivery: `0451` uses sealant, which the same site is already short of; the check compared one install with raw on hand. The blocked banner also told the leader to wait for stock when data problems blocked the crew too | Spec gap, not a coding slip. FR11 clarified, AC 33 and 34 added; a site shortage now makes every candidate using that material `short` |
 | 2026-10-04 | Reviewer suggested a shared dialog form shell and refreshing a stale tab on focus | Real but outside this slice | Recorded as limits, not built |
+| 2026-10-07 | Orchestrator edited docs in a worker's worktree while the worker ran | The worker saw `docs/` changed outside its brief, assumed the edits were its own and restored them to HEAD | Owning docs are now written in the main checkout after the transfer, never in a running worker's tree (`tasks/lessons.md`) |
+| 2026-10-07 | Orchestrator pushed two commits "to PR #2" and edited its description | PR #2 had merged minutes earlier; the unmoved PR head was read as GitHub lag | The work went out in PR #3; PR state is now checked (`gh pr view --json state`) before pushing to or editing a PR |
+| 2026-10-07 | Docs reviewed as current at each change | The readiness check's two read-only reviews found 2 Medium and about 14 Low drift items in side sections (candidate fields, a `CataloguePort` that never existed, retired state labels, untagged e2e tests) | Fixed in one docs change before submission; see change log |
 
 ## 4. Decisions awaiting confirmation
 
@@ -150,16 +156,20 @@ From `technical-design.md` section 11 and 12.
 - [x] Substitution tightened: exact normalisation rule, match on penetration, validate on write, empty state, demo codes from matchable set (decided 2026-10-03).
 - [x] Action lifecycle and write surface fixes applied to design (decided 2026-10-03).
 - [ ] Re-confirm design section 11 items 6 to 12 (new divergences added after review).
+- [ ] Materials across sites: pages only, no API route (design section 11 item 13).
+- [ ] Actions log across sites: page only, no API route (design section 11 item 14).
 
 ## 5. Pre-submission checks
 
-- [ ] CI green on the default branch (lint, typecheck, unit, API, DB, end-to-end).
-- [ ] Public URL loads and the demo scenario works from a clean browser.
-- [ ] No secrets in the repo or history. `.env.example` lists names only.
-- [ ] Sample data clearly labelled as invented. Every sample penetration references a real `internal_code`.
-- [ ] Docs match the built behaviour (design, spec, README, endpoints).
-- [ ] Known limitations list is current (auth, offline, real stock system, approval workflow).
-- [ ] Repo link and URL tested from outside the author's account.
+Readiness check 2026-10-07 on `b169450` (`origin/main`; `dev` had the same tree).
+
+- [x] CI green on the default branch (lint, typecheck, unit, API, DB, end-to-end). Run https://github.com/binartist/qantum-team-leader-slice/actions/runs/37528327015: checks, db, e2e and deploy all succeeded, including Secret scan (gitleaks), Bundle credential scan, production audit and Smoke. Re-run locally: typecheck, lint, 426 tests (100% lines, 99.84% branches), `check:ac` 46 of 46, build, 34 Playwright tests, `npm audit --omit=dev` 0, `skf sync --check` in sync.
+- [x] Public URL loads and the demo scenario works from a clean browser. README "Try it" steps 1 to 8 walked read-only in an isolated browser at 375px: no console errors, no sideways scroll, `x-vercel-id` syd1. Writes were proven live on 2026-10-06 (row 17); not repeated, to keep the shared demo state.
+- [x] No secrets in the repo or history. `.env.example` lists names only. gitleaks green on `main`; the only credential-shaped strings in history are `127.0.0.1` URLs for throwaway test databases.
+- [x] Sample data clearly labelled as invented. Every sample penetration references a real `internal_code`. All four files carry an "INVENTED SAMPLE DATA" `label`; 15 of 16 codes are in the 148-row catalogue, and `9999` is the deliberate missing code. CSV hash unchanged.
+- [x] Docs match the built behaviour (design, spec, README, endpoints). Two read-only reviews (README and API; spec, design, UI and test strategy) found no Critical or High drift; the Medium and Low items were fixed in the 2026-10-07 change below.
+- [x] Known limitations list is current (auth, offline, real stock system, approval workflow). Nothing in the code contradicts it; idempotent repeats with a different note added.
+- [x] Repo link and URL tested from outside the author's account. Fetched with no credentials: the GitHub API reports `visibility: public`, and `/`, `/sites` and `/materials` return 200. A check by a second person is still the strongest proof.
 
 ## 6. Change log
 
@@ -190,3 +200,5 @@ From `technical-design.md` section 11 and 12.
 | 2026-10-06 | Post-delivery walkthrough: substitute availability now accounts for site shortages (AC 33) and the blocked banner names data problems in its next step (AC 34). Spec, design, api.md, ui-design.md, test strategy and README updated. |
 | 2026-10-06 | Site reference removed from the sites list (names already tell sites apart) and kept on the site screen as "Job ref", where an escalation would quote it. API unchanged. |
 | 2026-10-06 | Landing page at `/` explains the demo; sites list moved to `/sites`; bottom demo bar replaced by a Demo tag in every header (user decision). Smoke test now checks both pages. |
+| 2026-10-07 | Responsive side menu (AC 47) built by Grok (44 turns, $1.26): drawer below 1024px, collapsible side menu from 1024px, remembered before paint. About page moved to `/about-this-demo` with `/` redirecting (307); smoke checks the redirect. Orchestrator e2e found two worker defects (the worker could not run a browser): both Theme groups shared one radio name, so a choice in one unchecked the other (fixed with a per-instance `useId` name); the sticky-heading spec could not scroll the empty log (now pads `main` and scrolls 8px past the heading). Spec, ui-design, test strategy and counts updated. |
+| 2026-10-07 | Submission readiness check (section 5 ticked with evidence). Doc drift fixed: api.md candidate and shortage fields, page-only `listAllActions`; technical design has no `CataloguePort` (AGENTS.md aligned), `pg` not Supabase, full migration constraints, no blank-text guard in matching; AC 34 states the Acted rule; ui-design drops the retired state labels and cites AC 30 to 47 (after merging the AC 47 side-menu work); test strategy splits AC 18 to 22 by layer and updates the smoke line; README coverage gate, variables, always-stale demo stock, idempotent-repeat limit. E2E and DB test names now carry AC 9, 10, 18 and 24. Section 4 gains design items 13 and 14. Full checklist walk: section 2 Specification, User experience and Engineering quality ticked with evidence, and Ownership on the author's confirmation; section 3 account items ticked against `agentic-approach.md`; row 17 points at the latest green run; three 2026-10-07 agent slips logged. `agentic-approach.md` gains the FR count, the helper subagents and the process slips. |

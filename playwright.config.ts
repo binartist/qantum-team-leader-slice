@@ -15,6 +15,7 @@ const readSpecs = [
   "**/site-tabs.spec.ts",
   "**/penetration-page.spec.ts",
   "**/navigation-drawer.spec.ts",
+  "**/side-menu.spec.ts",
   "**/actions-log.spec.ts",
 ];
 

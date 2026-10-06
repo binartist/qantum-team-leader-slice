@@ -140,7 +140,7 @@ if (!adminUrl) {
       ]);
     });
 
-    it("AC 17: rejects a 501-character note, an escalate without a target, and a status other than proposed", async () => {
+    it("AC 17, AC 24: rejects a 501-character note, an escalate without a target, and a status other than proposed", async () => {
       const siteId = id("site");
       await expectState(
         `insert into public.shortage_action (site_id, shortage_id, kind, note, created_by, idempotency_key)

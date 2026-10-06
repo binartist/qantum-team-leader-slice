@@ -45,7 +45,8 @@ The app's own HTTP API, as built. Requirements are in `slice-specification.md`, 
 { siteId, crewStatus: "clear" | "blocked" | "nothing_planned",
   asOf, stockAsOf,
   stockNotice: "On hand, shared, not reserved",
-  shortages: Shortage[],      // id siteId:materialId, kind short | unknown, required/onHand/shortfall, state, actions
+  shortages: Shortage[],      // id siteId:materialId, siteId, materialId, kind short | unknown,
+                              // requiredQty, onHandQty, shortfallQty, penetrationIds, state, actions
   blockers: Blocker[],        // id, reason, penetrationId, internalCode, mismatches? (solution_mismatch only), state, actions
   materials: Record<id, { name, unit }>,
   penetrations: Record<id, { floor, location, nominatedCode, serviceType, serviceSize }> }
@@ -53,7 +54,7 @@ The app's own HTTP API, as built. Requirements are in `slice-specification.md`, 
 
 `serviceType` and `serviceSize` are the nomination's raw text (catalogue spacing kept); the screen collapses repeated spaces for display only.
 
-Blocker reasons: `unknown_solution_code`, `solution_mismatch`, `no_material_mapping`, `invalid_quantity`. A `solution_mismatch` blocker also carries `mismatches`, the failing fields in a fixed order: `orientation`, `substrate`, `serviceType`, `serviceSize`, `integrity`, `insulation`. A shortage of kind `unknown` has null on hand and null shortfall.
+Blocker reasons: `unknown_solution_code`, `solution_mismatch`, `no_material_mapping`, `invalid_quantity`. A `solution_mismatch` blocker also carries `mismatches`, the failing fields in a fixed order: `orientation`, `substrate`, `serviceType`, `serviceSize`, `integrity`, `insulation`. A shortage of kind `unknown` has null `onHandQty` and null `shortfallQty`. Each entry in a shortage's or blocker's `actions` is a recorded wait or escalation plus `current: boolean` (false once the shortfall has grown past the one recorded with it).
 
 ### Wait and escalate
 
@@ -67,8 +68,9 @@ Blocker reasons: `unknown_solution_code`, `solution_mismatch`, `no_material_mapp
 { penetrationId, nominatedCode,
   status: "ok" | "nominated_code_unknown" | "substrate_incomplete",
   notice: "Catalogue match, not verified",
-  candidates: Array<{ internalCode, supplierRefCode, serviceType, serviceSize,
-    integrityMinutes, insulationMinutes,
+  candidates: Array<{ internalCode, supplierRefCode, orientation, substrateDetail,
+    serviceType, serviceSize, integrityMinutes, insulationMinutes: number | null,
+    mismatches: FitField[],   // fields that do not fit this penetration, same names and order as a blocker's
     availability: { internalCode,
       overall: "in_stock" | "short" | "unknown" | "no_material_mapping" | "invalid_quantity",
       lines: Array<{ materialId, quantityPerInstall, requiredQty, onHandQty, status }> },
@@ -79,7 +81,7 @@ Blocker reasons: `unknown_solution_code`, `solution_mismatch`, `no_material_mapp
 
 A line's `status` is `short` when one install needs more than is on hand, or when this site is already short of that material. It is `unknown` when there is no stock record, or when the site's stock for that material is unknown.
 
-`penetration` is the summary the penetration page shows above its substitutes. (The page's side-by-side comparison comes from a page-only use case, `describePenetration`, with no API route.) The materials pages likewise use page-only use cases (`listMaterialStock`, `describeMaterialStock`); decisions made there still go through the shortage `wait` and `escalate` routes above. Their `material_not_found` (404) is page-only too: no API route returns it. `id` and `nominatedCode` repeat the top-level fields. It carries no substrate, orientation or stock.
+`penetration` is the summary the penetration page shows above its substitutes. (The page's side-by-side comparison comes from a page-only use case, `describePenetration`, with no API route.) The materials pages likewise use page-only use cases (`listMaterialStock`, `describeMaterialStock`), as does the all-sites Actions log (`listAllActions`); decisions made there still go through the shortage `wait` and `escalate` routes above. Their `material_not_found` (404) is page-only too: no API route returns it. `id` and `nominatedCode` repeat the top-level fields. `penetration` carries no substrate, orientation or stock (each candidate does carry its own orientation and substrate).
 
 Candidate lines are one per material (quantities summed per material). The notice is present whatever the status. The API never says "compatible" or "approved".
 

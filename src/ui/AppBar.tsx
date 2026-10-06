@@ -15,10 +15,10 @@ export function AppBar({ backHref, backName }: { backHref: string; backName: str
   );
 }
 
-/** The sticky header for a top-level screen (the landing page, Sites, Materials, Actions log): the menu control that opens the drawer. */
+/** The sticky header for a top-level screen (the landing page, Sites, Materials, Actions log): the menu control that opens the drawer. At 1024px and wider the side menu replaces it, so this bar is hidden and must not keep a sticky offset. */
 export function MenuBar({ current }: { current: NavSection }) {
   return (
-    <header className={styles.appBar}>
+    <header className={`${styles.appBar} ${styles.menuBar}`} data-menu-bar="">
       <NavDrawer current={current} />
     </header>
   );

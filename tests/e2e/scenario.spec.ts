@@ -1,7 +1,7 @@
 import { expect, test, type Request } from "@playwright/test";
 import { gotoApp } from "./support";
 
-test("scenario: escalate sealant, propose 0451, then Kingsway still cannot go", async ({ page }) => {
+test("AC 10, AC 18: scenario: escalate sealant, propose 0451, then Kingsway still cannot go", async ({ page }) => {
   // Writes site-b sealant (site-b:MAT-SEALANT) and a proposal on pen-b-01.
   let releaseFirst: (() => void) | undefined;
   let held = false;
