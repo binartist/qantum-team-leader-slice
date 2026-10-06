@@ -15,7 +15,7 @@ I made the product and scope decisions: which slice, shared versus reserved stoc
 
 ## How the work was planned and directed
 
-1. **Docs before code.** The business path, glossary, iteration plan, specification (16 requirements, 32 numbered acceptance criteria, 34 after the post-delivery walkthrough, 36 after the solution-fit change, 42 after the materials pages, 44 after the actions log moved to the menu), technical design and test strategy were written and reviewed first. Code was then measured against them; when they disagreed, the spec was fixed first.
+1. **Docs before code.** The business path, glossary, iteration plan, specification (16 requirements, 32 numbered acceptance criteria, 34 after the post-delivery walkthrough, 36 after the solution-fit change, 42 after the materials pages, 44 after the actions log moved to the menu, 45 after the penetration tabs), technical design and test strategy were written and reviewed first. Code was then measured against them; when they disagreed, the spec was fixed first.
 2. **Risk tiers.** Each change was classified by blast radius. Contract and storage changes (the HTTP API, the move to Postgres) were Tier 3 and needed my written approval of a spec with a contract diff and rollback plan.
 3. **Orchestrator and worker.** Claude wrote a self-contained brief for each piece of work, as a file in the repo: role, facts, decisions not to relitigate, files the worker may touch, test-first method, verification commands and honesty rules ("do not claim a command passed unless you ran it"). Grok carried it out. Briefs were cheap to write and saved rounds of rework; the expensive model spent its tokens on decisions and checking, not on typing code.
 4. **Small rounds.** Domain core, API, UI, navigation, usability, then storage and delivery. Each round ended accepted and committed before the next began.
@@ -53,11 +53,11 @@ The agents proposed; I decided. Each case is logged with the reason in `docs/sub
 - **What the screens carry.** I questioned the site reference on every card (now only on the site screen, as "Job ref") and replaced the permanent demo bar with a landing page that explains the demo, keeping a small Demo tag in each header after the AI pointed out that deep links would otherwise skip the explanation (I later removed the tag as clutter).
 - **Shared stock on a material page.** I questioned why Wait and Escalate sit on the material page when work is done per penetration, and why its list named no site when stock is shared. The AI's point held for the buttons (a shortage is per site and material, so one escalation covers every penetration), so they stayed with their scope stated; the site is now named in the need line and the heading. When the AI proposed linking each place back to its penetration, I rejected it as circular: the places stay text, grouped, with one link up to the site list.
 
-- **Actions log.** I took the actions log out of the header, because it did not say which work it belonged to, moved it into the side menu and asked for the latest decision in a popover on each acted row. After the first build I asked for the entity icons, a sticky site title, and back controls that return to the log rather than to each page's parent.
+- **Actions log.** I took the actions log out of the header, because it did not say which work it belonged to, moved it into the side menu and asked for the latest decision in a popover on each acted row. After the first build I asked for the entity icons, a sticky site title, and back controls that return to the log rather than to each page's parent. Then I cut the row chips to icons, dropped the popover, and moved a penetration's decisions onto its own page as an Actions log tab.
 
 ## Cost
 
-Worker runs totalled about $34 across ten implementation runs and nine review sessions. Per-run figures are in `docs/agent-work/README.md`.
+Worker runs totalled about $36 across eleven implementation runs and nine review sessions. Per-run figures are in `docs/agent-work/README.md`.
 
 ## What I would do differently
 
