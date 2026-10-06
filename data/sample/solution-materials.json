@@ -162,6 +162,11 @@
       "internalCode": "0943",
       "materialId": "MAT-MASTIC",
       "quantityPerInstall": 1
+    },
+    {
+      "internalCode": "0348",
+      "materialId": "MAT-MASTIC",
+      "quantityPerInstall": 1
     }
   ]
 }

@@ -5,7 +5,7 @@ import type { SiteActions } from "@/application";
 import { getCachedActions, getCachedSite } from "../../../_lib/cached";
 import { ActionRow, ProposalRow } from "@/ui/ActionRow";
 import { UnavailablePanel } from "@/ui/UnavailablePanel";
-import { actionTarget, actionSentence } from "@/ui/format";
+import { actionLink, actionTarget, actionSentence, penetrationPath } from "@/ui/format";
 import { EMPTY, readinessBanner } from "@/ui/messages";
 import styles from "@/ui/primitives.module.css";
 import { loadPage } from "../../../_lib/load";
@@ -64,6 +64,8 @@ function ActionsLog({ siteId, listed }: { siteId: string; listed: SiteActions })
                     createdBy={action.createdBy}
                     note={action.note}
                     status={action.status}
+                    href={actionLink(siteId, action.shortageId, action.status)}
+                    decision={action.kind}
                   />
                 </li>
               );
@@ -80,6 +82,8 @@ function ActionsLog({ siteId, listed }: { siteId: string; listed: SiteActions })
                 <ProposalRow
                   fromCode={proposal.fromInternalCode}
                   toCode={proposal.toInternalCode}
+                  place={placeOf(listed, proposal.penetrationId)}
+                  href={penetrationPath(siteId, proposal.penetrationId)}
                   reason={proposal.reason}
                   recordedAt={proposal.createdAt}
                   createdBy={proposal.createdBy}
@@ -91,4 +95,9 @@ function ActionsLog({ siteId, listed }: { siteId: string; listed: SiteActions })
       ) : null}
     </>
   );
+}
+
+function placeOf(listed: SiteActions, penetrationId: string): string | undefined {
+  const place = listed.penetrations[penetrationId];
+  return place ? `${place.floor}, ${place.location}` : undefined;
 }

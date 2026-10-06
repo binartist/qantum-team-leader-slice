@@ -10,11 +10,11 @@ Before sending a crew to site, a team leader checks whether the materials for th
 The live demo uses invented sample data and has no login. Decisions are stored in Postgres and shared by everyone who visits, so some may already be recorded. The first page explains this.
 
 1. **Sites** ("Open sites" on the first page, or `/sites`). Harbour Point and Kingsway Works are blocked, and the chip says why. Riverside Plaza can go. Old Mill Annex has nothing planned.
-2. **Harbour Point.** "Blocked: hold the crew", with the tabs showing 2 shortages. Stock figures are labelled "on hand, shared, not reserved", with their age and a warning when they are more than a day old.
+2. **Harbour Point.** 12 penetrations across 5 solutions (tap the count for the full list). "Blocked: hold the crew", with the tabs showing 2 shortages. Stock figures are labelled "on hand, shared, not reserved", with their age and a warning when they are more than a day old.
 3. **Escalate the sealant shortage** to Purchasing with a note. The card shows Escalated and the crew is still blocked: a decision records intent, it does not create stock.
-4. **Open "Penetrations and substitutes"** on the sealant card and pick an `L3, Riser 2` row (solution `0438`). Candidates `0451` and `0464` are shown with their fire rating, whether they meet the required rating, and stock. Every candidate is "Catalogue match, not verified", and `0451` warns that it uses sealant, which this site is already short of. **Propose `0451`** with a reason anyway: a manager decides.
+4. **Tap "Affects 12 penetrations"** on the sealant card: the Penetrations page opens, filtered to sealant. Pick an `L3, Riser 2` row (solution `0438`). Candidates `0451` and `0464` are shown with their fire rating, whether they meet the required rating, and stock. Every candidate is "Catalogue match, not verified", and `0451` warns that it uses sealant, which this site is already short of. **Propose `0451`** with a reason anyway: a manager decides.
 5. **Back on Harbour Point**, open the `L5, Plant room` row (solution `0344`): no catalogue match, escalate instead.
-6. **Kingsway Works.** One material has no stock record ("stock unknown") and, on the Data problems tab, two data problems block the crew: a solution code missing from the catalogue and a solution with no materials recorded.
+6. **Kingsway Works.** One material has no stock record ("stock unknown", at L2, Plant room) and, on the Data problems tab, four data problems block the crew: a solution code missing from the catalogue, a solution with no materials recorded, and two nominated solutions that do not fit (L1, Stair core: substrate cut off in the catalogue; L1, Riser 1: insulation too low). Open either to see the side-by-side comparison.
 7. **Actions log** tab on Harbour Point: your decisions with time and author, and whether each still applies.
 
 ## Run locally
@@ -81,7 +81,7 @@ Next.js 16 server components and route handlers on Vercel, a pure TypeScript dom
 | Document | What it covers |
 | --- | --- |
 | `docs/iteration-plan.md` | Why this slice, and the iterations after it |
-| `docs/slice-specification.md` | Requirements, 34 acceptance criteria, assumptions, exclusions |
+| `docs/slice-specification.md` | Requirements, 36 acceptance criteria, assumptions, exclusions |
 | `docs/technical-design.md` | Architecture, domain rules, data model, trade-offs |
 | `docs/ui-design.md` | Screens, copy, states and accessibility |
 | `docs/api.md` | HTTP API, errors, idempotency, configuration |

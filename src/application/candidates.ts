@@ -1,8 +1,11 @@
 import {
   describeCandidateAvailability,
   findCandidates,
+  solutionMismatches,
   type CandidateAvailability,
   type CandidateStatus,
+  type FitField,
+  type Solution,
   type SiteShortageKinds,
   type SubstitutionProposal,
 } from "@/domain";
@@ -75,6 +78,21 @@ async function requirePenetration(deps: Dependencies, siteId: string, penetratio
 async function siteShortageKinds(deps: Dependencies, siteId: string): Promise<SiteShortageKinds> {
   const { readiness } = await loadSiteData(deps, siteId);
   return new Map(readiness.shortages.map((shortage) => [shortage.materialId, shortage.kind]));
+}
+
+export interface PenetrationDetail {
+  readonly penetration: NominatedPenetration;
+  /** The nominated solution's catalogue entry; null when the code is not in the catalogue. */
+  readonly nominated: Solution | null;
+  /** Fields on which the nominated solution does not fit the penetration (AC 35). */
+  readonly mismatches: readonly FitField[];
+}
+
+/** For the penetration page: both sides of the fit, for a side-by-side comparison (AC 36). Not an API route. */
+export async function describePenetration(deps: Dependencies, siteId: string, penetrationId: string): Promise<PenetrationDetail> {
+  const penetration = await requirePenetration(deps, siteId, penetrationId);
+  const nominated = deps.catalogue.byCode.get(penetration.nominatedCode) ?? null;
+  return { penetration, nominated, mismatches: nominated ? solutionMismatches(penetration, nominated) : [] };
 }
 
 export async function listCandidates(deps: Dependencies, siteId: string, penetrationId: string): Promise<CandidateList> {

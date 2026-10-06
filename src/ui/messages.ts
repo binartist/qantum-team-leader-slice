@@ -2,7 +2,6 @@ import { crewStatus, type StatusView } from "./status";
 
 export const CREW_STAYS = "This does not release the crew.";
 export const RECORDS_ONLY = "This records your decision here. Nobody is notified automatically yet.";
-export const OPEN_PENETRATION = "Open a penetration to see possible substitutes.";
 export const STOCK_STALE = "These stock figures are more than a day old. Check with the warehouse before relying on them.";
 export const SUBSTITUTES = "Substitutes";
 export const GIVE_REASON = "Give a reason.";
@@ -13,7 +12,17 @@ export const EMPTY = {
   actions: "Nothing recorded for this site yet.",
   shortages: "No shortages.",
   dataProblems: "No data problems.",
+  penetrations: "No penetrations planned for this site.",
 } as const;
+
+export const PENETRATION_FILTER = {
+  showAll: "Show all",
+  unknown: "That material is not a shortage on this site. Showing all penetrations.",
+} as const;
+
+export function filterLine(materialName: string, shown: number, total: number): string {
+  return `Using ${materialName} · ${shown} of ${total}`;
+}
 
 export const TABS = {
   label: "Site sections",
@@ -34,7 +43,6 @@ export const BUTTONS = {
   cancel: "Cancel",
   sending: "Sending…",
   tryAgain: "Try again",
-  actionsLog: "Actions log",
 } as const;
 
 export const ANNOUNCE = {

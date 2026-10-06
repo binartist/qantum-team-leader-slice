@@ -2,7 +2,7 @@ import { Card } from "./Card";
 import { EscalateDialog } from "./decisions/EscalateDialog";
 import { penetrationPath } from "./format";
 import { StatusChip } from "./StatusChip";
-import { blockerReason, earlierDecision, shortageState, type BlockerCode, type ShortageChip } from "./status";
+import { blockerReason, earlierDecision, shortageState, type BlockerCode, type FitFieldCode, type ShortageChip } from "./status";
 import styles from "./primitives.module.css";
 
 export function BlockerCard({
@@ -12,6 +12,7 @@ export function BlockerCard({
   place,
   reason,
   code,
+  mismatches,
   state,
   earlier,
 }: {
@@ -21,10 +22,11 @@ export function BlockerCard({
   place: string;
   reason: BlockerCode;
   code: string;
+  mismatches?: readonly FitFieldCode[];
   state: ShortageChip;
   earlier: boolean;
 }) {
-  const detail = blockerReason(reason, code);
+  const detail = blockerReason(reason, code, mismatches);
   return (
     <Card title={place} heading="h3" titleHref={penetrationPath(siteId, penetrationId)} kind="data-problem">
       <p>{detail.label}</p>

@@ -1,3 +1,4 @@
+import type { FitFieldCode } from "@/ui/status";
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
@@ -37,8 +38,9 @@ describe("crew status", () => {
 describe("shortage state", () => {
   it("AC 30: maps no decision yet, waiting, and escalated, including an earlier decision", () => {
     expectView(shortageState("open"), { label: "No decision yet", tone: "neutral", icon: "dashed-circle" });
-    expectView(shortageState("waiting"), { label: "Waiting", tone: "warning", icon: "warning" });
-    expectView(shortageState("escalated"), { label: "Escalated", tone: "warning", icon: "warning" });
+    // Decisions are neither "can go" nor an alarm, and the two must be told apart at a glance.
+    expectView(shortageState("waiting"), { label: "Waiting", tone: "info", icon: "clock" });
+    expectView(shortageState("escalated"), { label: "Escalated", tone: "escalation", icon: "arrow-up" });
     expectView(earlierDecision(), { label: "Earlier decision, shortfall has grown", tone: "warning", icon: "warning" });
     expect(hasEarlierDecision([{ current: true }, { current: false }])).toBe(true);
     expect(hasEarlierDecision([{ current: true }])).toBe(false);
@@ -219,5 +221,61 @@ describe("status icons", () => {
     expect(icon).toContain('name === "stop"');
     expect(icon).not.toContain('"cross"');
     expect(readFileSync("src/ui/status.ts", "utf8")).not.toContain('"cross"');
+  });
+});
+
+describe("decision icons", () => {
+  it("gives wait and escalate the icon and tone of the state they create", async () => {
+    const { decisionMark, shortageState: state } = await import("@/ui/status");
+    expect(decisionMark("wait")).toEqual({ tone: state("waiting").tone, icon: state("waiting").icon });
+    expect(decisionMark("escalate")).toEqual({ tone: state("escalated").tone, icon: state("escalated").icon });
+  });
+
+  it("puts the same icons on the Wait and Escalate buttons, which stay neutral", async () => {
+    const { readFileSync } = await import("node:fs");
+    const wait = readFileSync("src/ui/decisions/WaitDialog.tsx", "utf8");
+    const escalate = readFileSync("src/ui/decisions/EscalateDialog.tsx", "utf8");
+    expect(wait).toContain('<Icon name="clock" />');
+    expect(escalate).toContain('<Icon name="arrow-up" />');
+    // A logged wait or escalation shows the same mark.
+    expect(readFileSync("src/ui/ActionRow.tsx", "utf8")).toContain("mark={decisionMark(decision)}");
+  });
+});
+
+describe("AC 35: wording for a nominated solution that does not fit", () => {
+  it("names the solution and every field that does not fit, in plain words", async () => {
+    const { blockerReason, fitFieldLabel } = await import("@/ui/status");
+    expect(blockerReason("solution_mismatch", "0435", ["insulation"])).toEqual({
+      label: "Solution 0435 doesn't fit this penetration: insulation",
+      tone: "danger",
+      icon: "warning",
+    });
+    expect(blockerReason("solution_mismatch", "0435", ["orientation", "serviceType", "serviceSize"]).label).toBe(
+      "Solution 0435 doesn't fit this penetration: orientation, service type, size",
+    );
+    expect(blockerReason("solution_mismatch", "0435").label).toBe("Solution 0435 doesn't fit this penetration");
+    const fields: FitFieldCode[] = ["orientation", "substrate", "serviceType", "serviceSize", "integrity", "insulation"];
+    expect(fields.map((field) => fitFieldLabel(field))).toEqual([
+      "orientation",
+      "substrate",
+      "service type",
+      "size",
+      "integrity",
+      "insulation",
+    ]);
+  });
+});
+
+describe("rating checks agree with the domain on bad numbers", () => {
+  it("a negative or non-finite rating never meets a requirement", async () => {
+    const { ratingComparison: compare } = await import("@/ui/status");
+    expect(compare(60, 30, -5, 30).label).toBe("Below the required rating");
+    expect(compare(-1, 30, 60, 30).label).toBe("Below the required rating");
+    expect(compare(60, Number.NaN, 60, 30).label).toBe("Below the required rating");
+  });
+
+  it("words a field that does not fit with a stop sign", async () => {
+    const { doesNotFit } = await import("@/ui/status");
+    expect(doesNotFit("60 min")).toEqual({ label: "60 min, doesn't fit", tone: "danger", icon: "stop" });
   });
 });

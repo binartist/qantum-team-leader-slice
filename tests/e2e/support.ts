@@ -10,6 +10,9 @@ export const screens = [
   "/sites/site-d",
   "/sites/site-a/data-problems",
   "/sites/site-c/data-problems",
+  "/sites/site-b/penetrations",
+  "/sites/site-c/penetrations/pen-c-02",
+  "/sites/site-c/penetrations",
   "/sites/site-a/penetrations/pen-a-01",
   "/sites/site-b/penetrations/pen-b-01",
   "/sites/site-b/penetrations/pen-b-10",
@@ -33,33 +36,25 @@ export async function assertNoOverflow(page: Page): Promise<void> {
 }
 
 export async function assertTargets(page: Page): Promise<void> {
-  const handles = await page.locator("a, button, input, select, textarea, summary").all();
-  const failures: string[] = [];
-  for (const handle of handles) {
-    const box = await handle.boundingBox();
-    if (!box) continue;
-    const inline = await handle.evaluate((element) => element.tagName === "A" && element.closest("p") !== null);
-    if (inline) continue;
-    // Next's dev-only indicator (absent from the production build) is not part of the app.
-    const devTool = await handle.evaluate((element) => {
-      const root = element.getRootNode();
-      return root instanceof ShadowRoot && root.host.tagName.toLowerCase() === "nextjs-portal";
-    });
-    if (devTool) continue;
-    // Content inside a closed disclosure cannot be tapped; the summary itself is checked.
-    const hidden = await handle.evaluate((element) => {
+  // Measured in one pass inside the page, so a re-render between elements cannot leave a stale handle waiting.
+  const failures = await page.evaluate(() => {
+    const found: string[] = [];
+    for (const element of document.querySelectorAll<HTMLElement>("a, button, input, select, textarea, summary")) {
+      if (element.getClientRects().length === 0) continue;
+      // Inline links inside running text are exempt from the target size.
+      if (element.tagName === "A" && element.closest("p") !== null) continue;
+      // Content inside a closed disclosure cannot be tapped; the summary itself is checked.
       const details = element.closest("details");
-      return details !== null && !details.open && element.closest("summary") === null;
-    });
-    if (hidden) continue;
-    if (box.width < 44 || box.height < 44) {
-      const label = await handle.evaluate((element) => {
-        const text = ((element as HTMLElement).innerText ?? "").replace(/\s+/g, " ").trim().slice(0, 80);
-        return text || `<${element.tagName.toLowerCase()} id="${element.id}" aria-label="${element.getAttribute("aria-label") ?? ""}">`;
-      });
-      failures.push(`${box.width.toFixed(1)}x${box.height.toFixed(1)} ${label} on ${page.url()}`);
+      if (details !== null && !details.open && element.closest("summary") === null) continue;
+      const box = element.getBoundingClientRect();
+      if (box.width >= 44 && box.height >= 44) continue;
+      const text = (element.innerText ?? "").replace(/\s+/g, " ").trim().slice(0, 80);
+      const label = text || `<${element.tagName.toLowerCase()} id="${element.id}" aria-label="${element.getAttribute("aria-label") ?? ""}">`;
+      found.push(`${box.width.toFixed(1)}x${box.height.toFixed(1)} ${label} on ${location.pathname}`);
     }
-  }
+    return found;
+  });
+  // Next's dev-only indicator lives in a shadow root, which querySelectorAll does not enter.
   expect(failures).toEqual([]);
 }
 

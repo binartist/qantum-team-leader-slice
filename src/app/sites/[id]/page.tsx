@@ -64,17 +64,8 @@ function Shortages({ siteId, readiness }: { siteId: string; readiness: SiteReadi
                   unit={material?.unit ?? ""}
                   state={shortage.state}
                   earlier={hasEarlierDecision(shortage.actions)}
-                  places={shortage.penetrationIds.map((penetrationId) => {
-                    const place = readiness.penetrations[penetrationId];
-                    return {
-                      id: penetrationId,
-                      floor: place?.floor ?? penetrationId,
-                      location: place?.location ?? "",
-                      serviceType: place?.serviceType ?? "",
-                      serviceSize: place?.serviceSize ?? "",
-                      nominatedCode: place?.nominatedCode ?? "",
-                    };
-                  })}
+                  materialId={shortage.materialId}
+                  affected={shortage.penetrationIds.length}
                 />
               </li>
             );

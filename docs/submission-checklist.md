@@ -19,9 +19,9 @@ Legend: `[x]` done, `[~]` partial, `[ ]` not started.
 | 7 | README: demo scenario | [x] | README "Try it", following spec section 9. |
 | 8 | README: sample data and known limitations | [x] | README "Sample data" and "Known limitations"; `data/sample/README.md` labels the data invented. |
 | 9 | Iteration plan (md) | [x] | `docs/iteration-plan.md`: slice rationale, 6 iterations, uncertainties. Awaiting your review. |
-| 10 | First-slice specification (md) | [x] | `docs/slice-specification.md`: 16 FRs, 34 acceptance criteria, NFRs, assumptions, exclusions. Awaiting your review. |
+| 10 | First-slice specification (md) | [x] | `docs/slice-specification.md`: 16 FRs, 36 acceptance criteria, NFRs, assumptions, exclusions. Awaiting your review. |
 | 11 | Technical design (md) | [x] | `docs/technical-design.md`. Section 11 additions awaiting confirmation. |
-| 12 | Test strategy (md) | [x] | `docs/test-strategy.md`: layers, all 32 ACs mapped, risks, CI gates. Awaiting your review. |
+| 12 | Test strategy (md) | [x] | `docs/test-strategy.md`: layers, all 36 ACs mapped, risks, CI gates. Awaiting your review. |
 | 13 | Agent instructions and context files | [x] | `AGENTS.md` (tool-neutral; `CLAUDE.md` imports it), 11 Skill Forge skills in `.agents/skills` (`skill-forge.json`, lock file), and every brief, review brief, review report and worker note in `docs/agent-work/`. |
 | 14 | Working application code | [x] | Domain core, stubs, Postgres and memory stores, use cases, seven-route API, four screens. Live and proven against the real database. |
 | 15 | Automated tests | [x] | 289 unit and API tests, 5 database contract tests on Postgres 17, 12 Playwright tests with axe at 375px; all 32 ACs referenced; all run in CI. |

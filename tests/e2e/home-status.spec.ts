@@ -9,7 +9,7 @@ test("the sites list shows crew can go for Riverside and nothing planned for Old
   const harbour = page.getByRole("listitem").filter({ hasText: "Harbour Point, Levels 3 to 5" });
   await expect(harbour.getByText("Blocked · 2 shortages")).toBeVisible();
   const kingsway = page.getByRole("listitem").filter({ hasText: "Kingsway Works, Phase 2" });
-  await expect(kingsway.getByText("Blocked · 1 shortage, 2 data problems")).toBeVisible();
+  await expect(kingsway.getByText("Blocked · 1 shortage, 4 data problems")).toBeVisible();
   const mill = page.getByRole("listitem").filter({ hasText: "Old Mill Annex" });
   await expect(mill.getByText("Nothing planned")).toBeVisible();
 });
@@ -46,7 +46,7 @@ test("landing page explains the demo, no screen carries a Demo tag, and there is
   await expect(page.getByRole("heading", { level: 1, name: "Harbour Point, Levels 3 to 5" })).toBeVisible();
   await expect(page.getByText(/Stock figures from 3 Oct 2026, 08:00 UTC \(\d+ days? old\)/)).toBeVisible();
   await expect(page.getByText("These stock figures are more than a day old. Check with the warehouse before relying on them.")).toBeVisible();
-  await expect(page.getByText("Job ref HP-345", { exact: true })).toBeVisible();
+  await expect(page.locator("main p").filter({ hasText: "Job ref HP-345" })).toHaveText(/^Job ref HP-345\s*12 penetrations, 5 solutions$/);
   await expect(page.getByRole("contentinfo")).toHaveCount(0);
   await expect(page.getByRole("link", { name: /^Demo/ })).toHaveCount(0);
 
@@ -72,11 +72,16 @@ test("landing page explains the demo, no screen carries a Demo tag, and there is
 
   await gotoApp(page, "/sites/site-b");
   await expect(page.getByRole("heading", { level: 2, name: "Intumescent sealant, 310 ml cartridge" })).toBeVisible();
-  const moved = await page.evaluate(() => {
-    window.scrollTo(0, document.body.scrollHeight);
-    return window.scrollY > 0;
-  });
-  expect(moved).toBe(true);
+  await page.setViewportSize({ width: 375, height: 500 });
+  // In dev the stylesheet can land after hydration, so retry until the full-height layout can scroll.
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        window.scrollTo(0, document.body.scrollHeight);
+        return window.scrollY > 0;
+      }),
+    )
+    .toBe(true);
   // The sticky header keeps the back control in view at the end of a long page.
   await expect(page.getByRole("banner")).toBeInViewport();
   await expect(page.getByRole("link", { name: "Back to sites" })).toBeInViewport();

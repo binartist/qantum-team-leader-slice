@@ -1,6 +1,6 @@
 # UI design
 
-Proposed defaults for the three screens plus the actions log. Status: **approved 2026-10-04**. Requirements are in `slice-specification.md` (FR1 to FR15, AC 30 to 32), the API in `api.md`, terms in `glossary.md`. The screens were drawn for review in the conversation that produced this file.
+Proposed defaults for the three screens plus the actions log. Status: **approved 2026-10-04**. Requirements are in `slice-specification.md` (FR1 to FR16, AC 30 to 36), the API in `api.md`, terms in `glossary.md`. The screens were drawn for review in the conversation that produced this file.
 
 ## 1. Who and where
 
@@ -29,9 +29,10 @@ A team leader checks a site before the crew leaves, usually on a phone in a van 
 | --- | --- | --- |
 | `/` | About this demo | What the app is for, what is invented, the two-minute walkthrough, and a primary "Open sites" button in a full-width bar stuck to the bottom of the screen (the button fills it inside the side gutters, capped at the content width). No Demo tag (this is the page it links to) |
 | `/sites` | Sites | One card per site with name and a crew status chip |
-| `/sites/[id]` | Site: Shortages tab (default) | Header with back link, job ref, status banner, tab bar (Shortages, Data problems, Actions log, each with a count), then the stock notice, stock age and shortage cards |
+| `/sites/[id]` | Site: Shortages tab (default) | Header with back link, job ref with the planned work ("Job ref HP-345" then "12 penetrations, 5 solutions ›"), status banner, tab bar (Shortages, Data problems, Actions log, each with a count), then the stock notice, stock age and shortage cards |
 | `/sites/[id]/data-problems` | Site: Data problems tab | Same frame; one card per blocker with its reason and an escalate action |
-| `/sites/[id]/penetrations/[pid]` | Substitutes | Penetration summary, the "Catalogue match, not verified" notice, one card per candidate with an availability chip, "Propose this" |
+| `/sites/[id]/penetrations` | Penetrations (pushed in from the planned-work link, or filtered from a shortage card's "Affects N penetrations ›") | Back to the site, "12 penetrations, 5 solutions", the readiness banner, then every planned penetration grouped under its solution. Each row links to its substitutes and shows only per-penetration facts: a data problem's reason, "Uses short material: …", "Stock unknown: …". No ready marks |
+| `/sites/[id]/penetrations/[pid]` | Penetration (title: the place) | Nominated solution: its data-problem and shortage status lines, then the penetration and the solution side by side with any field that does not fit marked (AC 36). Substitutes: the "Catalogue match, not verified" notice and one card per candidate with an availability chip and "Propose this", or the reason there are none and a full-width Escalate |
 | `/sites/[id]/actions` | Site: Actions log tab | Same frame. Newest first: what was recorded, when, by whom, and whether it is current, earlier or resolved. Proposals listed separately |
 
 There is also a not-found page and one error page with a retry link. All data pages are dynamic (never cached). The landing page has no data and is static.
@@ -47,11 +48,11 @@ There is also a not-found page and one error page with a retry link. All data pa
 
 ### Shortage card
 
-Material name, one line `Need X, have Y, short Z unit` (or `Need X, stock unknown` for an unknown-stock shortage), count of affected penetrations (expandable to a list with floor and location, each linking to its substitutes screen), a state badge (Open, Waiting, Escalated, with "Earlier decision, shortfall has grown" when an action is not current), and two buttons: Wait and Escalate.
+Material name, one line `Need X, have Y, short Z unit` (or `Need X, stock unknown` for an unknown-stock shortage), count of affected penetrations as a link to the Penetrations page filtered to that material, a state badge (Open, Waiting, Escalated, with "Earlier decision, shortfall has grown" when an action is not current), and two buttons: Wait and Escalate.
 
 ### Data problem card (blocker)
 
-Plain reason: "Solution code 9999 isn't in the catalogue", "No materials recorded for solution 0393", "A material quantity is invalid for solution NNNN". Only an Escalate button (a wait makes no sense here). Same state badge.
+Plain reason: "Solution code 9999 isn't in the catalogue", "No materials recorded for solution 0393", "A material quantity is invalid for solution NNNN", "Solution NNNN doesn't fit this penetration: <fields>". Only an Escalate button (a wait makes no sense here). Same state badge.
 
 ### Decisions
 
@@ -67,7 +68,7 @@ Plain reason: "Solution code 9999 isn't in the catalogue", "No materials recorde
 | Situation | Message |
 | --- | --- |
 | No candidates (`ok`, empty) | With a related shortage or data problem: "No catalogue match for this penetration. Escalate instead." and an Escalate action. With none: "No catalogue match for this penetration." only, because there is nothing the API could escalate |
-| `substrate_incomplete` | The catalogue entry for this substrate is incomplete, so we can't suggest substitutes. |
+| `substrate_incomplete` | The catalogue entry for this substrate is incomplete, so we can't suggest substitutes. With a related data problem (pen-c-01), an Escalate action too. |
 | `nominated_code_unknown` | The nominated solution isn't in the catalogue, so we can't suggest substitutes. |
 | Candidate availability `no_material_mapping` | We can't tell if its materials are in stock. |
 | Candidate availability `unknown` | No stock record for one of its materials. |
@@ -146,20 +147,20 @@ Three independent reviews of the built UI led to these changes to the design abo
 | Unknown values | An unknown crew status shows the can't-check banner. An unknown shortage state or action status shows "Unknown", never "Escalated", "Resolved" or "Crew can go" |
 | Character count | Counts the trimmed text, as the limit does |
 | Inputs | A darker input border (at least 3:1 on both backgrounds) and a visible invalid state |
-| Links | Data-problem cards link the penetration to its substitutes screen. Every unavailable screen keeps its back link |
+| Links | Data-problem cards link the penetration to its penetration page. Every unavailable screen keeps its back link |
 | Error screens | `error.tsx` and `global-error.tsx` show fixed copy and a retry button, never the message or digest |
 
-Navigation shell (same day, after a phone review): the demo bar moved to a sticky footer; a sticky header carries the title and, on inner screens, a chevron back row sits just below it, named after the parent screen, replacing the full-width Back button (the chevron first sat inside the header; moved below it after review); the site reference reads "Job ref RP-A2" and appears on the site screen only, under the title, where an escalation would quote it (removed from the list cards after review, 2026-10-06). The page scrolls as a whole (not an inner scroller), so the browser restores scroll position when going back.
+Navigation shell (same day, after a phone review): the demo bar moved to a sticky footer; a sticky header carries the title and, on inner screens, a chevron back row sits just below it, named after the parent screen, replacing the full-width Back button (the chevron first sat inside the header; moved below it after review); the site reference reads "Job ref RP-A2" and appears on the site screen only, under the title, where an escalation would quote it (removed from the list cards after review, 2026-10-06). The page scrolls as a whole (not an inner scroller), so the browser restores scroll position when going back. (Superseded: no demo bar or Demo tag; the title is in the page body.)
 
 Usability round (2026-10-05, from a review against the exercise brief's UX question):
 
 | Topic | As built |
 | --- | --- |
-| Sites list | A blocked chip says why: "Blocked · 2 shortages", "Blocked · 1 shortage, 2 data problems" |
+| Sites list | A blocked chip says why: "Blocked · 2 shortages", "Blocked · 1 shortage, 4 data problems" |
 | Stock age | "Stock figures from 3 Oct 2026, 08:00 UTC (2 days old)". Older than a day adds "These stock figures are more than a day old. Check with the warehouse before relying on them." Warning only; crew status is unchanged. Hidden on a nothing-planned site |
 | Shortage state | Flat labels, not chips: "No decision yet", "Waiting", "Escalated" |
 | Units | `each` is omitted ("short 2"); other units pluralise ("2 cartridges", "2.5 metres") |
-| Penetrations | Disclosure "Penetrations and substitutes (n)" with a chevron and the line "Open a penetration to see possible substitutes." Rows are grouped under "Solution 0438 · 4"; each row is "{floor}, {location} · {service} {size}" with "Substitutes ›" |
+| Penetrations | (Replaced 2026-10-06.) The card's "Affects N penetrations ›" is a 44px link to the Penetrations page filtered to that material (`?material=…`), which shows "Using {material} · n of total" and a Show all link. Rows there are grouped under "Solution 0438 · 4"; each row is "{floor}, {location} · {service} {size}" with "Substitutes ›" |
 | Ratings | "Fire rating: 60 min integrity, 30 min insulation" (a missing part says "no insulation rating"). Candidates add "Supplier ref …" and "Meets the required rating" or "Below the required rating" against the penetration |
 | Catalogue notice | "Catalogue match, not verified" only when at least one candidate is listed |
 | Decisions | Wait and Escalate dialogs add "This records your decision here. Nobody is notified automatically yet." |
@@ -189,3 +190,28 @@ Kind icons (2026-10-06, user decision): small outline icons in the secondary tex
 Not on penetration rows (too many; the solution heading above carries the shield), the tab bar (width at 375px), or banners and chips (those are status).
 
 Stop icon (2026-10-06, user decision): blocked and short use a stop sign (octagon with a bar) instead of a cross, which read as "dismiss".
+
+Planned work (2026-10-06, user decision): every site tab shows how much work the check covered next to the job ref, counted from the site's planned penetrations and their distinct nominated solutions. No line when nothing is planned. No per-penetration ready marks: stock is shared across the site, so no single penetration can honestly be called ready. A full Penetrations tab was considered and skipped for now.
+
+Penetration list (2026-10-06, user decision): the planned-work counts on the site screen are a link ("12 penetrations, 5 solutions ›", a 44px target) that pushes in `/sites/[id]/penetrations`. Its rows reuse the shortage card's penetration rows (`PenetrationGroups`).
+
+Shortage card links and Substitutes page (2026-10-06, user decisions): a shortage card no longer expands an inline penetration list; its affected count opens the Penetrations page filtered to that material (only a material that is a shortage on the site can filter; anything else shows the full list with a note, never an empty list). Data problem cards keep their direct link to the one penetration. The Substitutes page no longer has an Actions log button: the log is a tab on the site screen.
+
+Penetration page (2026-10-06, user decisions): titled by the place, with three sections. Penetration: grey labels and values (Service, Required rating). Nominated solution: that solution's problems at this site as colour-coded status lines, each with an icon (data problem: red with a warning icon; uses a short material: red with a stop sign; stock unknown: amber). Substitutes: the not-verified notice and candidates, or the reason there are none as a status line, then Escalate as a full-width primary button. The Penetrations list uses the same status lines on its rows. (Superseded: the Penetration section was folded into the side-by-side comparison under Nominated solution; see "Demo tag removed and solution fit" below.)
+
+Actions log links (2026-10-06, user decision): an entry's title links to the work it is about. A proposal and a data problem decision open their penetration's page; a material shortage decision opens the Penetrations list filtered to that material, and has no link once the shortage is resolved. Proposals name their place: "Proposed substitute for L3, Riser 2: 0438 to 0451".
+
+Decision colours (2026-10-06, user decision): Waiting and Escalated were both amber with a warning triangle. A decision is neither "can go" nor an alarm, so each now has its own colour and icon, outside the crew-status colours:
+
+| State | Colour | Icon |
+| --- | --- | --- |
+| No decision yet | grey | dashed circle |
+| Waiting | blue (`--info-*`) | clock |
+| Escalated | purple (`--escalation-*`) | up arrow |
+| Earlier decision, shortfall has grown | amber | warning |
+
+The Wait and Escalate buttons carry the same icons but stay neutral (Escalate is primary only where it is a page's main action). Logged waits and escalations show the decision's icon in its colour; proposals keep the decision kind icon. Both new colour pairs are at least 4.5:1 against their chip background, the page and the card surface, in light and dark (a unit test checks it).
+
+Demo tag removed and solution fit (2026-10-06, user decisions): the Demo tag is gone from every header; top-level screens have no header. On the penetration page, the Nominated solution section shows the penetration and the solution side by side (orientation, substrate, service, size, integrity, insulation, supplier ref); a field that does not fit reads "…, doesn't fit" with a stop sign. A nominated solution that does not fit is also a data problem (AC 35, 36).
+
+Cut-off substrates (2026-10-06, user decision, option A): a substrate cut off after the family name never fits, on either side. The comparison shows why rather than two identical texts: "FR plasterboard, (cut off)" against "FR plasterboard, (cut off in the catalogue), doesn't fit".

@@ -32,7 +32,7 @@ function row(code: string): RawCatalogueRow {
 const catalogue = buildCatalogue([row("S1"), row("S2"), row("BARE")]);
 
 function openBlocker(
-  reason: "unknown_solution_code" | "no_material_mapping" | "invalid_quantity",
+  reason: "unknown_solution_code" | "no_material_mapping" | "invalid_quantity" | "solution_mismatch",
   penetrationId: string,
   internalCode: string,
   siteId = "site-a",
@@ -317,6 +317,59 @@ describe("computeSiteReadiness blockers and crew status", () => {
     expect(result.blockers.map((blocker) => blocker.penetrationId)).toEqual(["p-missing", "p-bare"]);
     expect(result.shortages.map((shortage) => shortage.materialId)).toEqual(["sealant"]);
     expect(result.shortages[0]?.penetrationIds).toEqual(["p-ok"]);
+    expect(result.crewStatus).toBe("blocked");
+  });
+
+  it("AC 35: a nominated solution below the penetration's rating is a solution_mismatch blocker that adds no need", () => {
+    const result = computeSiteReadiness(
+      input({
+        penetrations: [penetration({ id: "p1", requiredInsulationMinutes: 90 }), penetration({ id: "p2" })],
+        solutionMaterials: [{ internalCode: "S1", materialId: "M", quantityPerInstall: 4 }],
+        stock: [{ materialId: "M", location: "W", quantity: 4 }],
+      }),
+    );
+    expect(result.blockers).toEqual([{ ...openBlocker("solution_mismatch", "p1", "S1"), mismatches: ["insulation"] }]);
+    // Only p2 counts towards M, so 4 on hand covers it and there is no shortage.
+    expect(result.shortages).toEqual([]);
+    expect(result.crewStatus).toBe("blocked");
+  });
+
+  it("AC 35: an unknown code is reported before a mismatch, and a mismatch before a missing mapping", () => {
+    const result = computeSiteReadiness(
+      input({
+        penetrations: [
+          penetration({ id: "p1", nominatedCode: "NOPE", requiredInsulationMinutes: 90 }),
+          penetration({ id: "p2", nominatedCode: "BARE", requiredInsulationMinutes: 90 }),
+        ],
+      }),
+    );
+    expect(result.blockers.map((blocker) => [blocker.penetrationId, blocker.reason])).toEqual([
+      ["p1", "unknown_solution_code"],
+      ["p2", "solution_mismatch"],
+    ]);
+  });
+
+  it("AC 35: a mismatch is reported before an invalid quantity, and keeps its fields", () => {
+    const result = computeSiteReadiness(
+      input({
+        penetrations: [penetration({ id: "p1", requiredInsulationMinutes: 90 })],
+        solutionMaterials: [{ internalCode: "S1", materialId: "M", quantityPerInstall: Number.NaN }],
+      }),
+    );
+    expect(result.blockers).toEqual([{ ...openBlocker("solution_mismatch", "p1", "S1"), mismatches: ["insulation"] }]);
+    expect(result.shortages).toEqual([]);
+  });
+
+  it("AC 35: a requirement that is not a usable number blocks the crew and adds no need", () => {
+    const result = computeSiteReadiness(
+      input({
+        penetrations: [penetration({ id: "p1", requiredIntegrityMinutes: Number.NaN })],
+        solutionMaterials: [{ internalCode: "S1", materialId: "M", quantityPerInstall: 1 }],
+        stock: [],
+      }),
+    );
+    expect(result.blockers).toEqual([{ ...openBlocker("solution_mismatch", "p1", "S1"), mismatches: ["integrity"] }]);
+    expect(result.shortages).toEqual([]);
     expect(result.crewStatus).toBe("blocked");
   });
 

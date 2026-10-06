@@ -5,9 +5,10 @@ import {
   SITES_UNAVAILABLE,
   CREW_STAYS,
   EMPTY,
+  filterLine,
+  PENETRATION_FILTER,
   GIVE_REASON,
   MANAGER_CHECK,
-  OPEN_PENETRATION,
   RECORDS_ONLY,
   STOCK_STALE,
   SUBSTITUTES,
@@ -82,6 +83,12 @@ describe("banners and empty states", () => {
     expect(readinessBanner("bogus").label).not.toContain("Crew can go");
   });
 
+  it("words the penetration filter", () => {
+    expect(filterLine("Intumescent sealant, 310 ml cartridge", 12, 12)).toBe("Using Intumescent sealant, 310 ml cartridge · 12 of 12");
+    expect(PENETRATION_FILTER.showAll).toBe("Show all");
+    expect(PENETRATION_FILTER.unknown).toBe("That material is not a shortage on this site. Showing all penetrations.");
+  });
+
   it("has the approved empty states and the fixed decision lines", () => {
     expect(EMPTY.sites).toBe("No sites to show.");
     expect(EMPTY.actions).toBe("Nothing recorded for this site yet.");
@@ -89,7 +96,6 @@ describe("banners and empty states", () => {
     expect(GIVE_REASON).toBe("Give a reason.");
     expect(MANAGER_CHECK).toBe("A manager has to verify this catalogue match.");
     expect(RECORDS_ONLY).toBe("This records your decision here. Nobody is notified automatically yet.");
-    expect(OPEN_PENETRATION).toBe("Open a penetration to see possible substitutes.");
     expect(STOCK_STALE).toBe("These stock figures are more than a day old. Check with the warehouse before relying on them.");
     expect(SUBSTITUTES).toBe("Substitutes");
     expect(BUTTONS).toEqual({
@@ -102,7 +108,6 @@ describe("banners and empty states", () => {
       cancel: "Cancel",
       sending: "Sending…",
       tryAgain: "Try again",
-      actionsLog: "Actions log",
     });
     expect(ANNOUNCE).toEqual({
       escalation: "Escalation recorded",
@@ -131,7 +136,6 @@ describe("forbidden words", () => {
       GIVE_REASON,
       MANAGER_CHECK,
       RECORDS_ONLY,
-      OPEN_PENETRATION,
       STOCK_STALE,
       SUBSTITUTES,
       SITES_UNAVAILABLE,
