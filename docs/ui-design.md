@@ -17,8 +17,8 @@ A team leader checks a site before the crew leaves, usually on a phone in a van 
 | Layout | Single column. Max width 720px, centred. Fits 375px with no horizontal scroll | AC 32 |
 | Targets | At least 44px high and wide for anything tappable | AC 31 |
 | Motion | None needed. Respect `prefers-reduced-motion` | |
-| Demo honesty | A landing page at `/` ("Ready to send the crew?") explains the demo once, in a few short lines: sample data, no login, shared decisions, nothing sent, and a five-step walkthrough. Every other screen carries a small **Demo** tag in the sticky header (a 44px link, accessible name "Demo: sample data, no login. About this demo") that returns to it | The app is a demonstration and must not look like production, including on a deep-linked screen. One explanation in one place, instead of a bar taking space on every screen |
-| Navigation | A slim sticky nav header, one row: the back control on the left (a chevron and the name of the screen it returns to, "‹ Sites", "‹ Harbour Point, Levels 3 to 5", cut with an ellipsis when long, at least 44 high, accessible name "Back to <name>") and the Demo tag on the right. The page title is the page's one `h1`, first in `main`, shown in full and wrapping. The landing page has no header. No transition animation | A slim bar leaves room for the work while scrolling, and a site name is never cut, so two similar sites cannot look alike |
+| Demo honesty | A landing page at `/` ("Ready to send the crew?") explains the demo once: sample data, no login, shared decisions, nothing sent, and a five-step walkthrough. No screen carries a Demo tag (removed at the user's request, 2026-10-06) | One explanation in one place; the working screens stay uncluttered |
+| Navigation | A slim sticky nav header, one row: the back control (a chevron and the name of the screen it returns to, "‹ Sites", "‹ Harbour Point, Levels 3 to 5", cut with an ellipsis when long, at least 44 high, accessible name "Back to <name>"). The page title is the page's one `h1`, first in `main`, shown in full and wrapping. The landing page has no header. No transition animation | A slim bar leaves room for the work while scrolling, and a site name is never cut, so two similar sites cannot look alike |
 | Styling tech | CSS Modules and CSS custom properties. **No new dependencies** (no Tailwind, no component library) | Small app, nothing to justify a dependency. Tokens give one place for colours |
 | Rendering | Next.js server components for pages, small client islands only for dialogs and forms | Less client code, no loading flicker, nothing secret in the browser |
 | Data in pages | Server components call the application use cases through the composition root directly, not over HTTP | No self-request, faster, one fewer failure mode. Writes from the browser go through the real `/api` routes, so the API is still exercised end to end |
@@ -98,7 +98,7 @@ Plain words, sentence case, no exclamation marks, no "please", no "successfully"
 
 ## 5. Accessibility (WCAG 2.2 AA)
 
-- One `h1` per page (in the sticky header), ordered headings, landmarks: one `banner` (the header, holding the title and the Demo tag) and one `main`.
+- One `h1` per page (first in `main`, not in the header), ordered headings, landmarks: one `banner` (the header, holding the back control, on inner screens) and one `main`.
 - Status chips and banners carry text and an icon with `aria-hidden`, so colour is never the only signal.
 - Visible focus ring on every control, logical tab order, dialogs return focus to the control that opened them.
 - Form fields have visible labels, errors are announced next to the field, character counts are text.
@@ -168,11 +168,11 @@ Usability round (2026-10-05, from a review against the exercise brief's UX quest
 
 Limits recorded rather than built: an open tab keeps the banner it loaded until the next navigation; the three dialogs repeat their form code; no end-to-end test shows the "Earlier decision" badge (the sample stock cannot change during a run), which is covered at the API. From the usability review, not built: a separate escalation target for data problems (they are not a purchasing matter), a "substitute proposed" marker on shortage cards, a "what was checked" summary on a clear site, and a planned work date per site. Penetrations at the same place with the same service read the same (four in the sample); real data would add the floor-plan pin reference.
 
-Landing page (2026-10-06, user decision): the bottom demo bar was replaced by a landing page at `/` and a Demo tag in every header. The sites list moved from `/` to `/sites`; every `/sites/...` URL is unchanged, and back links named "Sites" go to `/sites`.
+Landing page (2026-10-06, user decision): the bottom demo bar was replaced by a landing page at `/` and a Demo tag in every header. The sites list moved from `/` to `/sites`; every `/sites/...` URL is unchanged, and back links named "Sites" go to `/sites`. (Superseded: the Demo tag was later removed.)
 
 Nav header (2026-10-06, user decision): the back control moved from a row below the header back into the sticky header, as the first of two rows. Site tabs (same day, user idea): `/sites/[id]` (Shortages), `/sites/[id]/data-problems` and `/sites/[id]/actions` share a frame with the job ref, the readiness banner and a tab bar with counts; the banner sits above the tabs on every tab.
 
-Title and banner (2026-10-06, user decisions): the title moved from the header into the page body as the `h1`, shown in full, and the header became one slim row (back control and Demo tag). With tab counts in place, the site screen's banner became "Blocked: hold the crew."; AC 34 rewritten to match.
+Title and banner (2026-10-06, user decisions): the title moved from the header into the page body as the `h1`, shown in full, and the header became one slim row (back control and Demo tag). With tab counts in place, the site screen's banner became "Blocked: hold the crew."; AC 34 rewritten to match. (Superseded: the Demo tag was later removed; the header holds only the back control.)
 
 Sticky tabs (2026-10-06, user decision): the site tab bar sticks directly below the nav header while scrolling, so the counts stay in view. The header has a fixed height (`--app-bar-height`) for that.
 

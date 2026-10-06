@@ -7,7 +7,7 @@ Before sending a crew to site, a team leader checks whether the materials for th
 
 ## Try it (about two minutes)
 
-The live demo uses invented sample data and has no login. Decisions are stored in Postgres and shared by everyone who visits, so some may already be recorded. The first page explains this; the **Demo** tag at the top of every screen leads back to it.
+The live demo uses invented sample data and has no login. Decisions are stored in Postgres and shared by everyone who visits, so some may already be recorded. The first page explains this.
 
 1. **Sites** ("Open sites" on the first page, or `/sites`). Harbour Point and Kingsway Works are blocked, and the chip says why. Riverside Plaza can go. Old Mill Annex has nothing planned.
 2. **Harbour Point.** "Blocked: hold the crew", with the tabs showing 2 shortages. Stock figures are labelled "on hand, shared, not reserved", with their age and a warning when they are more than a day old.

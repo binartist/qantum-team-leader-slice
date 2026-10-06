@@ -1,6 +1,5 @@
 "use client";
 
-import { AppBar } from "@/ui/AppBar";
 import { Button } from "@/ui/Button";
 import { BUTTONS } from "@/ui/messages";
 import styles from "@/ui/primitives.module.css";
@@ -9,7 +8,6 @@ export default function ErrorScreen({ error, retry }: { error: unknown; retry: (
   const marked = hasDigest(error);
   return (
     <>
-      <AppBar />
       <main data-digest={marked ? "present" : "absent"}>
         <title>Something went wrong</title>
         <h1>Something went wrong</h1>

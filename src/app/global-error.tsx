@@ -1,6 +1,5 @@
 "use client";
 
-import { AppBar } from "@/ui/AppBar";
 import { Button } from "@/ui/Button";
 import { BUTTONS } from "@/ui/messages";
 import styles from "@/ui/primitives.module.css";
@@ -13,7 +12,6 @@ export default function GlobalError({ retry }: { error: unknown; retry: () => vo
         <title>Something went wrong</title>
       </head>
       <body>
-        <AppBar />
         <main>
           <h1>Something went wrong</h1>
           <p>Try again.</p>

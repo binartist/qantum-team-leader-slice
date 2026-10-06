@@ -54,12 +54,10 @@ describe("fixed screen copy", () => {
     expect(source).not.toMatch(/\{error\.digest\}/);
   });
 
-  it("global-error has fixed copy, the header with its Demo tag, and a retry, and no message or digest", () => {
+  it("global-error has fixed copy, the header, and a retry, and no message or digest", () => {
     expect(existsSync("src/app/global-error.tsx")).toBe(true);
     const source = readFileSync("src/app/global-error.tsx", "utf8");
     expect(source).not.toContain("<footer");
-    expect(source).toContain("<AppBar");
-    expect(source).not.toContain("demoTag={false}");
     expect(source).toContain("Something went wrong");
     expect(source).toContain("Try again.");
     expect(source).toContain("retry");
@@ -89,7 +87,10 @@ describe("navigation shell", () => {
   it("every screen but the landing page renders AppBar, every screen has its h1 in main, and none uses LinkButton to go back", () => {
     for (const file of SCREEN_SOURCES) {
       const source = readFileSync(file, "utf8");
-      if (file !== "src/app/page.tsx") expect(source, file).toContain("<AppBar");
+      // Inner screens have a back control in the header; top-level screens (landing, sites list, loading, errors) have no header.
+      const topLevel = ["src/app/page.tsx", "src/app/sites/page.tsx", "src/app/loading.tsx", "src/app/error.tsx", "src/app/global-error.tsx"];
+      if (topLevel.includes(file)) expect(source, file).not.toContain("<AppBar");
+      else expect(source, file).toMatch(/<AppBar backHref=/);
       // The title is the page's own h1 inside main, not part of the header.
       expect(source, file).toMatch(/<main[^>]*>\s*(<title>[^<]*<\/title>\s*)?<h1>/);
       expect(source, file).not.toMatch(/<AppBar[^>]*title=/);
@@ -98,12 +99,11 @@ describe("navigation shell", () => {
     }
   });
 
-  it("the root layout has no demo footer and no header; the Demo tag lives in AppBar", () => {
+  it("the root layout has no demo footer and no header, and no screen carries a Demo tag (user decision)", () => {
     const layout = readFileSync("src/app/layout.tsx", "utf8");
     const bar = readFileSync("src/ui/AppBar.tsx", "utf8");
     expect(layout).not.toContain("<footer");
-    expect(bar).toContain("DEMO_TAG_LABEL");
-    expect(bar).toContain('href="/"');
+    expect(bar).not.toMatch(/demo/i);
     expect(layout).not.toMatch(/<header\b/);
   });
 
@@ -134,10 +134,9 @@ describe("input contrast", () => {
     }
   });
 
-  it("only the landing page has no header (so no Demo tag), and back links to the list go to /sites", () => {
+  it("back links to the list go to /sites, and the landing page has no header", () => {
     for (const file of SCREEN_SOURCES.filter((name) => name !== "src/app/page.tsx")) {
       const source = readFileSync(file, "utf8");
-      expect(source, file).not.toContain("demoTag={false}");
       expect(source, file).not.toContain('backHref="/"');
     }
     const landing = readFileSync("src/app/page.tsx", "utf8");

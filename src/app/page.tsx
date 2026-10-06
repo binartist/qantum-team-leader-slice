@@ -3,7 +3,7 @@ import styles from "@/ui/primitives.module.css";
 
 export const metadata = { title: "About this demo" };
 
-/** Explains the demo once, so the working screens only need a small Demo tag. */
+/** Explains the demo once: sample data, no login, shared decisions, nothing sent. */
 export default function LandingPage() {
   return (
     <>
@@ -31,7 +31,6 @@ export default function LandingPage() {
             <li>See what you recorded in the Actions log.</li>
           </ol>
         </section>
-        <p className={styles.muted}>Tap Demo at the top of any screen to come back here.</p>
       </main>
       {/* Last on the page and sticky, so it stays in view while reading and never covers the text at the end. */}
       <div className={styles.stickyAction}>

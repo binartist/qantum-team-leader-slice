@@ -1,6 +1,5 @@
 import { listSites } from "@/application";
 import { getDependencies } from "@/server/deps";
-import { AppBar } from "@/ui/AppBar";
 import { EMPTY, SITES_UNAVAILABLE } from "@/ui/messages";
 import { SiteCard } from "@/ui/SiteCard";
 import { siteChip } from "@/ui/status";
@@ -15,7 +14,6 @@ export default async function SitesPage() {
   const loaded = await loadPage(() => listSites(getDependencies()));
   return (
     <>
-      <AppBar />
       <main>
         <h1>Sites</h1>
         {loaded.status === "unavailable" ? (
