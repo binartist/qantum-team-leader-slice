@@ -114,3 +114,39 @@ test("AC 38: the materials list shows each planned material against the shared s
   await expect(page).toHaveURL(/\/materials\/MAT-COLLAR-25$/);
   await expect(page.getByRole("link", { name: "Back to Materials" })).toBeVisible();
 });
+
+test("AC 37: the menu's theme choice pins light or dark, is remembered on this device, and System follows the device", async ({ page }) => {
+  const background = () => page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+  await page.emulateMedia({ colorScheme: "light" });
+  await gotoApp(page, "/sites");
+  await page.getByRole("button", { name: "Open menu" }).click();
+  const theme = drawerOf(page).getByRole("group", { name: "Theme" });
+  await expect(theme.getByRole("radio", { name: "System" })).toBeChecked();
+
+  await theme.getByRole("radio", { name: "Dark" }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  expect(await background()).toBe("rgb(18, 19, 22)");
+  await assertAxe(page);
+  await assertTargets(page);
+
+  // Remembered: stamped before the page paints, and shown as the choice.
+  await page.reload();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await page.getByRole("button", { name: "Open menu" }).click();
+  await expect(theme.getByRole("radio", { name: "Dark" })).toBeChecked();
+
+  // Arrow keys move the choice, as in any radio group.
+  await theme.getByRole("radio", { name: "Dark" }).focus();
+  await page.keyboard.press("ArrowLeft");
+  await expect(theme.getByRole("radio", { name: "Light" })).toBeChecked();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+
+  // Light overrides a dark device; System hands it back.
+  await page.emulateMedia({ colorScheme: "dark" });
+  expect(await background()).toBe("rgb(255, 255, 255)");
+  await theme.getByRole("radio", { name: "System" }).click();
+  await expect(page.locator("html")).not.toHaveAttribute("data-theme", /.+/);
+  expect(await background()).toBe("rgb(18, 19, 22)");
+  await page.reload();
+  await expect(page.locator("html")).not.toHaveAttribute("data-theme", /.+/);
+});

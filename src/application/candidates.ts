@@ -92,6 +92,8 @@ export interface PenetrationDetail {
   readonly mismatches: readonly FitField[];
   /** Product names the nominated solution needs, in mapping order. Empty when none are recorded. */
   readonly materialNames: readonly string[];
+  /** Material ids in the same order as `materialNames`. Page only: which shortage decisions belong on this penetration. */
+  readonly materialIds: readonly string[];
 }
 
 /** For the penetration page: both sides of the fit, for a side-by-side comparison (AC 36). Not an API route. */
@@ -99,14 +101,16 @@ export async function describePenetration(deps: Dependencies, siteId: string, pe
   const penetration = await requirePenetration(deps, siteId, penetrationId);
   const nominated = deps.catalogue.byCode.get(penetration.nominatedCode) ?? null;
   const mapped = await deps.solutionMaterials.getSolutionMaterials([penetration.nominatedCode]);
+  const materialIds: string[] = [];
   const materialNames: string[] = [];
   const seen = new Set<string>();
   for (const item of mapped.items) {
     if (item.internalCode !== penetration.nominatedCode || seen.has(item.materialId)) continue;
     seen.add(item.materialId);
+    materialIds.push(item.materialId);
     materialNames.push(mapped.materials.find((material) => material.id === item.materialId)?.name ?? item.materialId);
   }
-  return { penetration, nominated, mismatches: nominated ? solutionMismatches(penetration, nominated) : [], materialNames };
+  return { penetration, nominated, mismatches: nominated ? solutionMismatches(penetration, nominated) : [], materialNames, materialIds };
 }
 
 export async function listCandidates(deps: Dependencies, siteId: string, penetrationId: string): Promise<CandidateList> {

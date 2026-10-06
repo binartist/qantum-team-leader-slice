@@ -18,6 +18,15 @@ test("stock down shows can't check and never crew can go", async ({ page }) => {
   await expect(page.getByRole("button", { name: /^Actions log/ })).toHaveCount(0);
   await expect(page.getByText("Crew can go")).toHaveCount(0);
 
+  // Stock is down, so the penetration cannot be checked. The page says so and never invents an empty log.
+  await gotoApp(page, "/sites/site-b/penetrations/pen-b-01");
+  await expect(page.getByRole("heading", { level: 1, name: "Harbour Point, Levels 3 to 5" })).toBeVisible();
+  await expect(page.getByText("Can't check this site right now. Don't assume it's clear. Try again.")).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "Penetration" })).toHaveCount(0);
+  await expect(page.getByText("Nothing recorded")).toHaveCount(0);
+  await expect(page.getByText("0", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("Crew can go")).toHaveCount(0);
+
   // Stock down makes every site's log unreadable, so the page says it cannot be loaded.
   await gotoApp(page, "/actions");
   await expect(page.getByRole("heading", { level: 1, name: "Actions log" })).toBeVisible();

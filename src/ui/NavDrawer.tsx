@@ -6,6 +6,7 @@ import { Icon } from "./Icon";
 import { KindIcon, type EntityKind } from "./KindIcon";
 import { ACTIONS_PATH, MATERIALS_PATH } from "./format";
 import { NAV } from "./messages";
+import { ThemeSwitch } from "./ThemeSwitch";
 import styles from "./primitives.module.css";
 
 export type NavSection = "sites" | "materials" | "actions" | "about";
@@ -46,6 +47,7 @@ export function NavDrawer({ current }: { current: NavSection }) {
         </ul>
       </nav>
       <div className={styles.navFooter}>
+        <ThemeSwitch />
         <Link className={styles.navItem} href="/" aria-current={current === "about" ? "page" : undefined}>
           <KindIcon kind="about" />
           <span>{NAV.about}</span>

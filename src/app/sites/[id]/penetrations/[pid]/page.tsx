@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 import { unstable_rethrow } from "next/navigation";
 import { connection } from "next/server";
+import Link from "next/link";
 import type { CandidateList, SiteReadinessView } from "@/application";
 import { FitTable } from "@/ui/FitTable";
 import { SubstituteSwitcher } from "@/ui/SubstituteSwitcher";
 import { fitRows } from "@/ui/fit";
 import { SiteNotFoundError } from "@/ports";
-import { getCachedCandidates, getCachedPenetrationDetail, getCachedReadiness, getCachedSite } from "../../../../_lib/cached";
+import { getCachedActions, getCachedCandidates, getCachedPenetrationDetail, getCachedReadiness, getCachedSite } from "../../../../_lib/cached";
 import { KindIcon } from "@/ui/KindIcon";
 import { logBack, logOrigin } from "@/ui/actions-log";
 import { AppBar } from "@/ui/AppBar";
@@ -15,7 +16,10 @@ import { EscalateDialog } from "@/ui/decisions/EscalateDialog";
 import { ratingValue, sitePath, serviceLine } from "@/ui/format";
 import { FactLine } from "@/ui/FactLine";
 import { Notice } from "@/ui/Notice";
-import { readinessBanner } from "@/ui/messages";
+import { NAV, PENETRATION_LOG, readinessBanner } from "@/ui/messages";
+import { PenetrationLog } from "@/ui/PenetrationLog";
+import { penetrationLog } from "@/ui/penetration-log";
+import { parsePenetrationTab, penetrationTabHref } from "@/ui/penetration-tabs";
 import { candidateStatus, emptyCatalogueLabel, type StatusView } from "@/ui/status";
 import { StatusChip } from "@/ui/StatusChip";
 import { candidateFacts, penetrationFacts } from "@/ui/penetrations";
@@ -25,7 +29,7 @@ import { loadPage } from "../../../../_lib/load";
 export const dynamic = "force-dynamic";
 
 type RouteParams = { params: Promise<{ id: string; pid: string }> };
-type PageProps = RouteParams & { searchParams: Promise<{ fromLog?: string | string[] }> };
+type PageProps = RouteParams & { searchParams: Promise<{ fromLog?: string | string[]; tab?: string | string[] }> };
 
 export async function generateMetadata({ params }: RouteParams): Promise<Metadata> {
   await connection();
@@ -41,7 +45,9 @@ export async function generateMetadata({ params }: RouteParams): Promise<Metadat
 
 export default async function PenetrationPage({ params, searchParams }: PageProps) {
   const { id, pid } = await params;
-  const { fromLog } = await searchParams;
+  const query = await searchParams;
+  const origin = logOrigin(query.fromLog, [id]);
+  const tab = parsePenetrationTab(query.tab);
   const siteLoad = await loadPage(async () => {
     const site = await getCachedSite(id);
     if (!site) throw new SiteNotFoundError();
@@ -49,7 +55,7 @@ export default async function PenetrationPage({ params, searchParams }: PageProp
   });
   if (siteLoad.status === "unavailable") return unavailable("This site", "/sites", "Sites");
   // Back to the actions log when it opened this page, else up to the site.
-  const back = logOrigin(fromLog, [id]) ? logBack(id) : { href: sitePath(id), name: siteLoad.value.name };
+  const back = origin ? logBack(id) : { href: sitePath(id), name: siteLoad.value.name };
 
   const listedLoad = await loadPage(() => getCachedCandidates(id, pid));
   if (listedLoad.status === "unavailable") return unavailable(siteLoad.value.name, back.href, back.name);
@@ -58,6 +64,9 @@ export default async function PenetrationPage({ params, searchParams }: PageProp
   const detailLoad = await loadPage(() => getCachedPenetrationDetail(id, pid));
   if (detailLoad.status === "unavailable") return unavailable(siteLoad.value.name, back.href, back.name);
   const detail = detailLoad.value;
+  const actionsLoad = await loadPage(() => getCachedActions(id));
+  const entries = actionsLoad.status === "ready" ? penetrationLog(actionsLoad.value, id, pid, detail.materialIds) : [];
+  const logCount = actionsLoad.status === "ready" ? entries.length : null;
 
   const listed = listedLoad.value;
   const readiness = readinessLoad.value;
@@ -74,71 +83,97 @@ export default async function PenetrationPage({ params, searchParams }: PageProp
       <AppBar backHref={back.href} backName={back.name} />
       <main>
         <h1>{`${detail.penetration.floor}, ${detail.penetration.location}`}</h1>
+        <nav className={styles.tabBar} aria-label="Penetration">
+          <Link className={styles.tab} href={penetrationTabHref(id, pid, "solution", origin)} aria-current={tab === "solution" ? "page" : undefined}>
+            Solution
+          </Link>
+          <Link className={styles.tab} href={penetrationTabHref(id, pid, "log", origin)} aria-current={tab === "log" ? "page" : undefined}>
+            <span>{NAV.actions}</span>
+            {logCount === null ? null : <span className={styles.tabCount}>{logCount}</span>}
+          </Link>
+        </nav>
 
-        <section className={styles.section} aria-labelledby="nominated-heading">
-          <h2 id="nominated-heading" className={styles.kindTitle}>
-            <KindIcon kind="solution" />
-            {`Nominated solution ${penetration.nominatedCode}`}
-          </h2>
-          {facts.length === 0 ? null : (
-            <ul className={styles.list}>
-              {facts.map((fact) => (
-                <li key={fact.label}>
-                  <FactLine fact={fact} />
-                </li>
-              ))}
-            </ul>
-          )}
-          {detail.nominated ? (
-            <FitTable
-              code={penetration.nominatedCode}
-              rows={fitRows(detail.penetration, { ...detail.nominated, materialNames: detail.materialNames }, detail.mismatches)}
-            />
-          ) : (
-            <dl className={styles.fields}>
-              <dt>Service</dt>
-              <dd>{serviceLine(penetration)}</dd>
-              <dt>Required rating</dt>
-              <dd>{ratingValue(penetration.requiredIntegrityMinutes, penetration.requiredInsulationMinutes)}</dd>
-            </dl>
-          )}
-        </section>
+        {tab === "log" ? (
+          <section className={styles.section} aria-labelledby="penetration-log-heading">
+            <h2 id="penetration-log-heading" className={styles.srOnly}>
+              {NAV.actions}
+            </h2>
+            {actionsLoad.status === "unavailable" ? (
+              <UnavailablePanel status={{ label: PENETRATION_LOG.unavailable, tone: "warning", icon: "warning" }} />
+            ) : (
+              <PenetrationLog entries={entries} shortages={readiness.shortages} />
+            )}
+          </section>
+        ) : null}
 
-        <section className={styles.section} aria-labelledby="substitutes-heading">
-          <h2 id="substitutes-heading">Substitutes</h2>
-          {hasCandidates ? (
-            <>
-              <Notice>{listed.notice}</Notice>
-              <SubstituteSwitcher
-                siteId={id}
-                penetrationId={pid}
-                fromCode={listed.nominatedCode}
-                choices={listed.candidates.map((candidate) => ({
-                  code: candidate.internalCode,
-                  facts: candidateFacts(candidate.availability, candidate.materials, readiness.shortages, { siteId: id, penetrationId: pid }),
-                  rows: fitRows(
-                    detail.penetration,
-                    {
-                      ...candidate,
-                      materialNames: candidate.availability.lines.map((line) => candidate.materials[line.materialId]?.name ?? line.materialId),
-                    },
-                    candidate.mismatches,
-                  ),
-                }))}
-              />
-            </>
-          ) : null}
-          {empty ? <StatusChip status={empty} appearance="label" /> : null}
-          {blockers.length > 0 ? (
-            <ul className={styles.list}>
-              {blockers.map((item) => (
-                <li key={item.id}>
-                  <EscalateDialog siteId={id} shortageId={item.id} target={item.target} prominent />
-                </li>
-              ))}
-            </ul>
-          ) : null}
-        </section>
+        {tab === "solution" ? (
+          <>
+            <section className={styles.section} aria-labelledby="nominated-heading">
+              <h2 id="nominated-heading" className={styles.kindTitle}>
+                <KindIcon kind="solution" />
+                {`Nominated solution ${penetration.nominatedCode}`}
+              </h2>
+              {facts.length === 0 ? null : (
+                <ul className={styles.list}>
+                  {facts.map((fact) => (
+                    <li key={fact.label}>
+                      <FactLine fact={fact} />
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {detail.nominated ? (
+                <FitTable
+                  code={penetration.nominatedCode}
+                  rows={fitRows(detail.penetration, { ...detail.nominated, materialNames: detail.materialNames }, detail.mismatches)}
+                />
+              ) : (
+                <dl className={styles.fields}>
+                  <dt>Service</dt>
+                  <dd>{serviceLine(penetration)}</dd>
+                  <dt>Required rating</dt>
+                  <dd>{ratingValue(penetration.requiredIntegrityMinutes, penetration.requiredInsulationMinutes)}</dd>
+                </dl>
+              )}
+            </section>
+
+            <section className={styles.section} aria-labelledby="substitutes-heading">
+              <h2 id="substitutes-heading">Substitutes</h2>
+              {hasCandidates ? (
+                <>
+                  <Notice>{listed.notice}</Notice>
+                  <SubstituteSwitcher
+                    siteId={id}
+                    penetrationId={pid}
+                    fromCode={listed.nominatedCode}
+                    choices={listed.candidates.map((candidate) => ({
+                      code: candidate.internalCode,
+                      facts: candidateFacts(candidate.availability, candidate.materials, readiness.shortages, { siteId: id, penetrationId: pid }),
+                      rows: fitRows(
+                        detail.penetration,
+                        {
+                          ...candidate,
+                          materialNames: candidate.availability.lines.map((line) => candidate.materials[line.materialId]?.name ?? line.materialId),
+                        },
+                        candidate.mismatches,
+                      ),
+                    }))}
+                  />
+                </>
+              ) : null}
+              {empty ? <StatusChip status={empty} appearance="label" /> : null}
+              {blockers.length > 0 ? (
+                <ul className={styles.list}>
+                  {blockers.map((item) => (
+                    <li key={item.id}>
+                      <EscalateDialog siteId={id} shortageId={item.id} target={item.target} prominent />
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </section>
+          </>
+        ) : null}
       </main>
     </>
   );
