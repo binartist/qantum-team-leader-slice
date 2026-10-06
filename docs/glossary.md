@@ -2,7 +2,7 @@
 
 Plain-language meanings for the exercise, from the business point of view. Each entry says where the term comes from:
 
-- **Brief**: stated in `passive-fire-exercise.md`.
+- **Brief**: stated in the exercise brief (kept outside the repo).
 - **CSV**: visible in `data/solutions-excerpt.csv`.
 - **Assumed**: our reading, not given in the source. Check with the business.
 - **Sample**: invented for this slice.

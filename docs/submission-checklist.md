@@ -1,6 +1,6 @@
 # Exercise submission checklist
 
-Living checklist against the "What to submit" and "What we will assess" sections of `docs/passive-fire-exercise.md`. Update it as work lands. Tick only with evidence (file, URL, or CI run), recorded in the Evidence column.
+Living checklist against the "What to submit" and "What we will assess" sections of the exercise brief (kept outside the repo). Update it as work lands. Tick only with evidence (file, URL, or CI run), recorded in the Evidence column.
 
 Last updated: 2026-10-07
 

@@ -13,3 +13,6 @@ next-env.d.ts
 .DS_Store
 supabase/.temp/
 .next-e2e*
+
+# The exercise brief stays local; it is not part of the submission.
+docs/passive-fire-exercise.md
