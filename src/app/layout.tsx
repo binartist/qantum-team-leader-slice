@@ -1,5 +1,6 @@
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import { Announcer } from "@/ui/Announcer";
+import { NavHistory } from "@/ui/NavHistory";
 import "./globals.css";
 
 export const metadata = {
@@ -12,6 +13,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="en">
       <body>
         <Announcer />
+        <Suspense fallback={null}>
+          <NavHistory />
+        </Suspense>
         {children}
       </body>
     </html>

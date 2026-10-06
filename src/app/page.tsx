@@ -1,5 +1,4 @@
-import { LinkButton } from "@/ui/LinkButton";
-import styles from "@/ui/primitives.module.css";
+import { MenuBar } from "@/ui/AppBar";
 
 export const metadata = { title: "About this demo" };
 
@@ -7,6 +6,7 @@ export const metadata = { title: "About this demo" };
 export default function LandingPage() {
   return (
     <>
+      <MenuBar current="about" />
       <main>
         <h1>Ready to send the crew?</h1>
         <p>
@@ -32,12 +32,6 @@ export default function LandingPage() {
           </ol>
         </section>
       </main>
-      {/* Last on the page and sticky, so it stays in view while reading and never covers the text at the end. */}
-      <div className={styles.stickyAction}>
-        <LinkButton href="/sites" primary>
-          Open sites
-        </LinkButton>
-      </div>
     </>
   );
 }

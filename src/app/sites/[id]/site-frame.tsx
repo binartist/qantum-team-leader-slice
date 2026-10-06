@@ -51,11 +51,22 @@ export async function loadSiteFrame(id: string): Promise<SiteFrameData> {
 }
 
 /** The site's header, then the list. A blocked site's rows already say why, so it has no summary banner. */
-export function SiteFrame({ frame, logOpen, children }: { frame: SiteFrameData; logOpen: boolean; children: ReactNode }) {
+export function SiteFrame({
+  frame,
+  logOpen,
+  back = { href: "/sites", name: "Sites" },
+  children,
+}: {
+  frame: SiteFrameData;
+  logOpen: boolean;
+  /** Where back goes. The sites list, unless this screen was opened from a material page. */
+  back?: { readonly href: string; readonly name: string };
+  children: ReactNode;
+}) {
   if (frame.status === "unavailable") {
     return (
       <>
-        <AppBar backHref="/sites" backName="Sites" />
+        <AppBar backHref={back.href} backName={back.name} />
         <main>
           <h1>This site</h1>
           <UnavailablePanel status={readinessBanner("unavailable")} />
@@ -66,7 +77,7 @@ export function SiteFrame({ frame, logOpen, children }: { frame: SiteFrameData; 
   const { site, readiness, plannedWork } = frame;
   return (
     <>
-      <AppBar backHref="/sites" backName="Sites" end={<SiteActionsButton siteId={site.id} initialOpen={logOpen} />} />
+      <AppBar backHref={back.href} backName={back.name} end={<SiteActionsButton siteId={site.id} initialOpen={logOpen} />} />
       <main>
         <h1>{site.name}</h1>
         <p className={`${styles.muted} ${styles.plannedWork}`}>

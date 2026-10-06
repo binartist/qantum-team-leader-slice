@@ -27,7 +27,7 @@ test("AC 32: a 375px screen does not scroll sideways, including with a dialog op
   await page.keyboard.press("Escape");
 
   await gotoApp(page, "/sites/site-b/penetrations/pen-b-01");
-  await page.getByRole("article").filter({ has: page.getByRole("heading", { name: "Solution 0451" }) }).getByRole("button", { name: /Propose this/ }).click();
+  await page.getByRole("region", { name: "Substitutes" }).getByRole("button", { name: /Propose this/ }).click();
   await expect(page.getByRole("dialog")).toBeVisible();
   await assertNoOverflow(page);
   await page.keyboard.press("Escape");

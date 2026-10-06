@@ -3,11 +3,12 @@ import { unstable_rethrow } from "next/navigation";
 import { connection } from "next/server";
 import Link from "next/link";
 import type { SiteReadinessView } from "@/application";
-import { getCachedSite } from "../../_lib/cached";
+import { IdSchema } from "@/ports";
+import { getCachedMaterialDetail, getCachedSite } from "../../_lib/cached";
 import { Notice } from "@/ui/Notice";
 import { PenetrationFilters } from "@/ui/PenetrationFilters";
 import { PenetrationGroups, type PenetrationPlace } from "@/ui/PenetrationGroups";
-import { sitePath } from "@/ui/format";
+import { materialPagePath, siteFromMaterialPath, sitePath } from "@/ui/format";
 import { StockFigures } from "@/ui/StockFigures";
 import { EMPTY, filterLine, NO_FILTER_MATCH, PENETRATION_FILTER } from "@/ui/messages";
 import { filterCounts, logIsOpen, matchingPenetrations, materialValues, parseShow, type ShowFilter } from "@/ui/penetration-filters";
@@ -19,7 +20,7 @@ export const dynamic = "force-dynamic";
 
 type RouteParams = { params: Promise<{ id: string }> };
 type PageProps = RouteParams & {
-  searchParams: Promise<{ show?: string | string[]; material?: string | string[]; log?: string | string[] }>;
+  searchParams: Promise<{ show?: string | string[]; material?: string | string[]; log?: string | string[]; fromMaterial?: string | string[] }>;
 };
 
 export async function generateMetadata({ params }: RouteParams): Promise<Metadata> {
@@ -38,8 +39,9 @@ export default async function SitePage({ params, searchParams }: PageProps) {
   const { id } = await params;
   const query = await searchParams;
   const frame = await loadSiteFrame(id);
+  const fromMaterial = await materialOrigin(id, query.fromMaterial);
   return (
-    <SiteFrame frame={frame} logOpen={logIsOpen(query.log)}>
+    <SiteFrame frame={frame} logOpen={logIsOpen(query.log)} back={fromMaterial?.back}>
       {frame.status === "ready" && frame.readiness && frame.places ? (
         <SitePenetrations
           siteId={frame.site.id}
@@ -47,10 +49,26 @@ export default async function SitePage({ params, searchParams }: PageProps) {
           places={frame.places}
           selected={parseShow(query.show)}
           material={materialValues(query.material)}
+          fromMaterial={fromMaterial?.id}
         />
       ) : null}
     </SiteFrame>
   );
+}
+
+/** A single well-formed material id this site was opened from. Anything else leaves back on the sites list. */
+async function materialOrigin(
+  siteId: string,
+  value: string | string[] | undefined,
+): Promise<{ readonly id: string; readonly back: { readonly href: string; readonly name: string } } | undefined> {
+  if (typeof value !== "string" || !IdSchema.safeParse(value).success) return undefined;
+  try {
+    const detail = await getCachedMaterialDetail(value);
+    return { id: value, back: { href: materialPagePath(value, { siteId }), name: detail.material.name } };
+  } catch (error) {
+    unstable_rethrow(error);
+    return undefined;
+  }
 }
 
 function SitePenetrations({
@@ -59,12 +77,14 @@ function SitePenetrations({
   places,
   selected,
   material,
+  fromMaterial,
 }: {
   siteId: string;
   readiness: SiteReadinessView;
   places: readonly PenetrationPlace[];
   selected: readonly ShowFilter[];
   material: readonly string[];
+  fromMaterial?: string;
 }) {
   // A repeated ?material= is not one material. Joining it keeps the unknown-material note and the full list.
   const materialId = material.length === 0 ? undefined : material.length === 1 ? material[0] : material.join(",");
@@ -76,27 +96,32 @@ function SitePenetrations({
       {places.length === 0 ? null : (
         <StockFigures notice={readiness.stockNotice} stockAsOf={readiness.stockAsOf} asOf={readiness.asOf} />
       )}
-      <PenetrationFilters siteId={siteId} selected={selected} counts={counts} material={material} />
-      {filtered.filter ? (
-        <p className={styles.filterRow}>
-          <span>{filterLine(filtered.filter.materialName, shown.length, filtered.filter.total)}</span>
-          <Link className={styles.plannedWorkLink} href={sitePath(siteId)}>
-            {PENETRATION_FILTER.showAll}
-          </Link>
-        </p>
-      ) : null}
-      {filtered.unknownMaterial ? <Notice>{PENETRATION_FILTER.unknown}</Notice> : null}
-      {selected.length > 0 && shown.length === 0 ? <p>{NO_FILTER_MATCH}</p> : null}
-      {selected.length === 0 && shown.length === 0 ? <p>{EMPTY.penetrations}</p> : null}
-      {shown.length > 0 ? (
-        <section className={styles.groups} aria-label="Penetrations">
+      <section className={styles.penetrationSection} aria-labelledby="penetrations-heading">
+        {/* The heading counts every planned penetration. The chips below count subsets of that list. */}
+        <h2 id="penetrations-heading" className={styles.listTitle}>
+          <span>Penetrations</span>
+          <span className={styles.tabCount}>{places.length}</span>
+        </h2>
+        <PenetrationFilters siteId={siteId} selected={selected} counts={counts} material={material} fromMaterial={fromMaterial} />
+        {filtered.filter ? (
+          <p className={styles.filterRow}>
+            <span>{filterLine(filtered.filter.materialName, shown.length, filtered.filter.total)}</span>
+            <Link className={styles.plannedWorkLink} href={fromMaterial ? siteFromMaterialPath(siteId, fromMaterial) : sitePath(siteId)}>
+              {PENETRATION_FILTER.showAll}
+            </Link>
+          </p>
+        ) : null}
+        {filtered.unknownMaterial ? <Notice>{PENETRATION_FILTER.unknown}</Notice> : null}
+        {selected.length > 0 && shown.length === 0 ? <p>{NO_FILTER_MATCH}</p> : null}
+        {selected.length === 0 && shown.length === 0 ? <p>{EMPTY.penetrations}</p> : null}
+        {shown.length > 0 ? (
           <PenetrationGroups
             siteId={siteId}
             places={shown}
             chips={(penetrationId) => listFactChips(penetrationId, readiness.shortages, readiness.blockers)}
           />
-        </section>
-      ) : null}
+        ) : null}
+      </section>
     </>
   );
 }

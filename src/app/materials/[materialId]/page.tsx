@@ -7,12 +7,13 @@ import { IdSchema } from "@/ports";
 import { AppBar } from "@/ui/AppBar";
 import { Banner } from "@/ui/Banner";
 import { Icon } from "@/ui/Icon";
+import { KindIcon } from "@/ui/KindIcon";
 import { StatusChip } from "@/ui/StatusChip";
 import { StockFigures } from "@/ui/StockFigures";
 import { UnavailablePanel } from "@/ui/UnavailablePanel";
 import { EscalateDialog } from "@/ui/decisions/EscalateDialog";
 import { WaitDialog } from "@/ui/decisions/WaitDialog";
-import { MATERIALS_PATH, decisionScope, groupPlaces, materialStockLine, penetrationLine, siteAnchor, siteMaterialLine, sitePath } from "@/ui/format";
+import { MATERIALS_PATH, decisionScope, groupPlaces, materialStockLine, penetrationLine, siteAnchor, siteFromMaterialPath, siteMaterialLine } from "@/ui/format";
 import { materialBack } from "@/ui/materials";
 import { MATERIALS, NAV } from "@/ui/messages";
 import { earlierDecision, hasEarlierDecision, shortageState } from "@/ui/status";
@@ -68,19 +69,32 @@ export default async function MaterialPage({ params, searchParams }: PageProps) 
         {detail.stockAsOf === null ? null : <StockFigures notice={detail.stockNotice} stockAsOf={detail.stockAsOf} asOf={detail.asOf} />}
         <p>{materialStockLine(detail.material.onHandQty, detail.material.plannedQty, detail.material.unit)}</p>
         {detail.sites.map((site) => (
-          <SiteSection key={site.siteId} site={site} materialName={detail.material.name} unit={detail.material.unit} />
+          <SiteSection key={site.siteId} site={site} materialId={detail.material.id} materialName={detail.material.name} unit={detail.material.unit} />
         ))}
       </main>
     </>
   );
 }
 
-function SiteSection({ site, materialName, unit }: { site: MaterialSite; materialName: string; unit: string }) {
+function SiteSection({
+  site,
+  materialId,
+  materialName,
+  unit,
+}: {
+  site: MaterialSite;
+  materialId: string;
+  materialName: string;
+  unit: string;
+}) {
   const anchor = siteAnchor(site.siteId);
   const heading = (
     <h2 id={`${anchor}-heading`}>
-      <Link className={styles.headingLink} href={sitePath(site.siteId)}>
-        {site.siteName}
+      <Link className={styles.headingLink} href={siteFromMaterialPath(site.siteId, materialId)}>
+        <span className={styles.kindTitle}>
+          <KindIcon kind="site" />
+          <span>{site.siteName}</span>
+        </span>
         <Icon name="chevron-right" />
       </Link>
     </h2>
@@ -112,7 +126,10 @@ function SiteSection({ site, materialName, unit }: { site: MaterialSite; materia
       <ul className={styles.list}>
         {places.map((label) => (
           <li key={label} className={styles.plannedPlace}>
-            {label}
+            <span className={styles.kindTitle}>
+              <KindIcon kind="penetration" />
+              <span>{label}</span>
+            </span>
           </li>
         ))}
       </ul>

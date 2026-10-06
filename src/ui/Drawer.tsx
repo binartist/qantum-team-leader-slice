@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useId, useRef, type ReactNode } from "react";
-import { Button } from "./Button";
+import { Icon } from "./Icon";
 import styles from "./primitives.module.css";
 
 /**
@@ -77,9 +77,9 @@ export function Drawer({
             <h2 id={titleId} className={styles.drawerTitle}>
               {title}
             </h2>
-            <Button type="button" onClick={close} aria-label={closeLabel}>
-              Close
-            </Button>
+            <button type="button" className={styles.drawerClose} onClick={close} aria-label={closeLabel}>
+              <Icon name="close" />
+            </button>
           </div>
           {children}
         </div>

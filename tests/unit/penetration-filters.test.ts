@@ -87,5 +87,9 @@ describe("penetration filters", () => {
     expect(showFilterHref("site-b", [], "acted", ["MAT-A", "MAT-B"])).toBe(
       "/sites/site-b?show=acted&material=MAT-A&material=MAT-B",
     );
+    expect(showFilterHref("site-b", ["shortages"], "shortages", [], "MAT-COLLAR-25")).toBe("/sites/site-b?fromMaterial=MAT-COLLAR-25");
+    expect(showFilterHref("site-b", [], "shortages", ["MAT-COLLAR-25"], "MAT-COLLAR-25")).toBe(
+      "/sites/site-b?show=shortages&material=MAT-COLLAR-25&fromMaterial=MAT-COLLAR-25",
+    );
   });
 });
