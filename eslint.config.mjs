@@ -61,6 +61,8 @@ export default defineConfig([
     "coverage/**",
     "playwright-report/**",
     "next-env.d.ts",
+    // Agent worktrees nest a full checkout here; each is linted in its own tree.
+    ".claude/worktrees/**",
   ]),
   {
     // Domain core stays pure: no framework, database or file-system imports.
